@@ -5,7 +5,7 @@ build:
   stage: build
   image: debian:latest
   before_script:
-    - export DEBIAN_FRONTEND=noninteractive && export TZ=Etc/UTC && apt-get update && apt-get -y dist-upgrade && apt-get -y install build-essential meson ninja
+    - export DEBIAN_FRONTEND=noninteractive && export TZ=Etc/UTC && apt-get update && apt-get -y dist-upgrade && apt-get -y install build-essential meson ninja-build
   script:
     - meson setup build
     - cd build && ninja
