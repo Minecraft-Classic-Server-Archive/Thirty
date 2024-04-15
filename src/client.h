@@ -28,6 +28,7 @@ typedef struct client_s {
 
 	char name[64];
 
+	bool spawned;
 	float x, y, z;
 	float yaw, pitch;
 } client_t;
