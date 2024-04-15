@@ -52,3 +52,4 @@ typedef struct {
 } mapsend_t;
 
 void *mapsend_thread_start(void *data);
+void *mapsend_fast_thread_start(void *data);

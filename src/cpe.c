@@ -4,6 +4,7 @@
 
 cpeext_t supported_extensions[] = {
 		{ "FullCP437", 1 },
+		{ "FastMap", 1 },
 
 		{ "", 0 }
 };
