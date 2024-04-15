@@ -30,6 +30,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->z = server.map->height / 2.0f;
 	client->yaw = 0.0f;
 	client->pitch = 0.0f;
+	client->spawned = false;
 }
 
 void client_destroy(client_t *client) {
@@ -101,6 +102,8 @@ void client_tick(client_t *client) {
 						buffer_write_int8(other->out_buffer, util_degrees2fixed(client->pitch));
 						client_flush(other);
 					}
+
+					client->spawned = true;
 
 					server_broadcast("&f%s &ejoined the game.", client->name);
 
@@ -328,16 +331,19 @@ void client_disconnect(client_t *client, const char *msg) {
 
 	client->connected = false;
 
-	server_broadcast("&f%s &edisconnected (&f%s&e)", client->name, msg);
+	if (client->spawned) {
+		client->spawned = false;
+		server_broadcast("&f%s &edisconnected (&f%s&e)", client->name, msg);
 
-	for (size_t i = 0; i < server.num_clients; i++) {
-		client_t *other = &server.clients[i];
-		if (other == client) {
-			continue;
+		for (size_t i = 0; i < server.num_clients; i++) {
+			client_t *other = &server.clients[i];
+			if (other == client) {
+				continue;
+			}
+
+			buffer_write_uint8(other->out_buffer, packet_player_despawn);
+			buffer_write_int8(other->out_buffer, client->idx);
+			client_flush(other);
 		}
-
-		buffer_write_uint8(other->out_buffer, packet_player_despawn);
-		buffer_write_int8(other->out_buffer, client->idx);
-		client_flush(other);
 	}
 }
