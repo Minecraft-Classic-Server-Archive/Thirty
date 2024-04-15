@@ -71,4 +71,4 @@ bool buffer_write_uint64be(buffer_t *buffer, uint64_t data);
 bool buffer_write_int64be(buffer_t *buffer, int64_t data);
 
 void buffer_read_mcstr(buffer_t *buffer, char data[65]);
-void buffer_write_mcstr(buffer_t *buffer, const char *data);
+void buffer_write_mcstr(buffer_t *buffer, const char *data, bool filter);

@@ -8,10 +8,12 @@
 #include "map.h"
 #include "packet.h"
 #include "util.h"
+#include "cpe.h"
 
 #define PING_INTERVAL (1 * 20)
 
 static void client_receive(client_t *client);
+static void client_login(client_t *client);
 static void client_start_mapsave(client_t *client);
 
 void client_init(client_t *client, int fd, size_t idx) {
@@ -84,7 +86,7 @@ void client_tick(client_t *client) {
 						// Inform the connecting client about others
 						buffer_write_uint8(client->out_buffer, packet_player_spawn);
 						buffer_write_uint8(client->out_buffer, other->idx);
-						buffer_write_mcstr(client->out_buffer, other->name);
+						buffer_write_mcstr(client->out_buffer, other->name, true);
 						buffer_write_int16be(client->out_buffer, util_float2fixed(other->x));
 						buffer_write_int16be(client->out_buffer, util_float2fixed(other->y));
 						buffer_write_int16be(client->out_buffer, util_float2fixed(other->y));
@@ -95,7 +97,7 @@ void client_tick(client_t *client) {
 						// and inform others about this client
 						buffer_write_uint8(other->out_buffer, packet_player_spawn);
 						buffer_write_uint8(other->out_buffer, client->idx);
-						buffer_write_mcstr(other->out_buffer, client->name);
+						buffer_write_mcstr(other->out_buffer, client->name, true);
 						buffer_write_int16be(other->out_buffer, util_float2fixed(client->x));
 						buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
 						buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
@@ -127,7 +129,7 @@ void client_tick(client_t *client) {
 		}
 		else if (client->mapsend_state == mapsend_failure) {
 			buffer_write_uint8(client->out_buffer, packet_player_disconnect);
-			buffer_write_mcstr(client->out_buffer, "Failed to send map data");
+			buffer_write_mcstr(client->out_buffer, "Failed to send map data", false);
 			client_flush(client);
 		}
 	}
@@ -176,6 +178,8 @@ void client_receive(client_t *client) {
 				buffer_read_mcstr(client->in_buffer, key);
 				buffer_read_uint8(client->in_buffer, &unused);
 
+				const bool supports_cpe = unused == 0x42;
+
 				for (size_t i = 0; i < server.num_clients; i++) {
 					if (strcasecmp(server.clients[i].name, username) == 0) {
 						client_disconnect(client, "Name already in use.");
@@ -185,17 +189,73 @@ void client_receive(client_t *client) {
 
 				strncpy(client->name, username, 64);
 
-				buffer_write_uint8(client->out_buffer, packet_ident);
-				buffer_write_uint8(client->out_buffer, 0x07);
-				buffer_write_mcstr(client->out_buffer, "hostname");
-				buffer_write_mcstr(client->out_buffer, "motd");
-				buffer_write_uint8(client->out_buffer, 0x00);
-				client_flush(client);
+				if (supports_cpe) {
+					buffer_write_uint8(client->out_buffer, packet_extinfo);
+					buffer_write_mcstr(client->out_buffer, "classicserver", false);
+					buffer_write_uint16be(client->out_buffer, cpe_count_supported());
 
-				client_start_mapsave(client);
+					for (size_t i = 0; true; i++) {
+						cpeext_t *ext = &supported_extensions[i];
+						if (ext->name[0] == '\0') {
+							break;
+						}
 
-				buffer_write_uint8(client->out_buffer, packet_level_init);
-				client_flush(client);
+						buffer_write_uint8(client->out_buffer, packet_extentry);
+						buffer_write_mcstr(client->out_buffer, ext->name, false);
+						buffer_write_int32be(client->out_buffer, ext->version);
+					}
+
+					client_flush(client);
+				}
+				else {
+					client_login(client);
+				}
+
+				break;
+			}
+
+			case packet_extinfo: {
+				char appname[65];
+				uint16_t extcount;
+
+				buffer_read_mcstr(client->in_buffer, appname);
+				buffer_read_uint16be(client->in_buffer, &extcount);
+
+				client->num_extensions = (size_t)extcount;
+				client->extensions = calloc(extcount, sizeof(*client->extensions));
+
+				printf("Client using %s with %d extensions\n", appname, extcount);
+
+				break;
+			}
+
+			case packet_extentry: {
+				char name[65];
+				int32_t version;
+
+				buffer_read_mcstr(client->in_buffer, name);
+				buffer_read_int32be(client->in_buffer, &version);
+
+				printf("Client supports %s v%d\n", name, version);
+
+				size_t i;
+				for (i = 0; i < client->num_extensions; i++) {
+					if (i == client->num_extensions) {
+						fprintf(stderr, "extension overrun!\n");
+						client_disconnect(client, "Invalid data.");
+						return;
+					}
+
+					if (client->extensions[i].name[0] == '\0') {
+						strncpy(client->extensions[i].name, name, 65);
+						client->extensions[i].version = version;
+						break;
+					}
+				}
+
+				if (i == client->num_extensions - 1) {
+					client_login(client);
+				}
 
 				break;
 			}
@@ -275,6 +335,22 @@ void client_receive(client_t *client) {
 	}
 }
 
+void client_login(client_t *client) {
+	const bool cp437 = client_supports_extension(client, "FullCP437", 1);
+
+	buffer_write_uint8(client->out_buffer, packet_ident);
+	buffer_write_uint8(client->out_buffer, 0x07);
+	buffer_write_mcstr(client->out_buffer, "hostname", cp437);
+	buffer_write_mcstr(client->out_buffer, "motd", cp437);
+	buffer_write_uint8(client->out_buffer, 0x00);
+	client_flush(client);
+
+	client_start_mapsave(client);
+
+	buffer_write_uint8(client->out_buffer, packet_level_init);
+	client_flush(client);
+}
+
 void client_flush(client_t *client) {
 	if (!client->connected) {
 		return;
@@ -334,7 +410,7 @@ void client_start_mapsave(client_t *client) {
 void client_disconnect(client_t *client, const char *msg) {
 	if (client->connected) {
 		buffer_write_uint8(client->out_buffer, packet_player_disconnect);
-		buffer_write_mcstr(client->out_buffer, msg);
+		buffer_write_mcstr(client->out_buffer, msg, client_supports_extension(client, "FullCP437", 1));
 		client_flush(client);
 	}
 
@@ -355,4 +431,14 @@ void client_disconnect(client_t *client, const char *msg) {
 			client_flush(other);
 		}
 	}
+}
+
+bool client_supports_extension(client_t *client, const char *name, int version) {
+	for (size_t i = 0; i < client->num_extensions; i++) {
+		if (strcasecmp(client->extensions[i].name, name) == 0 && client->extensions[i].version == version) {
+			return true;
+		}
+	}
+
+	return false;
 }
