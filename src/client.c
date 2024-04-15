@@ -1,8 +1,17 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <pthread.h>
 #include "client.h"
+#include "server.h"
 #include "buffer.h"
+#include "map.h"
+#include "packet.h"
+#include "util.h"
+
+static void client_receive(client_t *client);
+static void client_start_mapsave(client_t *client);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -11,6 +20,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->idx = idx;
 	client->in_buffer = buffer_allocate_memory(8192);
 	client->out_buffer = buffer_allocate_memory(8192);
+	client->mapsend_state = mapsend_none;
+	client->mapgz_buffer = NULL;
 }
 
 void client_destroy(client_t *client) {
@@ -19,6 +30,47 @@ void client_destroy(client_t *client) {
 }
 
 void client_tick(client_t *client) {
+	client_receive(client);
+
+	if (client->mapsend_state != mapsend_none) {
+		if (client->mapsend_state == mapsend_success) {
+			for (int i = 0; i < 4; i++) {
+				if (buffer_size(client->mapgz_buffer) == buffer_tell(client->mapgz_buffer)) {
+					buffer_destroy(client->mapgz_buffer);
+					client->mapsend_state = mapsend_sent;
+					client->mapgz_buffer = NULL;
+
+					buffer_write_uint8(client->out_buffer, packet_level_finish);
+					buffer_write_uint16be(client->out_buffer, server.map->width);
+					buffer_write_uint16be(client->out_buffer, server.map->height);
+					buffer_write_uint16be(client->out_buffer, server.map->depth);
+					client_flush(client);
+					break;
+				}
+				else {
+					uint8_t data[1024];
+					memset(data, 0, 1024);
+
+					size_t len = buffer_read(client->mapgz_buffer, data, 1024);
+
+					buffer_write_uint8(client->out_buffer, packet_level_chunk);
+					buffer_write_uint16be(client->out_buffer, (uint16_t)len);
+					buffer_write(client->out_buffer, data, 1024);
+					buffer_write_uint8(client->out_buffer, 0);
+
+					client_flush(client);
+				}
+			}
+		}
+		else if (client->mapsend_state == mapsend_failure) {
+			buffer_write_uint8(client->out_buffer, packet_player_disconnect);
+			buffer_write_mcstr(client->out_buffer, "Failed to send map data");
+			client_flush(client);
+		}
+	}
+}
+
+void client_receive(client_t *client) {
 	buffer_seek(client->in_buffer, 0);
 	int r = recv(client->socket_fd, client->in_buffer->mem.data, client->in_buffer->mem.size, 0);
 	if (r == -1) {
@@ -55,14 +107,16 @@ void client_tick(client_t *client) {
 		printf("key: %s\n", key);
 		printf("unused: %d\n", unused);
 
-		buffer_write_uint8(client->out_buffer, 0x00);
+		buffer_write_uint8(client->out_buffer, packet_ident);
 		buffer_write_uint8(client->out_buffer, 0x07);
 		buffer_write_mcstr(client->out_buffer, "hostname");
 		buffer_write_mcstr(client->out_buffer, "motd");
 		buffer_write_uint8(client->out_buffer, 0x00);
 		client_flush(client);
 
-		buffer_write_uint8(client->out_buffer, 0x02);
+		client_start_mapsave(client);
+
+		buffer_write_uint8(client->out_buffer, packet_level_init);
 		client_flush(client);
 	}
 }
@@ -85,4 +139,27 @@ void client_flush(client_t *client) {
 	}
 
 	printf("sending %d\n", r);
+}
+
+void client_start_mapsave(client_t *client) {
+	mapsend_t *data = malloc(sizeof(*data));
+	data->client = client;
+	data->width = server.map->width;
+	data->height = server.map->height;
+	data->depth = server.map->depth;
+
+	const uint32_t num_blocks = data->width * data->height * data->depth;
+	const size_t bufsize = sizeof(uint32_t) + num_blocks;
+	data->data = malloc(bufsize);
+
+	buffer_t *buf = buffer_create_memory(data->data, bufsize);
+	buffer_write_uint32be(buf, num_blocks);
+	buffer_write(buf, server.map->blocks, num_blocks);
+	buffer_destroy(buf);
+
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+
+	pthread_t thread;
+	pthread_create(&thread, &attr, mapsend_thread_start, data);
 }

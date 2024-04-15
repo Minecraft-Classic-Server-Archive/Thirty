@@ -8,8 +8,16 @@ source_files = [
     'src/client.c',
     'src/client.h',
     'src/main.c',
+    'src/map.c',
+    'src/map.h',
+    'src/mapsend.c',
     'src/server.c',
     'src/server.h'
 ]
 
-executable('classicserver', source_files)
+deps = [
+    dependency('threads', required: true),
+    dependency('zlib', required: true)
+]
+
+executable('classicserver', source_files, dependencies: deps)

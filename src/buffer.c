@@ -151,6 +151,15 @@ size_t buffer_write(buffer_t *buffer, const void *data, const size_t len) {
 	}
 }
 
+size_t buffer_write_mc(buffer_t *buffer, const void *data, const size_t len) {
+	buffer_write(buffer, data, util_min(len, 1024));
+	for (size_t i = len ; i < 1024; i++) {
+		buffer_write_uint8(buffer, 0x00);
+	}
+
+	return 1024;
+}
+
 #define CHECK_SIZE()                                                \
 	if (buffer_tell(buffer) + sizeof(c) > buffer_size(buffer)) {    \
 		return false;                                               \

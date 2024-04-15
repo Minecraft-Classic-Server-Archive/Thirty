@@ -41,7 +41,7 @@ static inline uint64_t endian_tolittle64(uint64_t x) {
 
 static inline uint16_t endian_tobig16(uint16_t x) {
 #ifdef ENDIAN_LITTLE
-	return endian_swap64(x);
+	return endian_swap16(x);
 #else
 	return x;
 #endif
@@ -49,8 +49,7 @@ static inline uint16_t endian_tobig16(uint16_t x) {
 
 static inline uint32_t endian_tobig32(uint32_t x) {
 #ifdef ENDIAN_LITTLE
-	return endian_swap64(x);
-	return x;
+	return endian_swap32(x);
 #else
 	return x;
 #endif
@@ -59,7 +58,6 @@ static inline uint32_t endian_tobig32(uint32_t x) {
 static inline uint64_t endian_tobig64(uint64_t x) {
 #ifdef ENDIAN_LITTLE
 	return endian_swap64(x);
-	return x;
 #else
 	return x;
 #endif
