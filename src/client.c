@@ -152,109 +152,111 @@ void client_receive(client_t *client) {
 		return;
 	}
 
-	uint8_t packet_id;
-	buffer_read_uint8(client->in_buffer, &packet_id);
+	while (buffer_tell(client->in_buffer) < r) {
+		uint8_t packet_id;
+		buffer_read_uint8(client->in_buffer, &packet_id);
 
-	switch (packet_id) {
-		case packet_ident: {
-			uint8_t protocol_version;
-			char username[65];
-			char key[65];
-			uint8_t unused;
+		switch (packet_id) {
+			case packet_ident: {
+				uint8_t protocol_version;
+				char username[65];
+				char key[65];
+				uint8_t unused;
 
-			buffer_read_uint8(client->in_buffer, &protocol_version);
-			buffer_read_mcstr(client->in_buffer, username);
-			buffer_read_mcstr(client->in_buffer, key);
-			buffer_read_uint8(client->in_buffer, &unused);
+				buffer_read_uint8(client->in_buffer, &protocol_version);
+				buffer_read_mcstr(client->in_buffer, username);
+				buffer_read_mcstr(client->in_buffer, key);
+				buffer_read_uint8(client->in_buffer, &unused);
 
-			strncpy(client->name, username, 64);
+				strncpy(client->name, username, 64);
 
-			buffer_write_uint8(client->out_buffer, packet_ident);
-			buffer_write_uint8(client->out_buffer, 0x07);
-			buffer_write_mcstr(client->out_buffer, "hostname");
-			buffer_write_mcstr(client->out_buffer, "motd");
-			buffer_write_uint8(client->out_buffer, 0x00);
-			client_flush(client);
+				buffer_write_uint8(client->out_buffer, packet_ident);
+				buffer_write_uint8(client->out_buffer, 0x07);
+				buffer_write_mcstr(client->out_buffer, "hostname");
+				buffer_write_mcstr(client->out_buffer, "motd");
+				buffer_write_uint8(client->out_buffer, 0x00);
+				client_flush(client);
 
-			client_start_mapsave(client);
+				client_start_mapsave(client);
 
-			buffer_write_uint8(client->out_buffer, packet_level_init);
-			client_flush(client);
+				buffer_write_uint8(client->out_buffer, packet_level_init);
+				client_flush(client);
 
-			break;
-		}
-
-		case packet_set_block_client: {
-			uint16_t x, y, z;
-			uint8_t mode;
-			uint8_t block;
-
-			buffer_read_uint16be(client->in_buffer, &x);
-			buffer_read_uint16be(client->in_buffer, &y);
-			buffer_read_uint16be(client->in_buffer, &z);
-			buffer_read_uint8(client->in_buffer, &mode);
-			buffer_read_uint8(client->in_buffer, &block);
-
-			map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
-
-			printf("%s changed block: x = %d, y = %d, z = %d, block = %d, mode = %d\n", client->name, x, y, z, block, mode);
-
-			break;
-		}
-
-		case packet_message: {
-			uint8_t unused;
-			char msg[65];
-
-			buffer_read_uint8(client->in_buffer, &unused);
-			buffer_read_mcstr(client->in_buffer, msg);
-
-			server_broadcast("&e%s: &f%s", client->name, msg);
-
-			break;
-		}
-
-		case packet_player_pos_angle: {
-			int8_t unused;
-			int16_t x, y, z;
-			int8_t yaw, pitch;
-
-			buffer_read_int8(client->in_buffer, &unused);
-			buffer_read_int16be(client->in_buffer, &x);
-			buffer_read_int16be(client->in_buffer, &y);
-			buffer_read_int16be(client->in_buffer, &z);
-			buffer_read_int8(client->in_buffer, &yaw);
-			buffer_read_int8(client->in_buffer, &pitch);
-
-			client->x = util_fixed2float(x);
-			client->y = util_fixed2float(y);
-			client->z = util_fixed2float(z);
-			client->yaw = util_fixed2degrees(yaw);
-			client->pitch = util_fixed2degrees(pitch);
-
-			for (size_t i = 0; i < server.num_clients; i++) {
-				client_t *other = &server.clients[i];
-				if (other == client) {
-					continue;
-				}
-
-				buffer_write_uint8(other->out_buffer, packet_player_pos_angle);
-				buffer_write_int8(other->out_buffer, client->idx);
-				buffer_write_int16be(other->out_buffer, util_float2fixed(client->x));
-				buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
-				buffer_write_int16be(other->out_buffer, util_float2fixed(client->z));
-				buffer_write_int8(other->out_buffer, util_degrees2fixed(client->yaw));
-				buffer_write_int8(other->out_buffer, util_degrees2fixed(client->pitch));
-				client_flush(other);
+				break;
 			}
 
-			break;
-		}
+			case packet_set_block_client: {
+				uint16_t x, y, z;
+				uint8_t mode;
+				uint8_t block;
 
-		default: {
-			fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
-			break;
-		};
+				buffer_read_uint16be(client->in_buffer, &x);
+				buffer_read_uint16be(client->in_buffer, &y);
+				buffer_read_uint16be(client->in_buffer, &z);
+				buffer_read_uint8(client->in_buffer, &mode);
+				buffer_read_uint8(client->in_buffer, &block);
+
+				map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
+
+				printf("%s changed block: x = %d, y = %d, z = %d, block = %d, mode = %d\n", client->name, x, y, z, block, mode);
+
+				break;
+			}
+
+			case packet_message: {
+				uint8_t unused;
+				char msg[65];
+
+				buffer_read_uint8(client->in_buffer, &unused);
+				buffer_read_mcstr(client->in_buffer, msg);
+
+				server_broadcast("&e%s: &f%s", client->name, msg);
+
+				break;
+			}
+
+			case packet_player_pos_angle: {
+				int8_t unused;
+				int16_t x, y, z;
+				int8_t yaw, pitch;
+
+				buffer_read_int8(client->in_buffer, &unused);
+				buffer_read_int16be(client->in_buffer, &x);
+				buffer_read_int16be(client->in_buffer, &y);
+				buffer_read_int16be(client->in_buffer, &z);
+				buffer_read_int8(client->in_buffer, &yaw);
+				buffer_read_int8(client->in_buffer, &pitch);
+
+				client->x = util_fixed2float(x);
+				client->y = util_fixed2float(y);
+				client->z = util_fixed2float(z);
+				client->yaw = util_fixed2degrees(yaw);
+				client->pitch = util_fixed2degrees(pitch);
+
+				for (size_t i = 0; i < server.num_clients; i++) {
+					client_t *other = &server.clients[i];
+					if (other == client) {
+						continue;
+					}
+
+					buffer_write_uint8(other->out_buffer, packet_player_pos_angle);
+					buffer_write_int8(other->out_buffer, client->idx);
+					buffer_write_int16be(other->out_buffer, util_float2fixed(client->x));
+					buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
+					buffer_write_int16be(other->out_buffer, util_float2fixed(client->z));
+					buffer_write_int8(other->out_buffer, util_degrees2fixed(client->yaw));
+					buffer_write_int8(other->out_buffer, util_degrees2fixed(client->pitch));
+					client_flush(other);
+				}
+
+				break;
+			}
+
+			default: {
+				fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
+				break;
+			};
+		}
 	}
 }
 
