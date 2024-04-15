@@ -149,9 +149,10 @@ void server_broadcast(const char *msg, ...) {
 	puts(buffer);
 
 	for (size_t i = 0; i < server.num_clients; i++) {
-		buffer_write_uint8(server.clients[i].out_buffer, packet_message);
-		buffer_write_uint8(server.clients[i].out_buffer, 0xFF);
-		buffer_write_mcstr(server.clients[i].out_buffer, buffer);
-		client_flush(&server.clients[i]);
+		client_t *client = &server.clients[i];
+		buffer_write_uint8(client->out_buffer, packet_message);
+		buffer_write_uint8(client->out_buffer, 0xFF);
+		buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));
+		client_flush(client);
 	}
 }

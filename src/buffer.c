@@ -247,12 +247,20 @@ void buffer_read_mcstr(buffer_t *buffer, char data[65]) {
 	data[end] = '\0';
 }
 
-void buffer_write_mcstr(buffer_t *buffer, const char *data) {
+void buffer_write_mcstr(buffer_t *buffer, const char *data, bool filter) {
 	char s[64];
 	memset(s, ' ', 64);
 
 	const size_t sl = strlen(data);
 	memcpy(s, data, util_min(sl, 64));
+
+	if (filter) {
+		for (size_t i = 0; i < 64; i++) {
+			if (s[i] < 0) {
+				s[i] = '?';
+			}
+		}
+	}
 
 	buffer_write(buffer, s, 64);
 }

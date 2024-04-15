@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "sockets.h"
+#include "cpe.h"
 
 struct buffer_s;
 
@@ -31,6 +32,9 @@ typedef struct client_s {
 	bool spawned;
 	float x, y, z;
 	float yaw, pitch;
+
+	size_t num_extensions;
+	cpeext_t *extensions;
 } client_t;
 
 void client_init(client_t *client, int fd, size_t idx);
@@ -38,6 +42,8 @@ void client_destroy(client_t *client);
 void client_tick(client_t *client);
 void client_flush(client_t *client);
 void client_disconnect(client_t *client, const char *msg);
+
+bool client_supports_extension(client_t *client, const char *name, int version);
 
 typedef struct {
 	client_t *client;

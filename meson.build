@@ -9,6 +9,8 @@ source_files = [
     'src/buffer.h',
     'src/client.c',
     'src/client.h',
+    'src/cpe.c',
+    'src/cpe.h',
     'src/main.c',
     'src/map.c',
     'src/map.h',
