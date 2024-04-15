@@ -46,7 +46,7 @@ void client_tick(client_t *client) {
 
 	client_receive(client);
 
-	if (server.tick - client->last_ping >= PING_INTERVAL) {
+	if (client->spawned && server.tick - client->last_ping >= PING_INTERVAL) {
 		buffer_write_uint8(client->out_buffer, packet_ping);
 		client_flush(client);
 		client->last_ping = server.tick;
