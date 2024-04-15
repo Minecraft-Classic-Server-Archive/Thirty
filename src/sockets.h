@@ -11,6 +11,7 @@
 
 #define SOCKET_EWOULDBLOCK WSAEWOULDBLOCK
 #define SOCKET_ECONNABORTED WSAECONNABORTED
+#define SOCKET_ECONNRESET WSAECONNRESET
 
 typedef SOCKET socket_t;
 
@@ -26,6 +27,7 @@ static inline int socket_error(void) { return WSAGetLastError(); }
 
 #define SOCKET_EWOULDBLOCK EWOULDBLOCK
 #define SOCKET_ECONNABORTED ECONNABORTED
+#define SOCKET_ECONNRESET ECONNRESET
 
 #define ioctlsocket ioctl
 #define closesocket close
