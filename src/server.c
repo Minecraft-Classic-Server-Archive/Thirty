@@ -7,9 +7,14 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <string.h>
+#include <stdarg.h>
 #include "server.h"
+
+#include "buffer.h"
 #include "client.h"
 #include "map.h"
+#include "packet.h"
 
 void server_accept();
 
@@ -56,6 +61,7 @@ bool server_init() {
 
 	printf("Server is listening on port %u\n", server.port);
 
+	printf("Preparing map...\n");
 	server.map = map_create(64, 64, 64);
 
 	return true;
@@ -71,6 +77,22 @@ void server_tick() {
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_tick(&server.clients[i]);
+	}
+
+	bool removed = false;
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *client = &server.clients[i];
+		if (client->connected) {
+			continue;
+		}
+
+		memmove(server.clients + i, server.clients + i + 1, (server.num_clients - i - 1) * sizeof(*server.clients));
+		server.num_clients--;
+		removed = true;
+	}
+
+	if (removed) {
+		server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
 	}
 
 	server.tick++;
@@ -104,4 +126,22 @@ void server_accept() {
 	server.clients = realloc(server.clients, server.num_clients * sizeof(*server.clients));
 	client_t *client = &server.clients[conn_idx];
 	client_init(client, acceptfd, conn_idx);
+}
+
+void server_broadcast(const char *msg, ...) {
+	char buffer[65];
+
+	va_list args;
+	va_start(args, msg);
+	vsnprintf(buffer, 65, msg, args);
+	va_end(args);
+
+	puts(buffer);
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		buffer_write_uint8(server.clients[i].out_buffer, packet_message);
+		buffer_write_uint8(server.clients[i].out_buffer, 0xFF);
+		buffer_write_mcstr(server.clients[i].out_buffer, buffer);
+		client_flush(&server.clients[i]);
+	}
 }

@@ -10,6 +10,8 @@
 #include "packet.h"
 #include "util.h"
 
+#define PING_INTERVAL (1 * 20)
+
 static void client_receive(client_t *client);
 static void client_start_mapsave(client_t *client);
 
@@ -17,11 +19,18 @@ void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
 
 	client->socket_fd = fd;
+	client->connected = true;
 	client->idx = idx;
 	client->in_buffer = buffer_allocate_memory(8192);
 	client->out_buffer = buffer_allocate_memory(8192);
 	client->mapsend_state = mapsend_none;
 	client->mapgz_buffer = NULL;
+	client->last_ping = 0;
+	client->x = server.map->width / 2.0f;
+	client->y = (server.map->depth / 2.0f) + 2.0f;
+	client->z = server.map->height / 2.0f;
+	client->yaw = 0.0f;
+	client->pitch = 0.0f;
 }
 
 void client_destroy(client_t *client) {
@@ -30,7 +39,17 @@ void client_destroy(client_t *client) {
 }
 
 void client_tick(client_t *client) {
+	if (!client->connected) {
+		return;
+	}
+
 	client_receive(client);
+
+	if (server.tick - client->last_ping >= PING_INTERVAL) {
+		buffer_write_uint8(client->out_buffer, packet_ping);
+		client_flush(client);
+		client->last_ping = server.tick;
+	}
 
 	if (client->mapsend_state != mapsend_none) {
 		if (client->mapsend_state == mapsend_success) {
@@ -45,6 +64,47 @@ void client_tick(client_t *client) {
 					buffer_write_uint16be(client->out_buffer, server.map->height);
 					buffer_write_uint16be(client->out_buffer, server.map->depth);
 					client_flush(client);
+
+					buffer_write_uint8(client->out_buffer, packet_player_pos_angle);
+					buffer_write_int8(client->out_buffer, 0xFF);
+					buffer_write_int16be(client->out_buffer, util_float2fixed(client->x));
+					buffer_write_int16be(client->out_buffer, util_float2fixed(client->y));
+					buffer_write_int16be(client->out_buffer, util_float2fixed(client->z));
+					buffer_write_int8(client->out_buffer, 0);
+					buffer_write_int8(client->out_buffer, 0);
+					client_flush(client);
+
+					for (size_t j = 0; j < server.num_clients; j++) {
+						client_t *other = &server.clients[j];
+						if (other == client) {
+							continue;
+						}
+
+						// Inform the connecting client about others
+						buffer_write_uint8(client->out_buffer, packet_player_spawn);
+						buffer_write_uint8(client->out_buffer, other->idx);
+						buffer_write_mcstr(client->out_buffer, other->name);
+						buffer_write_int16be(client->out_buffer, util_float2fixed(other->x));
+						buffer_write_int16be(client->out_buffer, util_float2fixed(other->y));
+						buffer_write_int16be(client->out_buffer, util_float2fixed(other->y));
+						buffer_write_int8(client->out_buffer, util_degrees2fixed(other->yaw));
+						buffer_write_int8(client->out_buffer, util_degrees2fixed(other->pitch));
+						client_flush(client);
+
+						// and inform others about this client
+						buffer_write_uint8(other->out_buffer, packet_player_spawn);
+						buffer_write_uint8(other->out_buffer, client->idx);
+						buffer_write_mcstr(other->out_buffer, client->name);
+						buffer_write_int16be(other->out_buffer, util_float2fixed(client->x));
+						buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
+						buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
+						buffer_write_int8(other->out_buffer, util_degrees2fixed(client->yaw));
+						buffer_write_int8(other->out_buffer, util_degrees2fixed(client->pitch));
+						client_flush(other);
+					}
+
+					server_broadcast("&f%s &ejoined the game.", client->name);
+
 					break;
 				}
 				else {
@@ -78,6 +138,12 @@ void client_receive(client_t *client) {
 			return;
 		}
 
+		if (errno == EPIPE) {
+			client->connected = false;
+			client_disconnect(client, "Disconnected");
+			return;
+		}
+
 		perror("recv");
 		return;
 	}
@@ -89,39 +155,115 @@ void client_receive(client_t *client) {
 	uint8_t packet_id;
 	buffer_read_uint8(client->in_buffer, &packet_id);
 
-	printf("packet id: 0x%02x\n", packet_id);
+	switch (packet_id) {
+		case packet_ident: {
+			uint8_t protocol_version;
+			char username[65];
+			char key[65];
+			uint8_t unused;
 
-	if (packet_id == 0x00) {
-		uint8_t protocol_version;
-		char username[65];
-		char key[65];
-		uint8_t unused;
+			buffer_read_uint8(client->in_buffer, &protocol_version);
+			buffer_read_mcstr(client->in_buffer, username);
+			buffer_read_mcstr(client->in_buffer, key);
+			buffer_read_uint8(client->in_buffer, &unused);
 
-		buffer_read_uint8(client->in_buffer, &protocol_version);
-		buffer_read_mcstr(client->in_buffer, username);
-		buffer_read_mcstr(client->in_buffer, key);
-		buffer_read_uint8(client->in_buffer, &unused);
+			strncpy(client->name, username, 64);
 
-		printf("protool: %d\n", protocol_version);
-		printf("username: %s\n", username);
-		printf("key: %s\n", key);
-		printf("unused: %d\n", unused);
+			buffer_write_uint8(client->out_buffer, packet_ident);
+			buffer_write_uint8(client->out_buffer, 0x07);
+			buffer_write_mcstr(client->out_buffer, "hostname");
+			buffer_write_mcstr(client->out_buffer, "motd");
+			buffer_write_uint8(client->out_buffer, 0x00);
+			client_flush(client);
 
-		buffer_write_uint8(client->out_buffer, packet_ident);
-		buffer_write_uint8(client->out_buffer, 0x07);
-		buffer_write_mcstr(client->out_buffer, "hostname");
-		buffer_write_mcstr(client->out_buffer, "motd");
-		buffer_write_uint8(client->out_buffer, 0x00);
-		client_flush(client);
+			client_start_mapsave(client);
 
-		client_start_mapsave(client);
+			buffer_write_uint8(client->out_buffer, packet_level_init);
+			client_flush(client);
 
-		buffer_write_uint8(client->out_buffer, packet_level_init);
-		client_flush(client);
+			break;
+		}
+
+		case packet_set_block_client: {
+			uint16_t x, y, z;
+			uint8_t mode;
+			uint8_t block;
+
+			buffer_read_uint16be(client->in_buffer, &x);
+			buffer_read_uint16be(client->in_buffer, &y);
+			buffer_read_uint16be(client->in_buffer, &z);
+			buffer_read_uint8(client->in_buffer, &mode);
+			buffer_read_uint8(client->in_buffer, &block);
+
+			map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
+
+			printf("%s changed block: x = %d, y = %d, z = %d, block = %d, mode = %d\n", client->name, x, y, z, block, mode);
+
+			break;
+		}
+
+		case packet_message: {
+			uint8_t unused;
+			char msg[65];
+			char formatted[65];
+
+			buffer_read_uint8(client->in_buffer, &unused);
+			buffer_read_mcstr(client->in_buffer, msg);
+
+			server_broadcast("&e%s: &f%s", client->name, msg);
+
+			break;
+		}
+
+		case packet_player_pos_angle: {
+			int8_t unused;
+			int16_t x, y, z;
+			int8_t yaw, pitch;
+
+			buffer_read_int8(client->in_buffer, &unused);
+			buffer_read_int16be(client->in_buffer, &x);
+			buffer_read_int16be(client->in_buffer, &y);
+			buffer_read_int16be(client->in_buffer, &z);
+			buffer_read_int8(client->in_buffer, &yaw);
+			buffer_read_int8(client->in_buffer, &pitch);
+
+			client->x = util_fixed2float(x);
+			client->y = util_fixed2float(y);
+			client->z = util_fixed2float(z);
+			client->yaw = util_fixed2degrees(yaw);
+			client->pitch = util_fixed2degrees(pitch);
+
+			for (size_t i = 0; i < server.num_clients; i++) {
+				client_t *other = &server.clients[i];
+				if (other == client) {
+					continue;
+				}
+
+				buffer_write_uint8(other->out_buffer, packet_player_pos_angle);
+				buffer_write_int8(other->out_buffer, client->idx);
+				buffer_write_int16be(other->out_buffer, util_float2fixed(client->x));
+				buffer_write_int16be(other->out_buffer, util_float2fixed(client->y));
+				buffer_write_int16be(other->out_buffer, util_float2fixed(client->z));
+				buffer_write_int8(other->out_buffer, util_degrees2fixed(client->yaw));
+				buffer_write_int8(other->out_buffer, util_degrees2fixed(client->pitch));
+				client_flush(other);
+			}
+
+			break;
+		}
+
+		default: {
+			fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
+			break;
+		};
 	}
 }
 
 void client_flush(client_t *client) {
+	if (!client->connected) {
+		return;
+	}
+
 	int sendflags = 0;
 #ifdef __linux__
 	sendflags |= MSG_NOSIGNAL;
@@ -135,10 +277,14 @@ void client_flush(client_t *client) {
 			return;
 		}
 
+		if (errno == EPIPE) {
+			client->connected = false;
+			client_disconnect(client, "Disconnected");
+			return;
+		}
+
 		perror("send");
 	}
-
-	printf("sending %d\n", r);
 }
 
 void client_start_mapsave(client_t *client) {
@@ -162,4 +308,27 @@ void client_start_mapsave(client_t *client) {
 
 	pthread_t thread;
 	pthread_create(&thread, &attr, mapsend_thread_start, data);
+}
+
+void client_disconnect(client_t *client, const char *msg) {
+	if (client->connected) {
+		buffer_write_uint8(client->out_buffer, packet_player_disconnect);
+		buffer_write_mcstr(client->out_buffer, msg);
+		client_flush(client);
+	}
+
+	client->connected = false;
+
+	server_broadcast("&f%s &edisconnected (&f%s&e)", client->name, msg);
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *other = &server.clients[i];
+		if (other == client) {
+			continue;
+		}
+
+		buffer_write_uint8(other->out_buffer, packet_player_despawn);
+		buffer_write_int8(other->out_buffer, client->idx);
+		client_flush(other);
+	}
 }
