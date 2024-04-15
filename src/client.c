@@ -33,6 +33,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->yaw = 0.0f;
 	client->pitch = 0.0f;
 	client->spawned = false;
+	client->num_extensions = 0;
+	client->extensions = NULL;
 }
 
 void client_destroy(client_t *client) {
