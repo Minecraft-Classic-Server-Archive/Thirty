@@ -14,7 +14,12 @@ source_files = [
     'src/main.c',
     'src/map.c',
     'src/map.h',
+    'src/mapgen.c',
     'src/mapsend.c',
+    'src/perlin.c',
+    'src/perlin.h',
+    'src/rng.c',
+    'src/rng.h',
     'src/server.c',
     'src/server.h'
 ]

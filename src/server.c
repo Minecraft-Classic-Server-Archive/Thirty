@@ -66,7 +66,7 @@ bool server_init(void) {
 	printf("Server is listening on port %u\n", server.port);
 
 	printf("Preparing map...\n");
-	server.map = map_create(64, 64, 64);
+	server.map = map_create(256, 256, 256);
 
 	return true;
 }

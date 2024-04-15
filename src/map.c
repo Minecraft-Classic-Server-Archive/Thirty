@@ -14,19 +14,7 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 	map->blocks = malloc(width * depth * height);
 	memset(map->blocks, 0, width * depth * height);
 
-	for (size_t x = 0; x < width; x++)
-	for (size_t y = 0; y < depth; y++)
-	for (size_t z = 0; z < height; z++) {
-		if (y == depth / 2) {
-			map_set(map, x, y, z, 2);
-		}
-		else if (y < (depth / 2) - 3) {
-			map_set(map, x, y, z, 1);
-		}
-		else if (y < depth / 2) {
-			map_set(map, x, y, z, 3);
-		}
-	}
+	mapgen(map);
 
 	return map;
 }
@@ -37,7 +25,11 @@ void map_destroy(map_t *map) {
 }
 
 void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
-	map->blocks[(y * map->height + z) * map->width + x] = block;
+	if (!map_pos_valid(map, x, y, z)) {
+		return;
+	}
+
+	map->blocks[map_get_block_index(map, x, y, z)] = block;
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_t *client = &server.clients[i];
@@ -51,5 +43,5 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 }
 
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z) {
-	return map->blocks[(y * map->height + z) * map->width + x];
+	return map->blocks[map_get_block_index(map, x, y, z)];
 }
