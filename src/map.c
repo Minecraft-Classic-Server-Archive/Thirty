@@ -14,7 +14,7 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 	map->blocks = malloc(width * depth * height);
 	memset(map->blocks, 0, width * depth * height);
 
-	mapgen_debug(map);
+	mapgen_classic(map);
 
 	return map;
 }
