@@ -9,12 +9,14 @@
 #include "packet.h"
 #include "util.h"
 #include "cpe.h"
+#include "blocks.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1 * 20)
 
 static void client_receive(client_t *client);
 static void client_login(client_t *client);
+static void client_send_level(client_t *client);
 static void client_start_mapsave(client_t *client);
 static void client_start_fast_mapsave(client_t *client);
 
@@ -37,6 +39,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->spawned = false;
 	client->num_extensions = 0;
 	client->extensions = NULL;
+	client->customblocks_support = -1;
 }
 
 void client_destroy(client_t *client) {
@@ -334,6 +337,15 @@ void client_receive(client_t *client) {
 				break;
 			}
 
+			case packet_custom_block_support_level: {
+				uint8_t level;
+				buffer_read_uint8(client->in_buffer, &level);
+				client->customblocks_support = level;
+				printf("%d\n", client->customblocks_support);
+				client_send_level(client);
+				break;
+			}
+
 			default: {
 				fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
 				break;
@@ -344,7 +356,13 @@ void client_receive(client_t *client) {
 
 void client_login(client_t *client) {
 	const bool cp437 = client_supports_extension(client, "FullCP437", 1);
-	const bool fastmap = client_supports_extension(client, "FastMap", 1);
+	const bool customblocks = client_supports_extension(client, "CustomBlocks", 1);
+
+	if (customblocks && client->customblocks_support == -1) {
+		buffer_write_uint8(client->out_buffer, packet_custom_block_support_level);
+		buffer_write_uint8(client->out_buffer, CPE_CUSTOMBLOCKS_LEVEL);
+		client_flush(client);
+	}
 
 	buffer_write_uint8(client->out_buffer, packet_ident);
 	buffer_write_uint8(client->out_buffer, 0x07);
@@ -353,7 +371,15 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x00);
 	client_flush(client);
 
-	if (fastmap) {
+	if (!customblocks) {
+		client_send_level(client);
+	}
+}
+
+void client_send_level(client_t *client) {
+	const bool fastmap = client_supports_extension(client, "FastMap", 1);
+
+	if (fastmap && client->customblocks_support >= CPE_CUSTOMBLOCKS_LEVEL) {
 		buffer_write_uint8(client->out_buffer, packet_level_init);
 		buffer_write_uint32be(client->out_buffer, server.map->width * server.map->depth * server.map->height);
 		client_flush(client);

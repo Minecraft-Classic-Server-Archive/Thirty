@@ -38,7 +38,7 @@ static void flood_fill(map_t *map, unsigned int startIndex, uint8_t block);
 static bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height);
 static void mapgen_grow_tree(struct map_s *map, genstate_t *state, int x, int y, int z, int height);
 
-void mapgen(map_t *map) {
+void mapgen_classic(map_t *map) {
 	genstate_t state;
 	state.rng = rng_create(0);
 	state.heightmap = calloc(map->width * map->height, sizeof(int));
@@ -514,5 +514,18 @@ void mapgen_grow_tree(map_t *map, genstate_t *state, int x, int y, int z, int he
 	/* trunk */
 	for (int yy = y; yy < max0; yy++) {
 		map_set(map, x, yy, z, wood);
+	}
+}
+
+void mapgen_debug(map_t *map) {
+	for (size_t x = 0; x < map->width; x++)
+	for (size_t z = 0; z < map->height; z++) {
+		map_set(map, x, 0, z, bedrock);
+		map_set(map, x, 1, z, stone);
+	}
+
+	for (size_t i = 0; i < num_blocks; i++)
+	for (size_t z = 0; z < map->height; z++) {
+		map_set(map, i, 2, z, i);
 	}
 }

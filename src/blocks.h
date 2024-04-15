@@ -1,4 +1,7 @@
 #pragma once
+#include <stdint.h>
+
+#define CPE_CUSTOMBLOCKS_LEVEL 1
 
 enum {
 	air,
@@ -52,5 +55,25 @@ enum {
 	mossy_cobblestoe,
 	obsidian,
 
+	// CPE blocks.
+	cobblestone_slab,
+	rope,
+	sandstone,
+	snow,
+	fire,
+	light_pink_wool,
+	forest_green_wool,
+	brown_wool,
+	deep_blue,
+	turquoise,
+	ice,
+	ceramic_tile,
+	magma,
+	pillar,
+	crate,
+	stone_brick,
+
 	num_blocks
 };
+
+uint8_t block_get_fallback(uint8_t block);

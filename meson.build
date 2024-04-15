@@ -5,6 +5,8 @@ project('classicserver', 'c',
 cc = meson.get_compiler('c')
 
 source_files = [
+    'src/blocks.c',
+    'src/blocks.h',
     'src/buffer.c',
     'src/buffer.h',
     'src/client.c',
