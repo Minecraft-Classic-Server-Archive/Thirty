@@ -235,10 +235,10 @@ GENERIC_WRITE(buffer_write_int64be,   int64_t, endian_tobig64)
 
 void buffer_read_mcstr(buffer_t *buffer, char data[65]) {
 	buffer_read(buffer, data, 64);
-	int end;
+	int end = 63;
 
-	for (end = 64; end >= 0;) {
-		if (data[end] != ' ') {
+	for (; end >= 0;) {
+		if (data[end - 1] != ' ') {
 			break;
 		}
 		end--;

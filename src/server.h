@@ -21,4 +21,6 @@ bool server_init();
 void server_tick();
 void server_shutdown();
 
+void server_broadcast(const char *msg, ...) __attribute__((format(printf, 1, 2)));
+
 extern server_t server;

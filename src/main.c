@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
 
 	server_init();
 
+	printf("Ready!\n");
+
 	while (running) {
 		server_tick();
 
