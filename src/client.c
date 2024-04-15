@@ -15,6 +15,7 @@
 static void client_receive(client_t *client);
 static void client_login(client_t *client);
 static void client_start_mapsave(client_t *client);
+static void client_start_fast_mapsave(client_t *client);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -59,8 +60,11 @@ void client_tick(client_t *client) {
 	if (client->mapsend_state != mapsend_none) {
 		if (client->mapsend_state == mapsend_success) {
 			for (int i = 0; i < 4; i++) {
-				if (buffer_size(client->mapgz_buffer) == buffer_tell(client->mapgz_buffer)) {
-					buffer_destroy(client->mapgz_buffer);
+				if (client->mapgz_buffer == NULL || buffer_size(client->mapgz_buffer) == buffer_tell(client->mapgz_buffer)) {
+					if (client->mapgz_buffer != NULL) {
+						buffer_destroy(client->mapgz_buffer);
+					}
+
 					client->mapsend_state = mapsend_sent;
 					client->mapgz_buffer = NULL;
 
@@ -339,6 +343,7 @@ void client_receive(client_t *client) {
 
 void client_login(client_t *client) {
 	const bool cp437 = client_supports_extension(client, "FullCP437", 1);
+	const bool fastmap = client_supports_extension(client, "FastMap", 1);
 
 	buffer_write_uint8(client->out_buffer, packet_ident);
 	buffer_write_uint8(client->out_buffer, 0x07);
@@ -347,10 +352,17 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x00);
 	client_flush(client);
 
-	client_start_mapsave(client);
-
-	buffer_write_uint8(client->out_buffer, packet_level_init);
-	client_flush(client);
+	if (fastmap) {
+		buffer_write_uint8(client->out_buffer, packet_level_init);
+		buffer_write_uint32be(client->out_buffer, server.map->width * server.map->depth * server.map->height);
+		client_flush(client);
+		client_start_fast_mapsave(client);
+	}
+	else {
+		buffer_write_uint8(client->out_buffer, packet_level_init);
+		client_flush(client);
+		client_start_mapsave(client);
+	}
 }
 
 void client_flush(client_t *client) {
@@ -407,6 +419,14 @@ void client_start_mapsave(client_t *client) {
 
 	pthread_t thread;
 	pthread_create(&thread, &attr, mapsend_thread_start, data);
+}
+
+void client_start_fast_mapsave(client_t *client) {
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+
+	pthread_t thread;
+	pthread_create(&thread, &attr, mapsend_fast_thread_start, client);
 }
 
 void client_disconnect(client_t *client, const char *msg) {

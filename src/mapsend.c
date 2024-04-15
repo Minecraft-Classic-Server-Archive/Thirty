@@ -4,6 +4,8 @@
 #include "buffer.h"
 #include "map.h"
 #include "client.h"
+#include "server.h"
+#include "packet.h"
 
 void *mapsend_thread_start(void *data) {
 	mapsend_t *info = (mapsend_t *)data;
@@ -23,7 +25,9 @@ void *mapsend_thread_start(void *data) {
 
 	int err = deflateInit2(&stream, Z_BEST_COMPRESSION, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
 	if (err != Z_OK) {
-
+		info->client->mapsend_state = mapsend_failure;
+		fprintf(stderr, "Failed to init zlib stream.");
+		goto cleanup;
 	}
 
 	while ((deflate(&stream, Z_FINISH)) != Z_STREAM_END);
@@ -37,9 +41,71 @@ void *mapsend_thread_start(void *data) {
 
 	info->client->mapsend_state = mapsend_success;
 
+cleanup:
 	free(outbuf);
 	free(info->data);
 	free(info);
+
+	pthread_exit(NULL);
+	return NULL;
+}
+
+#define BUFSIZE 1024
+
+void *mapsend_fast_thread_start(void *data) {
+	client_t *client = (client_t *)data;
+	const uint32_t num_blocks = server.map->width * server.map->height * server.map->depth;
+
+	buffer_t *blockbuffer = buffer_create_memory(server.map->blocks, num_blocks);
+
+	uint8_t inbuf[BUFSIZE];
+	uint8_t outbuf[BUFSIZE];
+
+	z_stream strm;
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+
+	int err = deflateInit2(&strm, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
+	if (err != Z_OK) {
+		client->mapsend_state = mapsend_failure;
+		fprintf(stderr, "Failed to init zlib stream.");
+		goto cleanup;
+	}
+
+	int flush, have;
+	do {
+		strm.avail_in = buffer_read(blockbuffer, inbuf, BUFSIZE);
+		flush = (buffer_tell(blockbuffer) == buffer_size(blockbuffer)) ? Z_FINISH : Z_SYNC_FLUSH;
+		strm.next_in = inbuf;
+
+		do {
+			strm.avail_out = BUFSIZE;
+			strm.next_out = outbuf;
+
+			err = deflate(&strm, flush);
+			if (err == Z_STREAM_ERROR) {
+				client->mapsend_state = mapsend_failure;
+				fprintf(stderr, "Failed to compress data.");
+				goto cleanup;
+			}
+
+			have = BUFSIZE - strm.avail_out;
+
+			buffer_write_uint8(client->out_buffer, packet_level_chunk);
+			buffer_write_uint16be(client->out_buffer, have);
+			buffer_write(client->out_buffer, outbuf, 1024);
+			buffer_write_uint8(client->out_buffer, 0);
+			client_flush(client);
+		} while (strm.avail_out == 0);
+	} while (flush != Z_FINISH);
+
+	deflateEnd(&strm);
+
+	client->mapsend_state = mapsend_success;
+
+cleanup:
+	buffer_destroy(blockbuffer);
 
 	pthread_exit(NULL);
 	return NULL;
