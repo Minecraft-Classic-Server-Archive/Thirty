@@ -2,6 +2,8 @@ project('classicserver', 'c',
     default_options: [ 'warning_level=3' ]
 )
 
+cc = meson.get_compiler('c')
+
 source_files = [
     'src/buffer.c',
     'src/buffer.h',
@@ -19,5 +21,9 @@ deps = [
     dependency('threads', required: true),
     dependency('zlib', required: true)
 ]
+
+if build_machine.system() == 'windows'
+    deps += cc.find_library('ws2_32')
+endif
 
 executable('classicserver', source_files, dependencies: deps)

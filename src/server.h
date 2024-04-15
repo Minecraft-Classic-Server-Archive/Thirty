@@ -1,12 +1,13 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include "sockets.h"
 
 typedef struct client_s client_t;
 typedef struct map_s map_t;
 
 typedef struct server_s {
-	int socket_fd;
+	socket_t socket_fd;
 	uint16_t port;
 
 	uint64_t tick;
