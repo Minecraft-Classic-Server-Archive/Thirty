@@ -9,3 +9,12 @@ build:
   script:
     - meson setup build
     - cd build && ninja
+
+build alpine:
+  stage: build
+  image: alpine:latest
+  before_script:
+    - apk add --update alpine-sdk zlib ninja-build
+  script:
+    - meson setup build
+    - cd build && ninja
