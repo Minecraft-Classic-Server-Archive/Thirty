@@ -168,6 +168,13 @@ void client_receive(client_t *client) {
 				buffer_read_mcstr(client->in_buffer, key);
 				buffer_read_uint8(client->in_buffer, &unused);
 
+				for (size_t i = 0; i < server.num_clients; i++) {
+					if (strcasecmp(server.clients[i].name, username) == 0) {
+						client_disconnect(client, "Name already in use.");
+						return;
+					}
+				}
+
 				strncpy(client->name, username, 64);
 
 				buffer_write_uint8(client->out_buffer, packet_ident);
