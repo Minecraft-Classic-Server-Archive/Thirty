@@ -35,6 +35,8 @@ typedef struct client_s {
 
 	size_t num_extensions;
 	cpeext_t *extensions;
+
+	int customblocks_support;
 } client_t;
 
 void client_init(client_t *client, int fd, size_t idx);

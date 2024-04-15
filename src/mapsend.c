@@ -6,10 +6,17 @@
 #include "client.h"
 #include "server.h"
 #include "packet.h"
+#include "blocks.h"
 
 void *mapsend_thread_start(void *data) {
 	mapsend_t *info = (mapsend_t *)data;
 	const uint32_t num_blocks = info->width * info->height * info->depth;
+
+	if (!client_supports_extension(info->client, "CustomBlocks", 1)) {
+		for (size_t i = 0; i < num_blocks; i++) {
+			info->data[i] = block_get_fallback(info->data[i]);
+		}
+	}
 
 	int outsize = ((num_blocks + sizeof(uint32_t)) * 1.1) + 12;
 	uint8_t *outbuf = malloc(outsize);

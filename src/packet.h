@@ -19,5 +19,7 @@ enum {
 	packet_player_set_type = 0x0f,
 
 	packet_extinfo = 0x10,
-	packet_extentry = 0x11
+	packet_extentry = 0x11,
+
+	packet_custom_block_support_level = 0x13,
 };
