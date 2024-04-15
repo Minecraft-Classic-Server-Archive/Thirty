@@ -71,8 +71,8 @@ void client_tick(client_t *client) {
 
 					buffer_write_uint8(client->out_buffer, packet_level_finish);
 					buffer_write_uint16be(client->out_buffer, server.map->width);
-					buffer_write_uint16be(client->out_buffer, server.map->height);
 					buffer_write_uint16be(client->out_buffer, server.map->depth);
+					buffer_write_uint16be(client->out_buffer, server.map->height);
 					client_flush(client);
 
 					buffer_write_uint8(client->out_buffer, packet_player_pos_angle);
