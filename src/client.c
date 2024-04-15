@@ -10,6 +10,7 @@
 #include "util.h"
 #include "cpe.h"
 
+#define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1 * 20)
 
 static void client_receive(client_t *client);
@@ -23,8 +24,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->socket_fd = fd;
 	client->connected = true;
 	client->idx = idx;
-	client->in_buffer = buffer_allocate_memory(8192);
-	client->out_buffer = buffer_allocate_memory(8192);
+	client->in_buffer = buffer_allocate_memory(BUFFER_SIZE);
+	client->out_buffer = buffer_allocate_memory(BUFFER_SIZE);
 	client->mapsend_state = mapsend_none;
 	client->mapgz_buffer = NULL;
 	client->last_ping = 0;
