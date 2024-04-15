@@ -18,9 +18,9 @@ typedef struct server_s {
 	map_t *map;
 } server_t;
 
-bool server_init();
-void server_tick();
-void server_shutdown();
+bool server_init(void);
+void server_tick(void);
+void server_shutdown(void);
 
 void server_broadcast(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 

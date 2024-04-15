@@ -42,4 +42,5 @@ void *mapsend_thread_start(void *data) {
 	free(info);
 
 	pthread_exit(NULL);
+	return NULL;
 }

@@ -12,11 +12,11 @@
 #include "map.h"
 #include "packet.h"
 
-void server_accept();
+void server_accept(void);
 
 server_t server;
 
-bool server_init() {
+bool server_init(void) {
 	server.port = (uint16_t)25565;
 
 	int err;
@@ -34,7 +34,11 @@ bool server_init() {
 	server_addr.sin_port = htons((uint16_t)server.port);
 
 	int yes = 1;
+#ifdef _WIN32
+	err = setsockopt(server.socket_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&yes, sizeof(yes));
+#else
 	err = setsockopt(server.socket_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+#endif
 	if (err == -1) {
 		perror("setsockopt(SO_REUSEADDR)");
 		return false;
@@ -53,7 +57,11 @@ bool server_init() {
 		return false;
 	}
 
+#ifdef _WIN32
+	ioctlsocket(server.socket_fd, FIONBIO, (u_long *)&yes);
+#else
 	ioctlsocket(server.socket_fd, FIONBIO, &yes);
+#endif
 
 	printf("Server is listening on port %u\n", server.port);
 
@@ -63,12 +71,12 @@ bool server_init() {
 	return true;
 }
 
-void server_shutdown() {
+void server_shutdown(void) {
 	map_destroy(server.map);
 	closesocket(server.socket_fd);
 }
 
-void server_tick() {
+void server_tick(void) {
 	server_accept();
 
 	for (size_t i = 0; i < server.num_clients; i++) {
@@ -96,7 +104,7 @@ void server_tick() {
 	server.tick++;
 }
 
-void server_accept() {
+void server_accept(void) {
 	struct sockaddr_storage client_addr;
 	socklen_t addr_size = sizeof(client_addr);
 
@@ -113,7 +121,11 @@ void server_accept() {
 	}
 
 	int yes = 1;
-	ioctlsocket(acceptfd, FIONBIO, &yes);
+#ifdef _WIN32
+	ioctlsocket(server.socket_fd, FIONBIO, (u_long *)&yes);
+#else
+	ioctlsocket(server.socket_fd, FIONBIO, &yes);
+#endif
 
 	struct sockaddr_in *sin = (struct sockaddr_in *)&client_addr;
 
