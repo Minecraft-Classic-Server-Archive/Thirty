@@ -65,7 +65,7 @@ bool server_init() {
 
 void server_shutdown() {
 	map_destroy(server.map);
-	close(server.socket_fd);
+	closesocket(server.socket_fd);
 }
 
 void server_tick() {
@@ -85,6 +85,8 @@ void server_tick() {
 		memmove(server.clients + i, server.clients + i + 1, (server.num_clients - i - 1) * sizeof(*server.clients));
 		server.num_clients--;
 		removed = true;
+
+		client_destroy(client);
 	}
 
 	if (removed) {

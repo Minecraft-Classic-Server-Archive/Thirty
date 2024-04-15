@@ -28,6 +28,7 @@ static inline int socket_error(void) { return WSAGetLastError(); }
 #define SOCKET_ECONNABORTED ECONNABORTED
 
 #define ioctlsocket ioctl
+#define closesocket close
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR (-1)
 
