@@ -24,6 +24,7 @@ static inline int socket_error(void) { return WSAGetLastError(); }
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define SOCKET_EWOULDBLOCK EWOULDBLOCK
 #define SOCKET_ECONNABORTED ECONNABORTED
