@@ -529,3 +529,13 @@ void mapgen_debug(map_t *map) {
 		map_set(map, i, 2, z, i);
 	}
 }
+
+void mapgen_random(map_t *map) {
+	rng_t *rng = rng_create(0);
+
+	for (size_t i = 0; i < map->width * map->depth * map->height; i++) {
+		map->blocks[i] = rng_next(rng, num_blocks);
+	}
+
+	rng_destroy(rng);
+}

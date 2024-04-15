@@ -24,3 +24,4 @@ static inline size_t map_get_block_index(map_t *map, size_t x, size_t y, size_t 
 
 void mapgen_classic(map_t *map);
 void mapgen_debug(map_t *map);
+void mapgen_random(map_t *map);
