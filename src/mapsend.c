@@ -92,15 +92,24 @@ void *mapsend_fast_thread_start(void *data) {
 
 			have = BUFSIZE - strm.avail_out;
 
+			if (!client->connected) {
+				goto cleanup;
+			}
+
+			if (buffer_tell(client->out_buffer) + 1028 >= buffer_size(client->out_buffer)) {
+				client_flush(client);
+				usleep(1000000 / 20);
+			}
+
 			buffer_write_uint8(client->out_buffer, packet_level_chunk);
 			buffer_write_uint16be(client->out_buffer, have);
 			buffer_write(client->out_buffer, outbuf, 1024);
 			buffer_write_uint8(client->out_buffer, 0);
-			client_flush(client);
 		} while (strm.avail_out == 0);
 	} while (flush != Z_FINISH);
 
 	deflateEnd(&strm);
+	client_flush(client);
 
 	client->mapsend_state = mapsend_success;
 
