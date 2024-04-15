@@ -14,7 +14,7 @@ build alpine:
   stage: build
   image: alpine:latest
   before_script:
-    - apk add --update alpine-sdk zlib samurai meson
+    - apk add --update alpine-sdk zlib-dev samurai meson
   script:
     - meson setup build
     - cd build && ninja
