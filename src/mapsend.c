@@ -7,6 +7,7 @@
 #include "server.h"
 #include "packet.h"
 #include "blocks.h"
+#include "util.h"
 
 void *mapsend_thread_start(void *data) {
 	mapsend_t *info = (mapsend_t *)data;
@@ -57,16 +58,17 @@ cleanup:
 	return NULL;
 }
 
-#define BUFSIZE 1024
+#define OUTBUFSIZE 1024
 
 void *mapsend_fast_thread_start(void *data) {
 	client_t *client = (client_t *)data;
 	const uint32_t num_blocks = server.map->width * server.map->height * server.map->depth;
 
 	buffer_t *blockbuffer = buffer_create_memory(server.map->blocks, num_blocks);
+	const size_t inbufsize = util_min(2 * 1024 * 1024, num_blocks);
 
-	uint8_t inbuf[BUFSIZE];
-	uint8_t outbuf[BUFSIZE];
+	uint8_t *inbuf = malloc(inbufsize);
+	uint8_t outbuf[OUTBUFSIZE];
 
 	z_stream strm;
 	strm.zalloc = Z_NULL;
@@ -82,12 +84,12 @@ void *mapsend_fast_thread_start(void *data) {
 
 	int flush, have;
 	do {
-		strm.avail_in = buffer_read(blockbuffer, inbuf, BUFSIZE);
+		strm.avail_in = buffer_read(blockbuffer, inbuf, inbufsize);
 		flush = (buffer_tell(blockbuffer) == buffer_size(blockbuffer)) ? Z_FINISH : Z_SYNC_FLUSH;
 		strm.next_in = inbuf;
 
 		do {
-			strm.avail_out = BUFSIZE;
+			strm.avail_out = OUTBUFSIZE;
 			strm.next_out = outbuf;
 
 			err = deflate(&strm, flush);
@@ -97,7 +99,7 @@ void *mapsend_fast_thread_start(void *data) {
 				goto cleanup;
 			}
 
-			have = BUFSIZE - strm.avail_out;
+			have = OUTBUFSIZE - strm.avail_out;
 
 			if (!client->connected) {
 				goto cleanup;
@@ -121,6 +123,7 @@ void *mapsend_fast_thread_start(void *data) {
 	client->mapsend_state = mapsend_success;
 
 cleanup:
+	free(inbuf);
 	buffer_destroy(blockbuffer);
 
 	pthread_exit(NULL);
