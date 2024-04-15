@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef struct map_s {
 	size_t width, depth, height;
@@ -12,3 +13,13 @@ void map_destroy(map_t *map);
 
 void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z);
+
+static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
+	return x >= 0 && x < map->width && y >= 0 && y < map->depth && z >= 0 && z < map->height;
+}
+
+static inline size_t map_get_block_index(map_t *map, size_t x, size_t y, size_t z) {
+	return (y * map->height + z) * map->width + x;
+}
+
+void mapgen(map_t *map);
