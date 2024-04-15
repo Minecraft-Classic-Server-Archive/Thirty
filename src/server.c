@@ -82,11 +82,11 @@ void server_tick() {
 			continue;
 		}
 
+		client_destroy(client);
+
 		memmove(server.clients + i, server.clients + i + 1, (server.num_clients - i - 1) * sizeof(*server.clients));
 		server.num_clients--;
 		removed = true;
-
-		client_destroy(client);
 	}
 
 	if (removed) {

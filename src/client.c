@@ -142,7 +142,7 @@ void client_receive(client_t *client) {
 			return;
 		}
 
-		if (e == EPIPE || e == SOCKET_ECONNABORTED) {
+		if (e == EPIPE || e == SOCKET_ECONNABORTED || e == SOCKET_ECONNRESET) {
 			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
@@ -290,7 +290,7 @@ void client_flush(client_t *client) {
 			return;
 		}
 
-		if (e == EPIPE || e == SOCKET_ECONNABORTED) {
+		if (e == EPIPE || e == SOCKET_ECONNABORTED || e == SOCKET_ECONNRESET) {
 			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
