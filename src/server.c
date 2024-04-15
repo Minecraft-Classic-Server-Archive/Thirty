@@ -1,16 +1,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/socket.h>
 #include <fcntl.h>
-#include <netinet/in.h>
-#include <sys/ioctl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
 #include "server.h"
-
 #include "buffer.h"
 #include "client.h"
 #include "map.h"
@@ -57,7 +53,7 @@ bool server_init() {
 		return false;
 	}
 
-	ioctl(server.socket_fd, FIONBIO, &yes);
+	ioctlsocket(server.socket_fd, FIONBIO, &yes);
 
 	printf("Server is listening on port %u\n", server.port);
 
@@ -102,20 +98,20 @@ void server_accept() {
 	struct sockaddr_storage client_addr;
 	socklen_t addr_size = sizeof(client_addr);
 
-	int acceptfd = accept(server.socket_fd, (struct sockaddr *)&client_addr, &addr_size);
-	if (acceptfd == -1) {
-		int e = errno;
-		if (e == EAGAIN || e == EWOULDBLOCK) {
+	socket_t acceptfd = accept(server.socket_fd, (struct sockaddr *)&client_addr, &addr_size);
+	if (acceptfd == INVALID_SOCKET) {
+		int e = socket_error();
+		if (e == EAGAIN || e == SOCKET_EWOULDBLOCK) {
 			// No connections.
 			return;
 		}
 
-		perror("accept");
+		fprintf(stderr, "accept error %d\n", e);
 		return;
 	}
 
 	int yes = 1;
-	ioctl(acceptfd, FIONBIO, &yes);
+	ioctlsocket(acceptfd, FIONBIO, &yes);
 
 	struct sockaddr_in *sin = (struct sockaddr_in *)&client_addr;
 

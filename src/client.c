@@ -1,5 +1,4 @@
 #include <string.h>
-#include <sys/socket.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -133,18 +132,19 @@ void client_tick(client_t *client) {
 void client_receive(client_t *client) {
 	buffer_seek(client->in_buffer, 0);
 	int r = recv(client->socket_fd, client->in_buffer->mem.data, client->in_buffer->mem.size, 0);
-	if (r == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (r == SOCKET_ERROR) {
+		int e = socket_error();
+		if (e == EAGAIN || e == SOCKET_EWOULDBLOCK) {
 			return;
 		}
 
-		if (errno == EPIPE) {
+		if (e == EPIPE || e == SOCKET_ECONNABORTED) {
 			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
 		}
 
-		perror("recv");
+		fprintf(stderr, "recv error %d\n", e);
 		return;
 	}
 
@@ -271,18 +271,19 @@ void client_flush(client_t *client) {
 	int r = send(client->socket_fd, client->out_buffer->mem.data, client->out_buffer->mem.offset, sendflags);
 	buffer_seek(client->out_buffer, 0);
 
-	if (r == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	if (r == SOCKET_ERROR) {
+		int e = socket_error();
+		if (e == EAGAIN || e == SOCKET_EWOULDBLOCK) {
 			return;
 		}
 
-		if (errno == EPIPE) {
+		if (e == EPIPE || e == SOCKET_ECONNABORTED) {
 			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
 		}
 
-		perror("send");
+		fprintf(stderr, "send error %d\n", e);
 	}
 }
 

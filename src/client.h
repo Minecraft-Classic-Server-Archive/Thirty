@@ -1,6 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include "sockets.h"
 
 struct buffer_s;
 
@@ -13,7 +14,7 @@ enum {
 };
 
 typedef struct client_s {
-	int socket_fd;
+	socket_t socket_fd;
 	bool connected;
 	size_t idx;
 

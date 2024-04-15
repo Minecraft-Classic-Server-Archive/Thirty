@@ -1,14 +1,24 @@
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
-
 #include "server.h"
+#include "sockets.h"
 
 static void signal_handler(int signum);
 
 static bool running = true;
 
 int main(int argc, char *argv[]) {
+	setbuf(stdout, NULL);
+	setbuf(stderr, NULL);
+
+#ifdef _WIN32
+	{
+		WSADATA wsadata;
+		WSAStartup(MAKEWORD(2, 2), &wsadata);
+	}
+#endif
+
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
 
@@ -23,6 +33,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	server_shutdown();
+
+#ifdef _WIN32
+	WSACleanup();
+#endif
 
 	return 0;
 }
