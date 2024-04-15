@@ -34,6 +34,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 }
 
 void client_destroy(client_t *client) {
+	closesocket(client->socket_fd);
 	buffer_destroy(client->in_buffer);
 	buffer_destroy(client->out_buffer);
 }
