@@ -38,6 +38,7 @@ size_t buffer_size(buffer_t *buffer);
 
 size_t buffer_read(buffer_t *buffer, void *data, size_t len);
 size_t buffer_write(buffer_t *buffer, const void *data, size_t len);
+size_t buffer_write_mc(buffer_t *buffer, const void *data, size_t len);
 
 bool buffer_read_uint8(buffer_t *buffer, uint8_t *data);
 bool buffer_read_int8(buffer_t *buffer, int8_t *data);

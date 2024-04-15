@@ -9,6 +9,7 @@
 #include <errno.h>
 #include "server.h"
 #include "client.h"
+#include "map.h"
 
 void server_accept();
 
@@ -55,10 +56,13 @@ bool server_init() {
 
 	printf("Server is listening on port %u\n", server.port);
 
+	server.map = map_create(64, 64, 64);
+
 	return true;
 }
 
 void server_shutdown() {
+	map_destroy(server.map);
 	close(server.socket_fd);
 }
 
@@ -68,6 +72,8 @@ void server_tick() {
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_tick(&server.clients[i]);
 	}
+
+	server.tick++;
 }
 
 void server_accept() {

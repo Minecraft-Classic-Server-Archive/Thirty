@@ -12,8 +12,6 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
 
-	printf("hi\n");
-
 	server_init();
 
 	while (running) {
