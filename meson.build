@@ -26,6 +26,7 @@ source_files = [
 
 deps = [
     dependency('threads', required: true),
+    dependency('m', required: false),
     dependency('zlib', required: true)
 ]
 
