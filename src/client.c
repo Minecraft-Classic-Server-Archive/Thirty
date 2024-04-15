@@ -66,7 +66,7 @@ void client_tick(client_t *client) {
 					client_flush(client);
 
 					buffer_write_uint8(client->out_buffer, packet_player_pos_angle);
-					buffer_write_int8(client->out_buffer, 0xFF);
+					buffer_write_int8(client->out_buffer, -1);
 					buffer_write_int16be(client->out_buffer, util_float2fixed(client->x));
 					buffer_write_int16be(client->out_buffer, util_float2fixed(client->y));
 					buffer_write_int16be(client->out_buffer, util_float2fixed(client->z));
@@ -205,7 +205,6 @@ void client_receive(client_t *client) {
 		case packet_message: {
 			uint8_t unused;
 			char msg[65];
-			char formatted[65];
 
 			buffer_read_uint8(client->in_buffer, &unused);
 			buffer_read_mcstr(client->in_buffer, msg);
