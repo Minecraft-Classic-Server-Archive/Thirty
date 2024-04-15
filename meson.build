@@ -26,12 +26,13 @@ source_files = [
 
 deps = [
     dependency('threads', required: true),
-    dependency('m', required: false),
     dependency('zlib', required: true)
 ]
 
 if build_machine.system() == 'windows'
     deps += cc.find_library('ws2_32')
+else
+    deps += cc.find_library('m')
 endif
 
 executable('classicserver', source_files, dependencies: deps)
