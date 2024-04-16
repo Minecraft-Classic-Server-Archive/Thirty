@@ -3,6 +3,10 @@
 
 #define CPE_CUSTOMBLOCKS_LEVEL 1
 
+typedef struct map_s map_t;
+
+typedef void (*blocktickfunc_t)(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+
 enum {
 	air,
 	stone,
@@ -75,5 +79,13 @@ enum {
 
 	num_blocks
 };
+
+typedef struct blockinfo_s {
+	blocktickfunc_t tickfunc;
+} blockinfo_t;
+
+extern blockinfo_t blockinfo[num_blocks];
+
+void blocks_init(void);
 
 uint8_t block_get_fallback(uint8_t block);
