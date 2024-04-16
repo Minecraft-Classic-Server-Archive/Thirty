@@ -10,6 +10,9 @@ static void signal_handler(int signum);
 static bool running = true;
 
 int main(int argc, char *argv[]) {
+	(void)argc;
+	(void)argv;
+	
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 
