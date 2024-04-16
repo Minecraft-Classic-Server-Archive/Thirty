@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
+#include <sys/types.h>
 #include "mapgen.h"
 #include "map.h"
 #include "rng.h"
