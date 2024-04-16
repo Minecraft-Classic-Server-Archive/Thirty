@@ -5,20 +5,38 @@
 #include "map.h"
 
 static void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 
 blockinfo_t blockinfo[num_blocks];
 
 void blocks_init(void) {
 	memset(blockinfo, 0, sizeof(blockinfo));
+	for (size_t i = 0; i < num_blocks; i++) {
+		blockinfo[i].solid = true;
+	}
 
+	blockinfo[air].solid = false;
 	blockinfo[sand].tickfunc = blocktick_gravity;
 	blockinfo[gravel].tickfunc = blocktick_gravity;
+	blockinfo[water].solid = false;
+	blockinfo[water].tickfunc = blocktick_flow;
+	blockinfo[water].ticktime = 4;
+	blockinfo[lava].solid = false;
+	blockinfo[lava].tickfunc = blocktick_flow;
+	blockinfo[lava].ticktime = 8;
+	blockinfo[rose].solid = false;
+	blockinfo[dandelion].solid = false;
+	blockinfo[brown_mushroom].solid = false;
+	blockinfo[red_mushroom].solid = false;
+	blockinfo[rope].solid = false;
+	blockinfo[fire].solid = false;
+	blockinfo[snow].solid = false;
 }
 
 void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 	size_t yy = y;
 
-	while (map_get(map, x, yy - 1, z) == air) {
+	while (!blockinfo[map_get(map, x, yy - 1, z)].solid) {
 		if (yy == 0) break;
 		yy--;
 	}
@@ -26,6 +44,24 @@ void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block) 
 	if (yy != y) {
 		map_set(map, x, y, z, air);
 		map_set(map, x, yy, z, block);
+	}
+}
+
+void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	if (!blockinfo[map_get(map, x - 1, y, z)].solid) {
+		map_set(map, x - 1, y, z, block);
+	}
+	if (!blockinfo[map_get(map, x + 1, y, z)].solid) {
+		map_set(map, x + 1, y, z, block);
+	}
+	if (!blockinfo[map_get(map, x, y, z - 1)].solid) {
+		map_set(map, x, y, z - 1, block);
+	}
+	if (!blockinfo[map_get(map, x, y, z + 1)].solid) {
+		map_set(map, x, y, z + 1, block);
+	}
+	if (!blockinfo[map_get(map, x, y - 1, z)].solid) {
+		map_set(map, x, y - 1, z, block);
 	}
 }
 
