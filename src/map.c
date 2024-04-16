@@ -33,20 +33,21 @@ void map_destroy(map_t *map) {
 }
 
 void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
-	if (!map_pos_valid(map, x, y, z)) {
+	if (!map_pos_valid(map, x, y, z) || map_get(map, x, y, z) == block) {
 		return;
 	}
 
 	map->blocks[map_get_block_index(map, x, y, z)] = block;
 
 	if (!map->generating) {
-		map_add_tick(map, x, y, z, 1);
-		map_add_tick(map, x + 1, y, z, 1);
-		map_add_tick(map, x - 1, y, z, 1);
-		map_add_tick(map, x, y - 1, z, 1);
-		map_add_tick(map, x, y + 1, z, 1);
-		map_add_tick(map, x, y, z - 1, 1);
-		map_add_tick(map, x, y, z + 1, 1);
+		uint64_t ticktime = blockinfo[block].ticktime;
+		map_add_tick(map, x, y, z, ticktime);
+		map_add_tick(map, x + 1, y, z, ticktime);
+		map_add_tick(map, x - 1, y, z, ticktime);
+		map_add_tick(map, x, y - 1, z, ticktime);
+		map_add_tick(map, x, y + 1, z, ticktime);
+		map_add_tick(map, x, y, z - 1, ticktime);
+		map_add_tick(map, x, y, z + 1, ticktime);
 	}
 
 	for (size_t i = 0; i < server.num_clients; i++) {
