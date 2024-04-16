@@ -13,34 +13,32 @@
 
 typedef struct genstate_s {
 	rng_t *rng;
-	int *heightmap;
+	unsigned int *heightmap;
 } genstate_t;
 
 static void gen_heightmap(map_t *map, genstate_t *state);
 static void gen_strata(map_t *map, genstate_t *state);
-static void gen_caves(map_t *map, genstate_t *state);
-static void gen_ore(map_t *map, genstate_t *state, int8_t block, float abundance);
 static void gen_water(map_t *map, genstate_t *state);
 static void gen_lava(map_t *map, genstate_t *state);
 static void gen_surface(map_t *map, genstate_t *state);
-static void gen_plants(map_t *map, genstate_t *state);
 
 void mapgen_classic(map_t *map) {
 	genstate_t state;
 	state.rng = rng_create((int)time(NULL));
-	state.heightmap = calloc(map->width * map->height, sizeof(int));
+	state.heightmap = calloc(map->width * map->height, sizeof(unsigned int));
 
 	gen_heightmap(map, &state);
 	gen_strata(map, &state);
-	gen_caves(map, &state);
-	gen_ore(map, &state, gold_ore, 0.5f);
-	gen_ore(map, &state, iron_ore, 0.7f);
-	gen_ore(map, &state, coal_ore, 0.9f);
+	gen_caves(map, state.rng);
+	gen_ore(map, state.rng, gold_ore, 0.5f);
+	gen_ore(map, state.rng, iron_ore, 0.7f);
+	gen_ore(map, state.rng, coal_ore, 0.9f);
 	gen_water(map, &state);
 	gen_lava(map, &state);
 	gen_surface(map, &state);
-	gen_plants(map, &state);
+	gen_plants(map, state.rng, state.heightmap);
 
+	free(state.heightmap);
 	rng_destroy(state.rng);
 }
 
@@ -53,11 +51,11 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
-		double heightLow = combinednoise_compute(noise1, (double)x * 1.3, (double)z * 1.3) / 6 - 4;
-		double heightHigh = combinednoise_compute(noise2, (double)x * 1.3, (double)z * 1.3) / 5 + 6;
+		double heightLow = combinednoise_compute2d(noise1, (double)x * 1.3, (double)z * 1.3) / 6 - 4;
+		double heightHigh = combinednoise_compute2d(noise2, (double)x * 1.3, (double)z * 1.3) / 5 + 6;
 		double heightResult;
 
-		if (octavenoise_compute(noise3, (double)x, (double)z) / 8 > 0) {
+		if (octavenoise_compute2d(noise3, (double)x, (double)z) / 8 > 0) {
 			heightResult = heightLow;
 		} else {
 			heightResult = util_max(heightLow, heightHigh);
@@ -69,7 +67,7 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 			heightResult *= 0.8;
 		}
 
-		state->heightmap[x + z * map->width] = (int) (heightResult + ((double)map->depth / 2.0));
+		state->heightmap[x + z * map->width] = (unsigned int) (heightResult + ((double)map->depth / 2.0));
 	}
 
 	combinednoise_destroy(noise1);
@@ -82,7 +80,7 @@ void gen_strata(map_t *map, genstate_t *state) {
 
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
-		size_t dirtThickness = (int) octavenoise_compute(noise, (double)x, (double)z) / 24 - 4;
+		size_t dirtThickness = (int) octavenoise_compute2d(noise, (double)x, (double)z) / 24 - 4;
 		size_t dirtTransition = state->heightmap[x + z * map->width];
 		size_t stoneTransition = dirtTransition + dirtThickness;
 
@@ -102,23 +100,23 @@ void gen_strata(map_t *map, genstate_t *state) {
 	}
 }
 
-static void gen_caves(map_t *map, genstate_t *state) {
+void gen_caves(map_t *map, rng_t *rng) {
 	unsigned int numCaves = (map->width * map->depth * map->height) / 8192;
 
 	for (unsigned int i = 0; i < numCaves; i++) {
-		double caveX = rng_next2(state->rng, 0, (int)map->width);
-		double caveY = rng_next2(state->rng, 0, (int)map->depth);
-		double caveZ = rng_next2(state->rng, 0, (int)map->height);
+		double caveX = rng_next2(rng, 0, (int)map->width);
+		double caveY = rng_next2(rng, 0, (int)map->depth);
+		double caveZ = rng_next2(rng, 0, (int)map->height);
 
-		int caveLength = (int) (rng_next_float(state->rng) * rng_next_float(state->rng) * 200.0f);
+		int caveLength = (int) (rng_next_float(rng) * rng_next_float(rng) * 200.0f);
 
-		double theta = rng_next_float(state->rng) * M_PI * 2;
+		double theta = rng_next_float(rng) * M_PI * 2;
 		double deltaTheta = 0.0;
 
-		double phi = rng_next_float(state->rng) * M_PI * 2;
+		double phi = rng_next_float(rng) * M_PI * 2;
 		double deltaPhi = 0.0;
 
-		double caveRadius = rng_next_float(state->rng) * rng_next_float(state->rng);
+		double caveRadius = rng_next_float(rng) * rng_next_float(rng);
 
 		for (double len = 0; len < (double)caveLength; len += 1.0f) {
 			caveX += sin(theta) * cos(phi);
@@ -126,14 +124,14 @@ static void gen_caves(map_t *map, genstate_t *state) {
 			caveZ += sin(phi);
 
 			theta = theta + deltaTheta * 0.2f;
-			deltaTheta = deltaTheta * 0.9f + rng_next_float(state->rng) - rng_next_float(state->rng);
+			deltaTheta = deltaTheta * 0.9f + rng_next_float(rng) - rng_next_float(rng);
 			phi = phi / 2.0f + deltaPhi / 4.0f;
-			deltaPhi = deltaPhi * 0.75f + rng_next_float(state->rng) - rng_next_float(state->rng);
+			deltaPhi = deltaPhi * 0.75f + rng_next_float(rng) - rng_next_float(rng);
 
-			if (rng_next_float(state->rng) >= 0.25f) {
-				int centreX = (int) (caveX + (double)(rng_next(state->rng, 4) - 2) * 0.2);
-				int centreY = (int) (caveY + (double)(rng_next(state->rng, 4) - 2) * 0.2);
-				int centreZ = (int) (caveZ + (double)(rng_next(state->rng, 4) - 2) * 0.2);
+			if (rng_next_float(rng) >= 0.25f) {
+				int centreX = (int) (caveX + (double)(rng_next(rng, 4) - 2) * 0.2);
+				int centreY = (int) (caveY + (double)(rng_next(rng, 4) - 2) * 0.2);
+				int centreZ = (int) (caveZ + (double)(rng_next(rng, 4) - 2) * 0.2);
 
 				double radius = ((double)map->height - centreY) / (double)map->height;
 				radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
@@ -145,19 +143,19 @@ static void gen_caves(map_t *map, genstate_t *state) {
 	}
 }
 
-void gen_ore(map_t *map, genstate_t *state, int8_t block, float abundance) {
+void gen_ore(map_t *map, rng_t *rng, int8_t block, float abundance) {
 	int numVeins = (int) (((double) (map->width * map->depth * map->height) * abundance) / 16384.0f);
 
 	for (int i = 0; i < numVeins; i++) {
-		double veinX = rng_next2(state->rng, 0, (int)map->width);
-		double veinY = rng_next2(state->rng, 0, (int)map->depth);
-		double veinZ = rng_next2(state->rng, 0, (int)map->height);
+		double veinX = rng_next2(rng, 0, (int)map->width);
+		double veinY = rng_next2(rng, 0, (int)map->depth);
+		double veinZ = rng_next2(rng, 0, (int)map->height);
 
-		double veinLength = rng_next_float(state->rng) * rng_next_float(state->rng) * 75.0f * abundance;
+		double veinLength = rng_next_float(rng) * rng_next_float(rng) * 75.0f * abundance;
 
-		double theta = rng_next_float(state->rng) * M_PI * 2;
+		double theta = rng_next_float(rng) * M_PI * 2;
 		double deltaTheta = 0;
-		double phi = rng_next_float(state->rng) * M_PI * 2;
+		double phi = rng_next_float(rng) * M_PI * 2;
 		double deltaPhi = 0;
 
 		for (float len = 0; len < veinLength; len += 1.0f) {
@@ -166,9 +164,9 @@ void gen_ore(map_t *map, genstate_t *state, int8_t block, float abundance) {
 			veinZ = veinZ + cos(theta);
 
 			theta = deltaTheta * 0.2;
-			deltaTheta = (deltaTheta * 0.9) + rng_next_float(state->rng) - rng_next_float(state->rng);
+			deltaTheta = (deltaTheta * 0.9) + rng_next_float(rng) - rng_next_float(rng);
 			phi = phi / 2.0 + deltaPhi / 4.0;
-			deltaPhi = (deltaPhi * 0.9) + rng_next_float(state->rng) - rng_next_float(state->rng);
+			deltaPhi = (deltaPhi * 0.9) + rng_next_float(rng) - rng_next_float(rng);
 
 			double radius = abundance * sin(len * M_PI / veinLength) + 1;
 
@@ -219,8 +217,8 @@ void gen_surface(map_t *map, genstate_t *state) {
 
 	for (unsigned int x = 0; x < map->width; x++)
 		for (unsigned int z = 0; z < map->height; z++) {
-			bool sandChance = octavenoise_compute(noise1, x, z) > 8;
-			bool gravelChance = octavenoise_compute(noise2, x, z) > 12;
+			bool sandChance = octavenoise_compute2d(noise1, x, z) > 8;
+			bool gravelChance = octavenoise_compute2d(noise2, x, z) > 12;
 
 			unsigned int y = state->heightmap[x + z * map->width];
 			uint8_t above = map_get(map, x, y + 1, z);
@@ -242,27 +240,27 @@ void gen_surface(map_t *map, genstate_t *state) {
 	octavenoise_destroy(noise2);
 }
 
-void gen_plants(map_t *map, genstate_t *state) {
+void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 	int numFlowers = (int)(map->width * map->height) / 3000;
 	int numShrooms = (int)(map->width * map->depth * map->height) / 2000;
 	int numTrees = (int)(map->width * map->height) / 4000;
 
 	for (int i = 0; i < numFlowers; i++) {
-		uint8_t flowerType = rng_next_boolean(state->rng) ? dandelion : rose;
+		uint8_t flowerType = rng_next_boolean(rng) ? dandelion : rose;
 
-		int patchX = rng_next2(state->rng, 0, (int)map->width);
-		int patchZ = rng_next2(state->rng, 0, (int)map->height);
+		int patchX = rng_next2(rng, 0, (int)map->width);
+		int patchZ = rng_next2(rng, 0, (int)map->height);
 
 		for (int j = 0; j < 10; j++) {
 			int flowerX = patchX;
 			int flowerZ = patchZ;
 
 			for (int k = 0; k < 5; k++) {
-				flowerX += rng_next(state->rng, 6) - rng_next(state->rng, 6);
-				flowerZ += rng_next(state->rng, 6) - rng_next(state->rng, 6);
+				flowerX += rng_next(rng, 6) - rng_next(rng, 6);
+				flowerZ += rng_next(rng, 6) - rng_next(rng, 6);
 
 				if (map_pos_valid(map, flowerX, 0, flowerZ)) {
-					int flowerY = state->heightmap[flowerX + flowerZ * map->width] + 1;
+					int flowerY = heightmap[flowerX + flowerZ * map->width] + 1;
 					uint8_t below = map_get(map, flowerX, flowerY - 1, flowerZ);
 
 					if (map_get(map, flowerX, flowerY, flowerZ) == air && below == grass) {
@@ -274,11 +272,11 @@ void gen_plants(map_t *map, genstate_t *state) {
 	}
 
 	for (int i = 0; i < numShrooms; i++) {
-		uint8_t shroomType = rng_next_boolean(state->rng) ? brown_mushroom : red_mushroom;
+		uint8_t shroomType = rng_next_boolean(rng) ? brown_mushroom : red_mushroom;
 
-		unsigned int patchX = rng_next2(state->rng, 0, (int)map->width);
-		unsigned int patchY = rng_next2(state->rng, 1, (int)map->depth);
-		unsigned int patchZ = rng_next2(state->rng, 0, (int)map->height);
+		unsigned int patchX = rng_next2(rng, 0, (int)map->width);
+		unsigned int patchY = rng_next2(rng, 1, (int)map->depth);
+		unsigned int patchZ = rng_next2(rng, 0, (int)map->height);
 
 		for (int j = 0; j < 20; j++) {
 			unsigned int shroomX = patchX;
@@ -286,10 +284,10 @@ void gen_plants(map_t *map, genstate_t *state) {
 			unsigned int shroomZ = patchZ;
 
 			for (int k = 0; k < 5; k++) {
-				shroomX += rng_next(state->rng, 6) - rng_next(state->rng, 6);
-				shroomZ += rng_next(state->rng, 6) - rng_next(state->rng, 6);
+				shroomX += rng_next(rng, 6) - rng_next(rng, 6);
+				shroomZ += rng_next(rng, 6) - rng_next(rng, 6);
 
-				if (map_pos_valid(map, shroomX, 0, shroomZ) && (int)shroomY < state->heightmap[shroomX + shroomZ * map->width] - 1) {
+				if (map_pos_valid(map, shroomX, 0, shroomZ) && shroomY < heightmap[shroomX + shroomZ * map->width] - 1) {
 					uint8_t below = map_get(map, shroomX, shroomY - 1, shroomZ);
 
 					if (map_get(map, shroomX, shroomY, shroomZ) == air && below == stone) {
@@ -301,23 +299,23 @@ void gen_plants(map_t *map, genstate_t *state) {
 	}
 
 	for (int i = 0; i < numTrees; i++) {
-		int patchX = rng_next2(state->rng, 0, (int)map->width);
-		int patchZ = rng_next2(state->rng, 0, (int)map->height);
+		int patchX = rng_next2(rng, 0, (int)map->width);
+		int patchZ = rng_next2(rng, 0, (int)map->height);
 
 		for (int j = 0; j < 20; j++) {
 			int treeX = patchX;
 			int treeZ = patchZ;
 
 			for (int k = 0; k < 20; k++) {
-				treeX += rng_next(state->rng, 6) - rng_next(state->rng, 6);
-				treeZ += rng_next(state->rng, 6) - rng_next(state->rng, 6);
+				treeX += rng_next(rng, 6) - rng_next(rng, 6);
+				treeZ += rng_next(rng, 6) - rng_next(rng, 6);
 
-				if (map_pos_valid(map, treeX, 0, treeZ) && rng_next_float(state->rng) <= 0.25f) {
-					int treeY = state->heightmap[treeX + treeZ * map->width] + 1;
-					int treeHeight = rng_next2(state->rng, 1, 3) + 4;
+				if (map_pos_valid(map, treeX, 0, treeZ) && rng_next_float(rng) <= 0.25f) {
+					int treeY = heightmap[treeX + treeZ * map->width] + 1;
+					int treeHeight = rng_next2(rng, 1, 3) + 4;
 
 					if (mapgen_space_for_tree(map, treeX, treeY, treeZ, treeHeight)) {
-						mapgen_grow_tree(map, state->rng, treeX, treeY, treeZ, treeHeight);
+						mapgen_grow_tree(map, rng, treeX, treeY, treeZ, treeHeight);
 					}
 				}
 			}

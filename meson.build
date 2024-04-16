@@ -3,6 +3,7 @@ project('classicserver', 'c',
 )
 
 cc = meson.get_compiler('c')
+ccflags = []
 
 source_files = [
     'src/blocks.c',
@@ -19,6 +20,8 @@ source_files = [
     'src/mapgen.c',
     'src/mapgen_classic.c',
     'src/mapgen_debug.c',
+    'src/mapgen_flat.c',
+    'src/mapgen_seantest.c',
     'src/mapsend.c',
     'src/perlin.c',
     'src/perlin.h',
@@ -39,4 +42,9 @@ else
     deps += cc.find_library('m')
 endif
 
-executable('classicserver', source_files, dependencies: deps)
+if cc.get_id() == 'gcc' or cc.get_id() == 'clang'
+    ccflags += ['-ftree-vectorize']
+endif
+
+
+executable('classicserver', source_files, dependencies: deps, c_args: ccflags)
