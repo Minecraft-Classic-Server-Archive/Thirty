@@ -78,6 +78,7 @@ void server_shutdown(void) {
 
 void server_tick(void) {
 	server_accept();
+	map_tick(server.map);
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_tick(&server.clients[i]);

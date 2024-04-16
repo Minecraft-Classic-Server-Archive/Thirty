@@ -143,6 +143,8 @@ void client_tick(client_t *client) {
 			client_flush(client);
 		}
 	}
+
+	client_flush(client);
 }
 
 void client_receive(client_t *client) {

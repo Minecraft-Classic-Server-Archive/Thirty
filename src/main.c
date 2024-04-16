@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "server.h"
 #include "sockets.h"
+#include "blocks.h"
 
 static void signal_handler(int signum);
 
@@ -11,6 +12,8 @@ static bool running = true;
 int main(int argc, char *argv[]) {
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
+
+	blocks_init();
 
 #ifdef _WIN32
 	{
