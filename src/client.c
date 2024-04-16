@@ -34,8 +34,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->mapgz_buffer = NULL;
 	client->last_ping = 0;
 	client->ping = 0;
-	client->x = rng_next_float(server.global_rng) * util_min(1023.0f, (float)server.map->width);
-	client->z = rng_next_float(server.global_rng) * util_min(1023.0f, (float)server.map->height);
+	client->x = rng_next(server.global_rng, util_min(1023, (int)server.map->width)) + 0.5f;
+	client->z = rng_next(server.global_rng, util_min(1023, (int)server.map->height)) + 0.5f;
 	client->y = map_get_top(server.map, (size_t)client->x, (size_t)client->z) + 2.0f;
 	client->yaw = 0.0f;
 	client->pitch = 0.0f;
