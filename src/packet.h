@@ -22,4 +22,6 @@ enum {
 	packet_extentry = 0x11,
 
 	packet_custom_block_support_level = 0x13,
+
+	packet_two_way_ping = 0x2b,
 };

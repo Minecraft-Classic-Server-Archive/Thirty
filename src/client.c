@@ -348,6 +348,23 @@ void client_receive(client_t *client) {
 				break;
 			}
 
+			case packet_two_way_ping: {
+				uint8_t direction;
+				uint16_t data;
+
+				buffer_read_uint8(client->in_buffer, &direction);
+				buffer_read_uint16be(client->in_buffer, &data);
+
+				if (direction == 0) {
+					buffer_write_uint8(client->out_buffer, packet_two_way_ping);
+					buffer_write_uint8(client->out_buffer, direction);
+					buffer_write_uint16be(client->out_buffer, data);
+					client_flush(client);
+				}
+
+				break;
+			}
+
 			default: {
 				fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
 				break;
