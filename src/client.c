@@ -12,7 +12,7 @@
 #include "blocks.h"
 
 #define BUFFER_SIZE (32 * 1024)
-#define PING_INTERVAL (1 * 20)
+#define PING_INTERVAL (1.0)
 
 static void client_receive(client_t *client);
 static void client_login(client_t *client);
@@ -31,6 +31,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->mapsend_state = mapsend_none;
 	client->mapgz_buffer = NULL;
 	client->last_ping = 0;
+	client->ping = 0;
 	client->x = server.map->width / 2.0f;
 	client->y = (server.map->depth / 2.0f) + 2.0f;
 	client->z = server.map->height / 2.0f;
@@ -55,10 +56,19 @@ void client_tick(client_t *client) {
 
 	client_receive(client);
 
-	if (client->spawned && server.tick - client->last_ping >= PING_INTERVAL) {
-		buffer_write_uint8(client->out_buffer, packet_ping);
-		client_flush(client);
-		client->last_ping = server.tick;
+	if (client->spawned && get_time_s() - client->last_ping >= PING_INTERVAL) {
+		if (client_supports_extension(client, "TwoWayPing", 1)) {
+			client->ping_key = rand() % UINT16_MAX;
+			buffer_write_uint8(client->out_buffer, packet_two_way_ping);
+			buffer_write_uint8(client->out_buffer, 1);
+			buffer_write_uint16be(client->out_buffer, client->ping_key);
+			client_flush(client);
+		}
+		else {
+			buffer_write_uint8(client->out_buffer, packet_ping);
+			client_flush(client);
+		}
+		client->last_ping = get_time_s();
 	}
 
 	if (client->mapsend_state != mapsend_none) {
@@ -360,6 +370,9 @@ void client_receive(client_t *client) {
 					buffer_write_uint8(client->out_buffer, direction);
 					buffer_write_uint16be(client->out_buffer, data);
 					client_flush(client);
+				}
+				else if (data == client->ping_key) {
+					client->ping = get_time_s() - client->last_ping;
 				}
 
 				break;

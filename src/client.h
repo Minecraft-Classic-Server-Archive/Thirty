@@ -25,7 +25,9 @@ typedef struct client_s {
 	int mapsend_state;
 	struct buffer_s *mapgz_buffer;
 
-	uint64_t last_ping;
+	double last_ping;
+	double ping;
+	uint16_t ping_key;
 
 	char name[64];
 

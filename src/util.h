@@ -9,3 +9,5 @@
 
 #define util_fixed2degrees(value) ((float)(((float)(value)) * 360.0f / 256.0f))
 #define util_degrees2fixed(value) ((int8_t)(((float)(value)) / 360.0f * 256.0f))
+
+double get_time_s(void);

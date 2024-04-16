@@ -28,7 +28,9 @@ source_files = [
     'src/rng.c',
     'src/rng.h',
     'src/server.c',
-    'src/server.h'
+    'src/server.h',
+    'src/util.c',
+    'src/util.h',
 ]
 
 deps = [
