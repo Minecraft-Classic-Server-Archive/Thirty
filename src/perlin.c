@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include "perlin.h"
 #include "rng.h"
 
@@ -25,40 +26,40 @@ improvednoise_t *improvednoise_create(rng_t *rng) {
 	return n;
 }
 
-double improvednoise_compute(improvednoise_t *noise, double x, double y) {
+static inline double fade(double t) {
+	return t * t * t * (t * (t * 6 - 15) + 10);
+}
+
+static inline double lerp(double t, double a, double b) {
+	return a + t * (b - a);
+}
+
+static inline double grad(int hash, double x, double y, double z) {
+	int h = hash & 15;
+	double u = h < 8 ? x : y, v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+	return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+}
+
+
+double improvednoise_compute3d(improvednoise_t *noise, double x, double y, double z) {
 	uint8_t *p = noise->p;
 
-	int xFloor = x >= 0 ? (int) x : (int) x - 1;
-	int yFloor = y >= 0 ? (int) y : (int) y - 1;
-	int X = xFloor & 0xFF, Y = yFloor & 0xFF;
-	x -= xFloor;
-	y -= yFloor;
+	int X = (int) floor(x) & 255, Y = (int) floor(y) & 255, Z = (int) floor(z) & 255;
+	x -= floor(x);
+	y -= floor(y);
+	z -= floor(z);
+	double u = fade(x), v = fade(y), w = fade(z);
+	int A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
 
-	double u = x * x * x * (x * (x * 6 - 15) + 10); // Fade(x)
-	double v = y * y * y * (y * (y * 6 - 15) + 10); // Fade(y)
-	int A = p[X] + Y, B = p[X + 1] + Y;
+	return lerp(w,
+				lerp(v, lerp(u, grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z)),
+					 lerp(u, grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z))),
+				lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1)),
+					 lerp(u, grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1))));
+}
 
-	// Normally, calculating Grad involves a function call. However, we can directly pack this table
-	// (since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing
-	// to call another function that performs branching
-	const int xFlags = 0x46552222, yFlags = 0x2222550A;
-
-	int hash = (p[p[A]] & 0xF) << 1;
-	double g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[A], x, y)
-	hash = (p[p[B]] & 0xF) << 1;
-	double g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) +
-				 (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[B], x - 1, y)
-	double c1 = g22 + u * (g12 - g22);
-
-	hash = (p[p[A + 1]] & 0xF) << 1;
-	double g21 = (((xFlags >> hash) & 3) - 1) * x +
-				 (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[A + 1], x, y - 1)
-	hash = (p[p[B + 1]] & 0xF) << 1;
-	double g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) +
-				 (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[B + 1], x - 1, y - 1)
-	double c2 = g21 + u * (g11 - g21);
-
-	return c1 + v * (c2 - c1);
+double improvednoise_compute2d(improvednoise_t *noise, double x, double y) {
+	return improvednoise_compute3d(noise, x, y, 0.0);
 }
 
 void improvednoise_destroy(improvednoise_t *noise) {
@@ -79,12 +80,25 @@ octavenoise_t *octavenoise_create(rng_t *rng, int numoctaves) {
 	return n;
 }
 
-double octavenoise_compute(octavenoise_t *noise, double x, double y) {
+double octavenoise_compute3d(octavenoise_t *noise, double x, double y, double z) {
 	double amplitude = 1, frequency = 1;
 	double sum = 0;
 
 	for (int i = 0; i < noise->num_octaves; i++) {
-		sum += improvednoise_compute(noise->octaves[i], x * frequency, y * frequency) * amplitude;
+		sum += improvednoise_compute3d(noise->octaves[i], x * frequency, y * frequency, z * frequency) * amplitude;
+		amplitude *= 2.0;
+		frequency *= 0.5;
+	}
+
+	return sum;
+}
+
+double octavenoise_compute2d(octavenoise_t *noise, double x, double y) {
+	double amplitude = 1, frequency = 1;
+	double sum = 0;
+
+	for (int i = 0; i < noise->num_octaves; i++) {
+		sum += improvednoise_compute2d(noise->octaves[i], x * frequency, y * frequency) * amplitude;
 		amplitude *= 2.0;
 		frequency *= 0.5;
 	}
@@ -109,9 +123,14 @@ combinednoise_t *combinednoise_create(octavenoise_t *n1, octavenoise_t *n2) {
 	return n;
 }
 
-double combinednoise_compute(combinednoise_t *noise, double x, double y) {
-	double offset = octavenoise_compute(noise->n2, x, y);
-	return octavenoise_compute(noise->n1, x + offset, y);
+double combinednoise_compute3d(combinednoise_t *noise, double x, double y, double z) {
+	double offset = octavenoise_compute3d(noise->n2, x, y, z);
+	return octavenoise_compute3d(noise->n1, x + offset, y, z);
+}
+
+double combinednoise_compute2d(combinednoise_t *noise, double x, double y) {
+	double offset = octavenoise_compute2d(noise->n2, x, y);
+	return octavenoise_compute2d(noise->n1, x + offset, y);
 }
 
 void combinednoise_destroy(combinednoise_t *noise) {
