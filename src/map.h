@@ -21,7 +21,3 @@ static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
 static inline size_t map_get_block_index(map_t *map, size_t x, size_t y, size_t z) {
 	return (y * map->height + z) * map->width + x;
 }
-
-void mapgen_classic(map_t *map);
-void mapgen_debug(map_t *map);
-void mapgen_random(map_t *map);
