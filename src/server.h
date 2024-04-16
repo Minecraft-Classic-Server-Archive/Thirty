@@ -5,6 +5,7 @@
 
 typedef struct client_s client_t;
 typedef struct map_s map_t;
+typedef struct rng_s rng_t;
 
 typedef struct server_s {
 	socket_t socket_fd;
@@ -16,6 +17,7 @@ typedef struct server_s {
 	size_t num_clients;
 
 	map_t *map;
+	rng_t *global_rng;
 } server_t;
 
 bool server_init(void);

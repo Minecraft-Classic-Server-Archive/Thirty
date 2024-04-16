@@ -6,11 +6,13 @@
 #include <errno.h>
 #include <string.h>
 #include <stdarg.h>
+#include <time.h>
 #include "server.h"
 #include "buffer.h"
 #include "client.h"
 #include "map.h"
 #include "packet.h"
+#include "rng.h"
 
 void server_accept(void);
 
@@ -18,6 +20,7 @@ server_t server;
 
 bool server_init(void) {
 	server.port = (uint16_t)25565;
+	server.global_rng = rng_create((int)time(NULL));
 
 	int err;
 
@@ -66,7 +69,7 @@ bool server_init(void) {
 	printf("Server is listening on port %u\n", server.port);
 
 	printf("Preparing map...\n");
-	server.map = map_create(192, 32, 192);
+	server.map = map_create(256, 256, 256);
 
 	return true;
 }
@@ -74,6 +77,7 @@ bool server_init(void) {
 void server_shutdown(void) {
 	map_destroy(server.map);
 	closesocket(server.socket_fd);
+	rng_destroy(server.global_rng);
 }
 
 void server_tick(void) {
