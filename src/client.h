@@ -45,6 +45,7 @@ void client_init(client_t *client, int fd, size_t idx);
 void client_destroy(client_t *client);
 void client_tick(client_t *client);
 void client_flush(client_t *client);
+void client_flush_buffer(client_t *client, struct buffer_s *buffer);
 void client_disconnect(client_t *client, const char *msg);
 
 bool client_supports_extension(client_t *client, const char *name, int version);

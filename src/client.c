@@ -426,7 +426,7 @@ void client_send_level(client_t *client) {
 	}
 }
 
-void client_flush(client_t *client) {
+void client_flush_buffer(client_t *client, buffer_t *buffer) {
 	if (!client->connected) {
 		return;
 	}
@@ -437,11 +437,11 @@ void client_flush(client_t *client) {
 #endif
 
 #ifdef _WIN32
-	int r = send(client->socket_fd, (const char *)client->out_buffer->mem.data, (int)client->out_buffer->mem.offset, sendflags);
+	int r = send(client->socket_fd, (const char *)buffer->mem.data, (int)buffer->mem.offset, sendflags);
 #else
-	int r = send(client->socket_fd, client->out_buffer->mem.data, client->out_buffer->mem.offset, sendflags);
+	int r = send(client->socket_fd, buffer->mem.data, buffer->mem.offset, sendflags);
 #endif
-	buffer_seek(client->out_buffer, 0);
+	buffer_seek(buffer, 0);
 
 	if (r == SOCKET_ERROR) {
 		int e = socket_error();
@@ -457,6 +457,10 @@ void client_flush(client_t *client) {
 
 		fprintf(stderr, "send error %d\n", e);
 	}
+}
+
+void client_flush(client_t *client) {
+	client_flush_buffer(client, client->out_buffer);
 }
 
 void client_start_mapsave(client_t *client) {
