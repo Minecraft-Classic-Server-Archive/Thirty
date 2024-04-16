@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include "mapgen.h"
 #include "rng.h"
 #include "map.h"
@@ -26,7 +27,7 @@ static void gen_plants(map_t *map, genstate_t *state);
 
 void mapgen_classic(map_t *map) {
 	genstate_t state;
-	state.rng = rng_create(0);
+	state.rng = rng_create((int)time(NULL));
 	state.heightmap = calloc(map->width * map->height, sizeof(int));
 
 	gen_heightmap(map, &state);
