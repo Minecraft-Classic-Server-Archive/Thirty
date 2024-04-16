@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <math.h>
 #include "client.h"
 #include "server.h"
 #include "buffer.h"
@@ -10,6 +11,7 @@
 #include "util.h"
 #include "cpe.h"
 #include "blocks.h"
+#include "rng.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -32,9 +34,9 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->mapgz_buffer = NULL;
 	client->last_ping = 0;
 	client->ping = 0;
-	client->x = server.map->width / 2.0f;
-	client->y = (server.map->depth / 2.0f) + 2.0f;
-	client->z = server.map->height / 2.0f;
+	client->x = rng_next_float(server.global_rng) * util_min(1023.0f, (float)server.map->width);
+	client->z = rng_next_float(server.global_rng) * util_min(1023.0f, (float)server.map->height);
+	client->y = map_get_top(server.map, (size_t)client->x, (size_t)client->z) + 2.0f;
 	client->yaw = 0.0f;
 	client->pitch = 0.0f;
 	client->spawned = false;
@@ -400,7 +402,7 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x07);
 	buffer_write_mcstr(client->out_buffer, "hostname", cp437);
 	buffer_write_mcstr(client->out_buffer, "motd", cp437);
-	buffer_write_uint8(client->out_buffer, 0x00);
+	buffer_write_uint8(client->out_buffer, 0x64);
 	client_flush(client);
 
 	if (!customblocks) {

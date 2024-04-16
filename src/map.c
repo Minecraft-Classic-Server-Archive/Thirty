@@ -20,7 +20,7 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 
 	memset(map->blocks, 0, width * depth * height);
 
-	mapgen_flat(map);
+	mapgen_classic(map);
 
 	map->generating = false;
 
@@ -62,6 +62,14 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z) {
 	return map->blocks[map_get_block_index(map, x, y, z)];
+}
+
+size_t map_get_top(map_t *map, size_t x, size_t z) {
+	size_t yy = map->depth;
+
+	while (map_get(map, x, --yy, z) == air && yy > 0) ;
+
+	return yy;
 }
 
 void map_tick(map_t *map) {
