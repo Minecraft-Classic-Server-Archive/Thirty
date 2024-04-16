@@ -70,6 +70,8 @@ void *mapsend_fast_thread_start(void *data) {
 	uint8_t *inbuf = malloc(inbufsize);
 	uint8_t outbuf[OUTBUFSIZE];
 
+	buffer_t *packetbuffer = buffer_allocate_memory(32 * 1024);
+
 	z_stream strm;
 	strm.zalloc = Z_NULL;
 	strm.zfree = Z_NULL;
@@ -105,25 +107,26 @@ void *mapsend_fast_thread_start(void *data) {
 				goto cleanup;
 			}
 
-			if (buffer_tell(client->out_buffer) + 1028 >= buffer_size(client->out_buffer)) {
-				client_flush(client);
+			if (buffer_tell(packetbuffer) + 1028 >= buffer_size(packetbuffer)) {
+				client_flush_buffer(client, packetbuffer);
 				usleep(1000000 / 20);
 			}
 
-			buffer_write_uint8(client->out_buffer, packet_level_chunk);
-			buffer_write_uint16be(client->out_buffer, have);
-			buffer_write(client->out_buffer, outbuf, 1024);
-			buffer_write_uint8(client->out_buffer, 0);
+			buffer_write_uint8(packetbuffer, packet_level_chunk);
+			buffer_write_uint16be(packetbuffer, have);
+			buffer_write(packetbuffer, outbuf, 1024);
+			buffer_write_uint8(packetbuffer, 0);
 		} while (strm.avail_out == 0);
 	} while (flush != Z_FINISH);
 
 	deflateEnd(&strm);
-	client_flush(client);
+	client_flush_buffer(client, packetbuffer);
 
 	client->mapsend_state = mapsend_success;
 
 cleanup:
 	free(inbuf);
+	buffer_destroy(packetbuffer);
 	buffer_destroy(blockbuffer);
 
 	pthread_exit(NULL);
