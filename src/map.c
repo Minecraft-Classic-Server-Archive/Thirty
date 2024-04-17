@@ -23,7 +23,7 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 
 	printf("Generating map...\n");
 	double start = get_time_s();
-	mapgen_classic(server.map);
+	mapgen_seantest(map);
 	double duration = get_time_s() - start;
 	printf("Map generation took %f seconds\n", duration);
 
