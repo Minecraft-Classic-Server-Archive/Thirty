@@ -54,6 +54,10 @@ bool buffer_read_uint64le(buffer_t *buffer, uint64_t *data);
 bool buffer_read_int64le(buffer_t *buffer, int64_t *data);
 bool buffer_read_uint64be(buffer_t *buffer, uint64_t *data);
 bool buffer_read_int64be(buffer_t *buffer, int64_t *data);
+bool buffer_read_floatle(buffer_t *buffer, float *data);
+bool buffer_read_floatbe(buffer_t *buffer, float *data);
+bool buffer_read_doublele(buffer_t *buffer, double *data);
+bool buffer_read_doublebe(buffer_t *buffer, double *data);
 
 bool buffer_write_uint8(buffer_t *buffer, uint8_t data);
 bool buffer_write_int8(buffer_t *buffer, int8_t data);
@@ -69,6 +73,10 @@ bool buffer_write_uint64le(buffer_t *buffer, uint64_t data);
 bool buffer_write_int64le(buffer_t *buffer, int64_t data);
 bool buffer_write_uint64be(buffer_t *buffer, uint64_t data);
 bool buffer_write_int64be(buffer_t *buffer, int64_t data);
+bool buffer_write_floatle(buffer_t *buffer, float data);
+bool buffer_write_floatbe(buffer_t *buffer, float data);
+bool buffer_write_doublele(buffer_t *buffer, double data);
+bool buffer_write_doublebe(buffer_t *buffer, double data);
 
 void buffer_read_mcstr(buffer_t *buffer, char data[65]);
 void buffer_write_mcstr(buffer_t *buffer, const char *data, bool filter);
