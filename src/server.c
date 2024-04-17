@@ -29,14 +29,21 @@
 #include "map.h"
 #include "packet.h"
 #include "rng.h"
+#include "util.h"
+
+#define HEARTBEAT_INTERVAL (45.0)
 
 void server_accept(void);
+void server_generate_salt(char *out, size_t length);
 
 server_t server;
 
 bool server_init(void) {
 	server.port = (uint16_t)25565;
 	server.global_rng = rng_create((int)time(NULL));
+	server.last_heartbeat = 0.0;
+
+	server_generate_salt(server.salt, 16);
 
 	int err;
 
@@ -88,6 +95,9 @@ bool server_init(void) {
 	server.map = map_create(256, 256, 256);
 	map_save(server.map, "map.cw");
 
+	server_heartbeat();
+	server.last_heartbeat = get_time_s();
+
 	return true;
 }
 
@@ -121,6 +131,11 @@ void server_tick(void) {
 
 	if (removed) {
 		server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
+	}
+
+	if (get_time_s() - server.last_heartbeat > HEARTBEAT_INTERVAL) {
+		server_heartbeat();
+		server.last_heartbeat = get_time_s();
 	}
 
 	server.tick++;
@@ -176,5 +191,14 @@ void server_broadcast(const char *msg, ...) {
 		buffer_write_uint8(client->out_buffer, 0xFF);
 		buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));
 		client_flush(client);
+	}
+}
+
+void server_generate_salt(char *out, size_t length) {
+	const char *chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	const size_t num_chars = strlen(chars);
+
+	for (size_t i = 0; i < length; i++) {
+		out[i] = chars[rng_next(server.global_rng, (int)num_chars)];
 	}
 }
