@@ -73,6 +73,8 @@ size_t map_get_top(map_t *map, size_t x, size_t z) {
 }
 
 void map_tick(map_t *map) {
+	bool resized = false;
+
 	for (size_t i = 0; i < map->num_ticks; i++) {
 		scheduledtick_t *tick = &map->ticks[i];
 		if (server.tick < tick->time) {
@@ -86,9 +88,12 @@ void map_tick(map_t *map) {
 
 		memmove(map->ticks + i, map->ticks + i + 1, (map->num_ticks - i - 1) * sizeof(*map->ticks));
 		map->num_ticks--;
+		resized = true;
 	}
 
-	map->ticks = realloc(map->ticks, sizeof(*map->ticks) * map->num_ticks);
+	if (resized) {
+		map->ticks = realloc(map->ticks, sizeof(*map->ticks) * map->num_ticks);
+	}
 }
 
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until) {
