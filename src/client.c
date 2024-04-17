@@ -433,7 +433,7 @@ void client_flush_buffer(client_t *client, buffer_t *buffer) {
 #ifdef _WIN32
 	int r = send(client->socket_fd, (const char *)buffer->mem.data, (int)buffer->mem.offset, 0);
 #else
-	int r = send(client->socket_fd, buffer->mem.data, buffer->mem.offset, sendflags);
+	int r = send(client->socket_fd, buffer->mem.data, buffer->mem.offset, 0);
 #endif
 	buffer_seek(buffer, 0);
 
