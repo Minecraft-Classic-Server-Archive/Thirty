@@ -7,6 +7,7 @@
 #include "client.h"
 #include "packet.h"
 #include "blocks.h"
+#include "util.h"
 
 map_t *map_create(size_t width, size_t depth, size_t height) {
 	map_t *map = malloc(sizeof(*map));
@@ -20,9 +21,11 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 
 	memset(map->blocks, 0, width * depth * height);
 
-	mapgen_classic(map);
-
-	map->generating = false;
+	printf("Generating map...\n");
+	double start = get_time_s();
+	mapgen_classic(server.map);
+	double duration = get_time_s() - start;
+	printf("Map generation took %f seconds\n", duration);
 
 	return map;
 }
