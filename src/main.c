@@ -27,6 +27,9 @@ int main(int argc, char *argv[]) {
 
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
+#ifndef _WIN32
+	signal(SIGPIPE, SIG_IGN);
+#endif
 
 	server_init();
 

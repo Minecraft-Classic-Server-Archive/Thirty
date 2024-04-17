@@ -430,14 +430,8 @@ void client_flush_buffer(client_t *client, buffer_t *buffer) {
 	if (!client->connected) {
 		return;
 	}
-
-	int sendflags = 0;
-#ifdef __linux__
-	sendflags |= MSG_NOSIGNAL;
-#endif
-
 #ifdef _WIN32
-	int r = send(client->socket_fd, (const char *)buffer->mem.data, (int)buffer->mem.offset, sendflags);
+	int r = send(client->socket_fd, (const char *)buffer->mem.data, (int)buffer->mem.offset, 0);
 #else
 	int r = send(client->socket_fd, buffer->mem.data, buffer->mem.offset, sendflags);
 #endif
