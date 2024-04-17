@@ -41,13 +41,14 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 
 	if (!map->generating) {
 		uint64_t ticktime = blockinfo[block].ticktime;
-		map_add_tick(map, x, y, z, ticktime);
-		map_add_tick(map, x + 1, y, z, ticktime);
-		map_add_tick(map, x - 1, y, z, ticktime);
-		map_add_tick(map, x, y - 1, z, ticktime);
-		map_add_tick(map, x, y + 1, z, ticktime);
-		map_add_tick(map, x, y, z - 1, ticktime);
-		map_add_tick(map, x, y, z + 1, ticktime);
+		uint64_t dist = ticktime == 0 ? 0 : (((server.tick / ticktime) + 1) * ticktime) - server.tick;
+		map_add_tick(map, x, y, z, dist);
+		map_add_tick(map, x + 1, y, z, dist);
+		map_add_tick(map, x - 1, y, z, dist);
+		map_add_tick(map, x, y - 1, z, dist);
+		map_add_tick(map, x, y + 1, z, dist);
+		map_add_tick(map, x, y, z - 1, dist);
+		map_add_tick(map, x, y, z + 1, dist);
 	}
 
 	for (size_t i = 0; i < server.num_clients; i++) {
