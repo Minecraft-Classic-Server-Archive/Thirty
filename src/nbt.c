@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include "nbt.h"
 #include "buffer.h"
 
@@ -423,13 +424,13 @@ void nbt_dump(tag_t *tag, int indent) {
 		case tag_string:
 			printf("'%s'\n", tag->str); break;
 
-		case tag_byte: printf("%d\n", tag->b); break;
-		case tag_short: printf("%d\n", tag->s); break;
-		case tag_int: printf("%d\n", tag->i); break;
-		case tag_long: printf("%lld\n", tag->l); break;
+		case tag_byte: printf("%" PRId8 "\n", tag->b); break;
+		case tag_short: printf("%" PRId16 "\n", tag->s); break;
+		case tag_int: printf("%" PRId32 "\n", tag->i); break;
+		case tag_long: printf("%" PRId64 "\n", tag->l); break;
 		case tag_float: printf("%f\n", tag->f); break;
 		case tag_double: printf("%f\n", tag->d); break;
-		case tag_byte_array: printf("[%d uint8_ts]\n", tag->array_size); break;
+		case tag_byte_array: printf("[%" PRId32 " bytes]\n", tag->array_size); break;
 
 		default: printf("\n"); break;
 	}
