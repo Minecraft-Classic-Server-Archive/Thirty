@@ -50,8 +50,8 @@ tag_t *nbt_create_string(const char *name, const char *val){
 	tag_t *t = nbt_create(name);
 	t->type = tag_string;
 
-	t->array_size = strlen(val);
-	t->str = malloc(t->array_size);
+	t->array_size = (int32_t) strlen(val);
+	t->str = malloc(t->array_size + 1);
 	strncpy(t->str, val, t->array_size);
 	t->str[t->array_size] = '\0';
 
