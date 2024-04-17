@@ -17,8 +17,15 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <pthread.h>
+#include <string.h>
+#include <stdlib.h>
 #include "server.h"
 #include "sockets.h"
+
+#ifndef _WIN32
+#include <sys/types.h>
+#include <netdb.h>
+#endif
 
 static void *heartbeat_main(void *data) {
 	(void)data;
