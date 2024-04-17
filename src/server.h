@@ -34,11 +34,16 @@ typedef struct server_s {
 
 	map_t *map;
 	rng_t *global_rng;
+
+	char salt[17];
+	double last_heartbeat;
 } server_t;
 
 bool server_init(void);
 void server_tick(void);
 void server_shutdown(void);
+
+void server_heartbeat(void);
 
 void server_broadcast(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 

@@ -28,6 +28,7 @@
 #include "cpe.h"
 #include "blocks.h"
 #include "rng.h"
+#include "md5.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -37,6 +38,7 @@ static void client_login(client_t *client);
 static void client_send_level(client_t *client);
 static void client_start_mapsave(client_t *client);
 static void client_start_fast_mapsave(client_t *client);
+static bool client_verify_key(char name[65], char key[65]);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -227,6 +229,11 @@ void client_receive(client_t *client) {
 					}
 				}
 
+				if (!client_verify_key(username, key)) {
+					client_disconnect(client, "Authentication failed.");
+					return;
+				}
+
 				strncpy(client->name, username, 64);
 
 				if (supports_cpe) {
@@ -402,6 +409,20 @@ void client_receive(client_t *client) {
 			};
 		}
 	}
+}
+
+bool client_verify_key(char name[65], char key[65]) {
+	char work[128];
+	snprintf(work, sizeof(work), "%s%s", server.salt, name);
+
+	uint8_t hash[16];
+	char hashstr[33];
+	md5String(work, hash);
+	for (size_t i = 0; i < 16; i++) {
+		sprintf(hashstr + i * 2, "%02x", hash[i]);
+	}
+
+	return strcasecmp(hashstr, key) == 0;
 }
 
 void client_login(client_t *client) {

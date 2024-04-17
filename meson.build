@@ -29,6 +29,7 @@ source_files = [
     'src/client.c',
     'src/client.h',
     'src/cpe.c',
+    'src/heartbeat.c',
     'src/cpe.h',
     'src/main.c',
     'src/map.c',
@@ -50,6 +51,9 @@ source_files = [
     'src/server.h',
     'src/util.c',
     'src/util.h',
+
+    'lib/md5.c',
+    'lib/md5.h',
 ]
 
 deps = [
@@ -67,5 +71,6 @@ if cc.get_id() == 'gcc' or cc.get_id() == 'clang'
     ccflags += ['-ftree-vectorize']
 endif
 
+libdir = include_directories('lib')
 
-executable('classicserver', source_files, dependencies: deps, c_args: ccflags)
+executable('classicserver', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir)
