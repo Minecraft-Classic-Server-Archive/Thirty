@@ -70,6 +70,7 @@ bool server_init(void) {
 
 	printf("Preparing map...\n");
 	server.map = map_create(256, 256, 256);
+	map_save(server.map, "map.cw");
 
 	return true;
 }

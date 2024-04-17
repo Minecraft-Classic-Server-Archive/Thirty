@@ -29,6 +29,8 @@ size_t map_get_top(map_t *map, size_t x, size_t z);
 void map_tick(map_t *map);
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until);
 
+void map_save(map_t *map, const char *filename);
+
 static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
 	return x < map->width && y < map->depth && z < map->height;
 }

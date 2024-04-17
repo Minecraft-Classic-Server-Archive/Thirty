@@ -199,6 +199,10 @@ GENERIC_READ(buffer_read_uint64le, uint64_t, endian_tolittle64)
 GENERIC_READ(buffer_read_int64le,   int64_t, endian_tolittle64)
 GENERIC_READ(buffer_read_uint64be, uint64_t, endian_tobig64)
 GENERIC_READ(buffer_read_int64be,   int64_t, endian_tobig64)
+GENERIC_READ(buffer_read_floatle,     float, endian_tolittlef)
+GENERIC_READ(buffer_read_floatbe,     float, endian_tobigf)
+GENERIC_READ(buffer_read_doublele,   double, endian_tolittled)
+GENERIC_READ(buffer_read_doublebe,   double, endian_tobigd)
 
 #define GENERIC_WRITE(function_name, data_type, swap_function)      \
 	bool function_name (buffer_t *buffer, const data_type data) {   \
@@ -232,6 +236,10 @@ GENERIC_WRITE(buffer_write_uint64le, uint64_t, endian_tolittle64)
 GENERIC_WRITE(buffer_write_int64le,   int64_t, endian_tolittle64)
 GENERIC_WRITE(buffer_write_uint64be, uint64_t, endian_tobig64)
 GENERIC_WRITE(buffer_write_int64be,   int64_t, endian_tobig64)
+GENERIC_WRITE(buffer_write_floatle,     float, endian_tolittlef)
+GENERIC_WRITE(buffer_write_floatbe,     float, endian_tobigf)
+GENERIC_WRITE(buffer_write_doublele,   double, endian_tolittled)
+GENERIC_WRITE(buffer_write_doublebe,   double, endian_tobigd)
 
 void buffer_read_mcstr(buffer_t *buffer, char data[65]) {
 	buffer_read(buffer, data, 64);
