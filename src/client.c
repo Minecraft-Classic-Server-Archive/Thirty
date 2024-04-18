@@ -78,7 +78,7 @@ void client_tick(client_t *client) {
 
 	if (client->spawned && get_time_s() - client->last_ping >= PING_INTERVAL) {
 		if (client_supports_extension(client, "TwoWayPing", 1)) {
-			client->ping_key = rand() % UINT16_MAX;
+			client->ping_key = (uint16_t) rng_next(server.global_rng, UINT16_MAX);
 			buffer_write_uint8(client->out_buffer, packet_two_way_ping);
 			buffer_write_uint8(client->out_buffer, 1);
 			buffer_write_uint16be(client->out_buffer, client->ping_key);
