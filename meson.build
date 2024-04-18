@@ -52,8 +52,12 @@ source_files = [
     'src/util.c',
     'src/util.h',
 
+    'lib/b64.c',
+    'lib/b64.h',
     'lib/md5.c',
     'lib/md5.h',
+    'lib/sha1.c',
+    'lib/sha1.h',
 ]
 
 deps = [

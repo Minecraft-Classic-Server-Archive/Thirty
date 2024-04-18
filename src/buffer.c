@@ -68,6 +68,10 @@ buffer_t *buffer_open_file(const char *path, const char *mode) {
 }
 
 void buffer_destroy(buffer_t *buffer) {
+	if (buffer == NULL) {
+		return;
+	}
+
 	if (buffer->owned) {
 		switch (buffer->type) {
 			case buftype_memory: {

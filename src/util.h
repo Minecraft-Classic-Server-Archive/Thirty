@@ -27,3 +27,11 @@
 #define util_degrees2fixed(value) ((int8_t)(((float)(value)) / 360.0f * 256.0f))
 
 double get_time_s(void);
+
+typedef struct {
+	char *key, *value;
+} httpheader_t;
+
+httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers);
+const char *util_httpheaders_get(httpheader_t *headers, size_t num_headers, const char *key);
+void util_httpheaders_destroy(httpheader_t *list, size_t num_headers);

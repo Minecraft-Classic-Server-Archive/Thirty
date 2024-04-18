@@ -17,6 +17,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "sockets.h"
 #include "cpe.h"
 
@@ -37,6 +38,7 @@ typedef struct client_s {
 
 	struct buffer_s *in_buffer;
 	struct buffer_s *out_buffer;
+	pthread_mutex_t out_mutex;
 
 	int mapsend_state;
 	struct buffer_s *mapgz_buffer;
@@ -55,6 +57,12 @@ typedef struct client_s {
 	cpeext_t *extensions;
 
 	int customblocks_support;
+
+	bool ws_can_switch, using_websocket;
+	unsigned int ws_state, ws_opcode, ws_frame_len, ws_frame_read, ws_mask_read;
+	uint8_t ws_mask[4];
+	struct buffer_s *ws_frame;
+	struct buffer_s *ws_out_buffer;
 } client_t;
 
 void client_init(client_t *client, int fd, size_t idx);
