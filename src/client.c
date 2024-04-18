@@ -419,7 +419,7 @@ bool client_verify_key(char name[65], char key[65]) {
 	char hashstr[33];
 	md5String(work, hash);
 	for (size_t i = 0; i < 16; i++) {
-		sprintf(hashstr + i * 2, "%02x", hash[i]);
+		snprintf(hashstr + i * 2, 33 - i * 2, "%02x", hash[i]);
 	}
 
 	return strcasecmp(hashstr, key) == 0;
