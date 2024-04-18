@@ -33,13 +33,13 @@ static void *heartbeat_main(void *data) {
 	char url[2048];
 	char response[2048];
 	snprintf(url, sizeof(url),
-			 "GET /server/heartbeat/?port=%" PRIu16 "&max=%d&public=%s&version=7&salt=%s&users=%zu&name=%s HTTP/1.1\r\n"
+			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&name=%s HTTP/1.1\r\n"
 			 "Host: www.classicube.net\r\n"
 			 "User-Agent: classicserver\r\n"
 			 "\r\n",
 			 25565,
 			 128,
-			 "True",
+			 "False",
 			 server.salt,
 			 server.num_clients,
 			 "test"
@@ -84,6 +84,7 @@ static void *heartbeat_main(void *data) {
 	if (strncmp(response, expected, strlen(expected)) != 0) {
 		fprintf(stderr, "Heartbeat failed:\n%s\n", response);
 	}
+	else printf("%s\n", response);
 
 cleanup:
 	closesocket(sock);

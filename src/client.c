@@ -29,16 +29,26 @@
 #include "blocks.h"
 #include "rng.h"
 #include "md5.h"
+#include "sha1.h"
+#include "b64.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
 
 static void client_receive(client_t *client);
 static void client_login(client_t *client);
+static void client_send(client_t *client, buffer_t *buffer);
+static void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r);
 static void client_send_level(client_t *client);
 static void client_start_mapsave(client_t *client);
 static void client_start_fast_mapsave(client_t *client);
 static bool client_verify_key(char name[65], char key[65]);
+static void client_ws_upgrade(client_t *client, int r);
+static void client_ws_handle_packet(client_t *client, int len);
+static void client_ws_handle_chunk(client_t *client);
+static void client_ws_decode_frame(client_t *client);
+static void client_ws_disconnect(client_t *client, int code);
+static void client_ws_wrap_packet(client_t *client, buffer_t *buffer);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -61,10 +71,21 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->num_extensions = 0;
 	client->extensions = NULL;
 	client->customblocks_support = -1;
+	client->ws_can_switch = true;
+	client->using_websocket = false;
+	client->ws_state = 0;
+	client->ws_opcode = 0;
+	client->ws_frame_len = 0;
+	client->ws_frame_read = 0;
+	client->ws_mask_read = 0;
+	client->ws_frame = NULL;
+	client->ws_out_buffer = NULL;
 }
 
 void client_destroy(client_t *client) {
 	closesocket(client->socket_fd);
+	buffer_destroy(client->ws_out_buffer);
+	buffer_destroy(client->ws_frame);
 	buffer_destroy(client->in_buffer);
 	buffer_destroy(client->out_buffer);
 }
@@ -204,9 +225,23 @@ void client_receive(client_t *client) {
 		return;
 	}
 
-	while (buffer_tell(client->in_buffer) < (size_t)r) {
+	if (client->ws_can_switch && memcmp(client->in_buffer->mem.data, "GET ", 4) == 0) {
+		client_ws_upgrade(client, r);
+		return;
+	}
+
+	if (client->using_websocket) {
+		client_ws_handle_packet(client, r);
+	}
+	else {
+		client_handle_in_buffer(client, client->in_buffer, (size_t)r);
+	}
+}
+
+void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
+	while (buffer_tell(in_buffer) < (size_t)r) {
 		uint8_t packet_id;
-		buffer_read_uint8(client->in_buffer, &packet_id);
+		buffer_read_uint8(in_buffer, &packet_id);
 
 		switch (packet_id) {
 			case packet_ident: {
@@ -215,10 +250,12 @@ void client_receive(client_t *client) {
 				char key[65];
 				uint8_t unused;
 
-				buffer_read_uint8(client->in_buffer, &protocol_version);
-				buffer_read_mcstr(client->in_buffer, username);
-				buffer_read_mcstr(client->in_buffer, key);
-				buffer_read_uint8(client->in_buffer, &unused);
+				client->ws_can_switch = false;
+
+				buffer_read_uint8(in_buffer, &protocol_version);
+				buffer_read_mcstr(in_buffer, username);
+				buffer_read_mcstr(in_buffer, key);
+				buffer_read_uint8(in_buffer, &unused);
 
 				const bool supports_cpe = unused == 0x42;
 
@@ -265,8 +302,8 @@ void client_receive(client_t *client) {
 				char appname[65];
 				uint16_t extcount;
 
-				buffer_read_mcstr(client->in_buffer, appname);
-				buffer_read_uint16be(client->in_buffer, &extcount);
+				buffer_read_mcstr(in_buffer, appname);
+				buffer_read_uint16be(in_buffer, &extcount);
 
 				client->num_extensions = (size_t)extcount;
 				client->extensions = calloc(extcount, sizeof(*client->extensions));
@@ -280,8 +317,8 @@ void client_receive(client_t *client) {
 				char name[65];
 				int32_t version;
 
-				buffer_read_mcstr(client->in_buffer, name);
-				buffer_read_int32be(client->in_buffer, &version);
+				buffer_read_mcstr(in_buffer, name);
+				buffer_read_int32be(in_buffer, &version);
 
 				printf("Client supports %s v%d\n", name, version);
 
@@ -312,11 +349,11 @@ void client_receive(client_t *client) {
 				uint8_t mode;
 				uint8_t block;
 
-				buffer_read_uint16be(client->in_buffer, &x);
-				buffer_read_uint16be(client->in_buffer, &y);
-				buffer_read_uint16be(client->in_buffer, &z);
-				buffer_read_uint8(client->in_buffer, &mode);
-				buffer_read_uint8(client->in_buffer, &block);
+				buffer_read_uint16be(in_buffer, &x);
+				buffer_read_uint16be(in_buffer, &y);
+				buffer_read_uint16be(in_buffer, &z);
+				buffer_read_uint8(in_buffer, &mode);
+				buffer_read_uint8(in_buffer, &block);
 
 				map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
 
@@ -329,8 +366,8 @@ void client_receive(client_t *client) {
 				uint8_t unused;
 				char msg[65];
 
-				buffer_read_uint8(client->in_buffer, &unused);
-				buffer_read_mcstr(client->in_buffer, msg);
+				buffer_read_uint8(in_buffer, &unused);
+				buffer_read_mcstr(in_buffer, msg);
 
 				server_broadcast("&e%s: &f%s", client->name, msg);
 
@@ -342,12 +379,12 @@ void client_receive(client_t *client) {
 				int16_t x, y, z;
 				int8_t yaw, pitch;
 
-				buffer_read_int8(client->in_buffer, &unused);
-				buffer_read_int16be(client->in_buffer, &x);
-				buffer_read_int16be(client->in_buffer, &y);
-				buffer_read_int16be(client->in_buffer, &z);
-				buffer_read_int8(client->in_buffer, &yaw);
-				buffer_read_int8(client->in_buffer, &pitch);
+				buffer_read_int8(in_buffer, &unused);
+				buffer_read_int16be(in_buffer, &x);
+				buffer_read_int16be(in_buffer, &y);
+				buffer_read_int16be(in_buffer, &z);
+				buffer_read_int8(in_buffer, &yaw);
+				buffer_read_int8(in_buffer, &pitch);
 
 				client->x = util_fixed2float(x);
 				client->y = util_fixed2float(y);
@@ -376,9 +413,8 @@ void client_receive(client_t *client) {
 
 			case packet_custom_block_support_level: {
 				uint8_t level;
-				buffer_read_uint8(client->in_buffer, &level);
+				buffer_read_uint8(in_buffer, &level);
 				client->customblocks_support = level;
-				printf("%d\n", client->customblocks_support);
 				client_send_level(client);
 				break;
 			}
@@ -387,8 +423,8 @@ void client_receive(client_t *client) {
 				uint8_t direction;
 				uint16_t data;
 
-				buffer_read_uint8(client->in_buffer, &direction);
-				buffer_read_uint16be(client->in_buffer, &data);
+				buffer_read_uint8(in_buffer, &direction);
+				buffer_read_uint16be(in_buffer, &data);
 
 				if (direction == 0) {
 					buffer_write_uint8(client->out_buffer, packet_two_way_ping);
@@ -463,8 +499,8 @@ void client_send_level(client_t *client) {
 	}
 }
 
-void client_flush_buffer(client_t *client, buffer_t *buffer) {
-	if (!client->connected) {
+void client_send(client_t *client, buffer_t *buffer) {
+	if (buffer->mem.offset == 0) {
 		return;
 	}
 
@@ -494,6 +530,25 @@ void client_flush_buffer(client_t *client, buffer_t *buffer) {
 
 		fprintf(stderr, "send error %d\n", e);
 	}
+}
+
+void client_flush_buffer(client_t *client, buffer_t *buffer) {
+	if (!client->connected) {
+		return;
+	}
+
+	pthread_mutex_lock(&client->out_mutex);
+
+	if (client->using_websocket) {
+		client_ws_wrap_packet(client, buffer);
+		client_send(client, client->ws_out_buffer);
+		buffer_seek(buffer, 0);
+	}
+	else {
+		client_send(client, buffer);
+	}
+
+	pthread_mutex_unlock(&client->out_mutex);
 }
 
 void client_flush(client_t *client) {
@@ -536,6 +591,10 @@ void client_disconnect(client_t *client, const char *msg) {
 		buffer_write_uint8(client->out_buffer, packet_player_disconnect);
 		buffer_write_mcstr(client->out_buffer, msg, client_supports_extension(client, "FullCP437", 1));
 		client_flush(client);
+
+		if (client->using_websocket) {
+			client_ws_disconnect(client, 1000);
+		}
 	}
 
 	client->connected = false;
@@ -565,4 +624,191 @@ bool client_supports_extension(client_t *client, const char *name, int version) 
 	}
 
 	return false;
+}
+
+void client_ws_upgrade(client_t *client, int r) {
+	client->in_buffer->mem.data[r + 1] = 0;
+
+	size_t num_headers;
+	httpheader_t *headers = util_httpheaders_parse((const char *) client->in_buffer->mem.data, &num_headers);
+
+	bool is_valid =
+			util_httpheaders_get(headers, num_headers, "Connection") != NULL
+			&& (strstr(util_httpheaders_get(headers, num_headers, "Connection"), "upgrade") || strstr(util_httpheaders_get(headers, num_headers, "Connection"), "Upgrade"))
+			&& util_httpheaders_get(headers, num_headers, "Upgrade") != NULL
+			&& strcasecmp(util_httpheaders_get(headers, num_headers, "Upgrade"), "WebSocket") == 0
+			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Version") != NULL
+			&& strcmp(util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Version"), "13") == 0
+			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Protocol") != NULL
+			&& strcasecmp(util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Protocol"), "ClassiCube") == 0
+			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Key") != NULL;
+
+	if (!is_valid) {
+		client_disconnect(client, "");
+		return;
+	}
+
+	char key[512];
+	snprintf(key, 512, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Key"));
+
+	unsigned char key_sha1[20];
+	SHA1(key_sha1, key, strlen(key));
+
+	char *key_b64 = base64_enc_malloc(key_sha1, 20);
+
+	char response[2048];
+	snprintf(response, 2048,
+			 "HTTP/1.1 101 Switching Protocols\r\n"
+			 "Connection: upgrade\r\n"
+			 "Upgrade: websocket\r\n"
+			 "Sec-WebSocket-Accept: %s\r\n"
+			 "Sec-WebSocket-Protocol: ClassiCube\r\n"
+			 "Server: %s\r\n"
+			 "\r\n",
+
+			 key_b64,
+			 "classicserver"
+	);
+
+	buffer_write(client->out_buffer, response, strlen(response));
+	client_flush(client);
+	client->using_websocket = true;
+	client->ws_out_buffer = buffer_allocate_memory(BUFFER_SIZE + 4);
+
+	free(key_b64);
+	util_httpheaders_destroy(headers, num_headers);
+}
+
+void client_ws_handle_packet(client_t *client, int len) {
+	while (buffer_tell(client->in_buffer) < (size_t)len) {
+		client_ws_handle_chunk(client);
+	}
+}
+
+enum {
+	wss_handle_header1,
+	wss_extended_length1,
+	wss_mask,
+	wss_data
+};
+
+void client_ws_handle_chunk(client_t *client) {
+	switch (client->ws_state) {
+		case wss_handle_header1: {
+			uint8_t tmp;
+
+			buffer_read_uint8(client->in_buffer, &tmp);
+			client->ws_opcode = tmp & 0x0F;
+			buffer_read_uint8(client->in_buffer, &tmp);
+			int flags = tmp & 0x7F;
+
+			if (flags == 127) {
+				// dc
+				client_ws_disconnect(client, 1009);
+				return;
+			}
+			else if (flags == 126) {
+				client->ws_state = wss_extended_length1;
+				goto extended_length1;
+			}
+			else {
+				client->ws_frame_len = flags;
+				client->ws_state = wss_mask;
+				goto mask;
+			}
+		}
+
+		case wss_extended_length1:
+		extended_length1: {
+			uint16_t tmp;
+			buffer_read_uint16be(client->in_buffer, &tmp);
+			client->ws_frame_len = tmp;
+			client->ws_state = wss_mask;
+
+			goto mask;
+		}
+
+		case wss_mask:
+		mask: {
+			buffer_read(client->in_buffer, client->ws_mask, 4);
+
+			client->ws_state = wss_data;
+			goto data;
+		}
+
+		case wss_data:
+		data: {
+			if (client->ws_frame == NULL || client->ws_frame_len > buffer_size(client->ws_frame)) {
+				buffer_destroy(client->ws_frame);
+				client->ws_frame = buffer_allocate_memory(client->ws_frame_len);
+			}
+
+			buffer_seek(client->ws_frame, 0);
+
+			size_t copy = client->ws_frame_len - client->ws_frame_read;
+			buffer_read(client->in_buffer, client->ws_frame->mem.data + client->ws_frame_read, copy);
+			client->ws_frame_read += copy;
+
+			if (client->ws_frame_read == client->ws_frame_len) {
+				client_ws_decode_frame(client);
+				client->ws_mask_read = 0;
+				client->ws_frame_read = 0;
+				client->ws_state = wss_handle_header1;
+			}
+
+			break;
+		}
+
+		default: break;
+	}
+}
+
+void client_ws_decode_frame(client_t *client) {
+	for (size_t i = 0; i < client->ws_frame_len; i++) {
+		client->ws_frame->mem.data[i] ^= client->ws_mask[i & 3];
+	}
+
+	switch (client->ws_opcode) {
+		case 0x00:
+		case 0x02: {
+			client_handle_in_buffer(client, client->ws_frame, client->ws_frame_len);
+			break;
+		}
+
+		case 0x08: {
+			client_ws_disconnect(client, 1000);
+			break;
+		}
+
+		default: {
+			client_ws_disconnect(client, 1003);
+			break;
+		}
+	}
+}
+
+void client_ws_wrap_packet(client_t *client, buffer_t *buffer) {
+	size_t data_len = buffer_tell(buffer);
+	if (data_len == 0) {
+		return;
+	}
+
+	buffer_write_uint8(client->ws_out_buffer, 0x82U);
+
+	if (data_len >= 126) {
+		buffer_write_uint8(client->ws_out_buffer, 126);
+		buffer_write_uint16be(client->ws_out_buffer, data_len);
+	}
+	else {
+		buffer_write_uint8(client->ws_out_buffer, data_len);
+	}
+
+	buffer_write(client->ws_out_buffer, buffer->mem.data, data_len);
+}
+
+void client_ws_disconnect(client_t *client, int code) {
+	buffer_write_uint8(client->ws_out_buffer, 0x88);
+	buffer_write_uint8(client->ws_out_buffer, 0x02);
+	buffer_write_uint16be(client->ws_out_buffer, code);
+	client_send(client, client->ws_out_buffer);
 }
