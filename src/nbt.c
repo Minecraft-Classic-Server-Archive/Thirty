@@ -96,6 +96,24 @@ tag_t *nbt_create_bytearray(const char *name, uint8_t *val, int32_t len) {
 	return t;
 }
 
+tag_t *nbt_create_intarray(const char *name, int32_t *val, int32_t len) {
+	tag_t *t = nbt_create(name);
+	t->type = tag_int_array;
+	t->array_size = len;
+	t->pi = val;
+
+	return t;
+}
+
+tag_t *nbt_create_longarray(const char *name, int64_t *val, int32_t len) {
+	tag_t *t = nbt_create(name);
+	t->type = tag_long_array;
+	t->array_size = len;
+	t->pl = val;
+
+	return t;
+}
+
 tag_t *nbt_copy_bytearray(const char *name, uint8_t *val, int32_t len) {
 	uint8_t *a = malloc(len);
 	memcpy(a, val, len);
@@ -123,12 +141,14 @@ void nbt_destroy(tag_t *tag, bool destroy_values) {
 		}
 	}
 
-	if (tag->type == tag_string && destroy_values) {
-		free(tag->str);
-	}
-
-	if (tag->type == tag_byte_array && destroy_values) {
-		free(tag->pb);
+	if (destroy_values) {
+		switch (tag->type) {
+			case tag_string:        free(tag->str); break;
+			case tag_byte_array:    free(tag->pb);  break;
+			case tag_int_array:	    free(tag->pi);  break;
+			case tag_long_array:    free(tag->pl);  break;
+			default: break;
+		}
 	}
 
 	free(tag);
@@ -211,6 +231,22 @@ void nbt_write(tag_t *tag, buffer_t *buffer) {
 
 			buffer_write_uint8(buffer, tag_end);
 
+			break;
+		}
+
+		case tag_int_array: {
+			buffer_write_int32be(buffer, tag->array_size);
+			for (int32_t i = 0; i < tag->array_size; i++) {
+				buffer_write_int32be(buffer, tag->pi[i]);
+			}
+			break;
+		}
+
+		case tag_long_array: {
+			buffer_write_int32be(buffer, tag->array_size);
+			for (int32_t i = 0; i < tag->array_size; i++) {
+				buffer_write_int64be(buffer, tag->pl[i]);
+			}
 			break;
 		}
 
@@ -378,6 +414,26 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 			while ((subtag = nbt_read(buffer, true))->type != tag_end) {
 				t->list[i] = subtag;
 				i++;
+			}
+
+			break;
+		}
+
+		case tag_int_array: {
+			buffer_read_int32be(buffer, &t->array_size);
+			t->pi = malloc(t->array_size * sizeof(int32_t));
+			for (int32_t i = 0; i < t->array_size; i++) {
+				buffer_read_int32be(buffer, &t->pi[i]);
+			}
+
+			break;
+		}
+
+		case tag_long_array: {
+			buffer_read_int32be(buffer, &t->array_size);
+			t->pl = malloc(t->array_size * sizeof(int64_t));
+			for (int32_t i = 0; i < t->array_size; i++) {
+				buffer_read_int32be(buffer, &t->pi[i]);
 			}
 
 			break;
