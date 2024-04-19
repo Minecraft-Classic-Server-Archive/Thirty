@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <stdbool.h>
+#include <limits.h>
 #include "config.h"
 
 typedef void (*configcallback_t)(const char *section, const char *key, const char *value);
