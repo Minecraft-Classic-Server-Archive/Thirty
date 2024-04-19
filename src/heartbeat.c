@@ -34,7 +34,7 @@ static void *heartbeat_main(void *data) {
 	char url[2048];
 	char response[2048];
 	snprintf(url, sizeof(url),
-			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&name=%s HTTP/1.1\r\n"
+			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&software=%s&name=%s HTTP/1.1\r\n"
 			 "Host: www.classicube.net\r\n"
 			 "User-Agent: Thirty\r\n"
 			 "\r\n",
@@ -43,6 +43,7 @@ static void *heartbeat_main(void *data) {
 			 "False",
 			 server.salt,
 			 server.num_clients,
+			 "Thirty",
 			 "test"
 	);
 
