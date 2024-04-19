@@ -327,8 +327,6 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_mcstr(in_buffer, name);
 				buffer_read_int32be(in_buffer, &version);
 
-				printf("Client supports %s v%d\n", name, version);
-
 				size_t i;
 				for (i = 0; i < client->num_extensions; i++) {
 					if (i == client->num_extensions) {
