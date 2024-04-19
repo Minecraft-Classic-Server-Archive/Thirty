@@ -98,7 +98,7 @@ cleanup:
 	deflateEnd(&strm);
 
 	fclose(fp);
-
+	free(readbuf);
 	buffer_destroy(outbuf);
 
 	nbt_destroy(root, true);
