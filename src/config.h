@@ -25,6 +25,7 @@ typedef struct {
 		uint16_t port;
 		bool public;
 		bool offline;
+		unsigned max_players;
 	} server;
 
 	struct {
