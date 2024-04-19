@@ -208,6 +208,14 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "offline") == 0) {
 			config.server.offline = strcmp(value, "true") == 0;
 		}
+		else if (strcmp(key, "max_players") == 0) {
+			long max = parse_int(value, &ok);
+			if (!ok) {
+				fprintf(stderr, "Failed to parse 'max_players' as unsigned integer\n");
+			} else {
+				config.server.max_players = (unsigned int) max;
+			}
+		}
 	}
 
 	else if (strcmp(section, "map") == 0) {
@@ -259,6 +267,10 @@ void config_init(void) {
 
 	if (config.server.port == 0) {
 		config.server.port = 25565;
+	}
+
+	if (config.server.max_players == 0) {
+		config.server.max_players = 8;
 	}
 
 	if (config.map.name == NULL) {

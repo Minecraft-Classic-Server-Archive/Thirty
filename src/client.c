@@ -260,6 +260,11 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 
 				const bool supports_cpe = unused == 0x42;
 
+				if (server.num_clients > config.server.max_players) {
+					client_disconnect(client, "This server is full.");
+					return;
+				}
+
 				for (size_t i = 0; i < server.num_clients; i++) {
 					if (strcasecmp(server.clients[i].name, username) == 0) {
 						client_disconnect(client, "Name already in use.");
