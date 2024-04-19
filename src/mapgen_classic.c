@@ -114,6 +114,8 @@ void gen_strata(map_t *map, genstate_t *state) {
 			map_set(map, x, y, z, block);
 		}
 	}
+
+	octavenoise_destroy(noise);
 }
 
 void gen_caves(map_t *map, rng_t *rng) {

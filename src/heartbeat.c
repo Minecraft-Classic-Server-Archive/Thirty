@@ -89,6 +89,7 @@ static void *heartbeat_main(void *data) {
 
 cleanup:
 	closesocket(sock);
+	freeaddrinfo(result);
 
 	return NULL;
 }
