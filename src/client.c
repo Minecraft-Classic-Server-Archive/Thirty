@@ -362,8 +362,6 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 
 				map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
 
-				printf("%s changed block: x = %d, y = %d, z = %d, block = %d, mode = %d\n", client->name, x, y, z, block, mode);
-
 				break;
 			}
 
