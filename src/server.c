@@ -30,6 +30,8 @@
 #include "packet.h"
 #include "rng.h"
 #include "util.h"
+#include "mapgen.h"
+#include "config.h"
 
 #define HEARTBEAT_INTERVAL (45.0)
 
@@ -39,7 +41,7 @@ void server_generate_salt(char *out, size_t length);
 server_t server;
 
 bool server_init(void) {
-	server.port = (uint16_t)25565;
+	server.port = config.server.port;
 	server.global_rng = rng_create((int)time(NULL));
 	server.last_heartbeat = 0.0;
 
@@ -92,8 +94,15 @@ bool server_init(void) {
 	printf("Server is listening on port %u\n", server.port);
 
 	printf("Preparing map...\n");
-	server.map = map_create(256, 256, 256);
-	map_save(server.map, "map.cw");
+	server.map = map_create(config.map.name, config.map.width, config.map.depth, config.map.height);
+
+	printf("Generating map...\n");
+	double start = get_time_s();
+	map_generate(server.map, config.map.generator);
+	double duration = get_time_s() - start;
+	printf("Map generation took %f seconds\n", duration);
+
+	map_save(server.map);
 
 	server_heartbeat();
 	server.last_heartbeat = get_time_s();

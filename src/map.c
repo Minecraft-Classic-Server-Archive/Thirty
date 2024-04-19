@@ -25,8 +25,9 @@
 #include "blocks.h"
 #include "util.h"
 
-map_t *map_create(size_t width, size_t depth, size_t height) {
+map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map_t *map = malloc(sizeof(*map));
+	map->name = strdup(name);
 	map->width = width;
 	map->depth = depth;
 	map->height = height;
@@ -37,16 +38,11 @@ map_t *map_create(size_t width, size_t depth, size_t height) {
 
 	memset(map->blocks, 0, width * depth * height);
 
-	printf("Generating map...\n");
-	double start = get_time_s();
-	mapgen_seantest(map);
-	double duration = get_time_s() - start;
-	printf("Map generation took %f seconds\n", duration);
-
 	return map;
 }
 
 void map_destroy(map_t *map) {
+	free(map->name);
 	free(map->blocks);
 	free(map);
 }

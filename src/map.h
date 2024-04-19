@@ -25,6 +25,8 @@ typedef struct scheduledtick_s {
 } scheduledtick_t;
 
 typedef struct map_s {
+	char *name;
+
 	size_t width, depth, height;
 	uint8_t *blocks;
 
@@ -35,7 +37,7 @@ typedef struct map_s {
 	scheduledtick_t *ticks;
 } map_t;
 
-map_t *map_create(size_t width, size_t depth, size_t height);
+map_t *map_create(const char *name, size_t width, size_t depth, size_t height);
 void map_destroy(map_t *map);
 
 void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
@@ -45,7 +47,7 @@ size_t map_get_top(map_t *map, size_t x, size_t z);
 void map_tick(map_t *map);
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until);
 
-void map_save(map_t *map, const char *filename);
+void map_save(map_t *map);
 
 static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
 	return x < map->width && y < map->depth && z < map->height;

@@ -22,6 +22,7 @@
 #include "sockets.h"
 #include "blocks.h"
 #include "util.h"
+#include "config.h"
 
 static void signal_handler(int signum);
 
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 
+	config_init();
 	blocks_init();
 
 #ifdef _WIN32
@@ -62,6 +64,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	server_shutdown();
+	config_destroy();
 
 #ifdef _WIN32
 	WSACleanup();

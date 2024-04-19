@@ -17,12 +17,34 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 #include "mapgen.h"
 #include "map.h"
 #include "rng.h"
 #include "perlin.h"
 #include "util.h"
 #include "blocks.h"
+
+void map_generate(map_t *map, const char *generator_name) {
+	if (strcmp(generator_name, "classic") == 0) {
+		mapgen_classic(map);
+	}
+	else if (strcmp(generator_name, "seantest") == 0) {
+		mapgen_seantest(map);
+	}
+	else if (strcmp(generator_name, "flat") == 0) {
+		mapgen_flat(map);
+	}
+	else if (strcmp(generator_name, "debug") == 0) {
+		mapgen_debug(map);
+	}
+	else if (strcmp(generator_name, "random") == 0) {
+		mapgen_random(map);
+	}
+	else {
+		fprintf(stderr, "Invalid generator name '%s', map will be empty\n", generator_name);
+	}
+}
 
 void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, uint8_t block) {
 	int xStart = (int)floor(util_max(centreX - radius, 0));

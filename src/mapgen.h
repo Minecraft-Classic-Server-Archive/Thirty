@@ -27,6 +27,8 @@ typedef struct fastintstack_s {
 typedef struct map_s map_t;
 typedef struct rng_s rng_t;
 
+void map_generate(map_t *map, const char *generator_name);
+
 void mapgen_classic(map_t *map);
 void mapgen_debug(map_t *map);
 void mapgen_flat(map_t *map);
