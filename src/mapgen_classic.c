@@ -23,6 +23,7 @@
 #include "blocks.h"
 #include "perlin.h"
 #include "util.h"
+#include "config.h"
 
 // Minecraft Classic world generator.
 // Partially derived from ClassiCube client under BSD 3-clause (c) 2014 - 2022, UnknownShadow200
@@ -40,7 +41,7 @@ static void gen_surface(map_t *map, genstate_t *state);
 
 void mapgen_classic(map_t *map) {
 	genstate_t state;
-	state.rng = rng_create((int)time(NULL));
+	state.rng = rng_create(config.map.random_seed ? (int)time(NULL) : config.map.seed);
 	state.heightmap = calloc(map->width * map->height, sizeof(unsigned int));
 
 	gen_heightmap(map, &state);

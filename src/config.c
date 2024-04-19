@@ -249,11 +249,22 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "generator") == 0) {
 			config.map.generator = strdup(value);
 		}
+		else if (strcmp(key, "seed") == 0) {
+			long seed = parse_int(value, &ok);
+			if (!ok) {
+				fprintf(stderr, "Failed to parse 'seed' as unsigned integer\n");
+			} else {
+				config.map.seed = seed;
+				config.map.random_seed = false;
+			}
+		}
 	}
 }
 
 void config_init(const char *config_path) {
 	memset(&config, 0, sizeof(config));
+
+	config.map.random_seed = true;
 
 	config_parse(config_path, cfg_callback);
 

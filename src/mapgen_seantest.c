@@ -22,6 +22,7 @@
 #include "rng.h"
 #include "perlin.h"
 #include "blocks.h"
+#include "config.h"
 
 // Experimental world generator I originally wrote for "real" Minecraft.
 // Works better with large (infinite...) worlds. But even then the terrain ends up pretty rough.
@@ -44,7 +45,7 @@ static void gen_surface(map_t *map, genstate_t *state);
 
 void mapgen_seantest(map_t *map) {
 	genstate_t state;
-	state.rng = rng_create((int)time(NULL));
+	state.rng = rng_create(config.map.random_seed ? (int)time(NULL) : config.map.seed);
 	state.heightmap = calloc(map->width * map->height, sizeof(unsigned int));
 	state.basenoise1 = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
 	state.basenoise2 = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
