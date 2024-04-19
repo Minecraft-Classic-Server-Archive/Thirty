@@ -111,6 +111,7 @@ bool server_init(void) {
 }
 
 void server_shutdown(void) {
+	map_save(server.map);
 	map_destroy(server.map);
 	closesocket(server.socket_fd);
 	rng_destroy(server.global_rng);
