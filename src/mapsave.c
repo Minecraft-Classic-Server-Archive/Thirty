@@ -21,6 +21,7 @@
 #include "map.h"
 #include "nbt.h"
 #include "buffer.h"
+#include "server.h"
 
 void map_save(map_t *map) {
 	char filename[256];
@@ -39,6 +40,30 @@ void map_save(map_t *map) {
 	tag_t *z_size = nbt_create("Z"); nbt_set_int16(z_size, (int16_t)map->height);
 	tag_t *block_array = nbt_copy_bytearray("BlockArray", map->blocks, num_blocks);
 	tag_t *metadata = nbt_create_compound("Metadata");
+	tag_t *software_data = nbt_create_compound("classicserver");
+
+	tag_t *scheduled_ticks = nbt_create_list("ScheduledTicks", tag_compound, (int32_t)map->num_ticks);
+
+	for (size_t i = 0; i < map->num_ticks; i++) {
+		const scheduledtick_t *tick = &map->ticks[i];
+
+		tag_t *tag = nbt_create_compound(NULL);
+		tag_t *tick_x = nbt_create("X"); nbt_set_int16(tick_x, (int16_t)tick->x);
+		tag_t *tick_y = nbt_create("Y"); nbt_set_int16(tick_y, (int16_t)tick->y);
+		tag_t *tick_z = nbt_create("Z"); nbt_set_int16(tick_z, (int16_t)tick->z);
+		tag_t *tick_time = nbt_create("Time"); nbt_set_int32(tick_time, (int32_t)(server.tick - tick->time));
+
+		nbt_add_tag(tag, tick_x);
+		nbt_add_tag(tag, tick_y);
+		nbt_add_tag(tag, tick_z);
+		nbt_add_tag(tag, tick_time);
+
+		nbt_add_tag(scheduled_ticks, tag);
+	}
+
+	nbt_add_tag(software_data, scheduled_ticks);
+
+	nbt_add_tag(metadata, software_data);
 
 	nbt_add_tag(root, format_version);
 	nbt_add_tag(root, name_tag);

@@ -65,6 +65,7 @@ typedef struct tag_s {
 
 tag_t *nbt_create(const char *name);
 tag_t *nbt_create_compound(const char *name);
+tag_t *nbt_create_list(const char *name, tag_e type, int32_t length);
 tag_t *nbt_create_string(const char *name, const char *val);
 tag_t *nbt_create_bytearray(const char *name, uint8_t *val, int32_t len);
 tag_t *nbt_copy_bytearray(const char *name, uint8_t *val, int32_t len);
