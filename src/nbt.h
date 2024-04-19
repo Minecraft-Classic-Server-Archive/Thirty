@@ -32,6 +32,8 @@ typedef enum tag_e {
 	tag_string,
 	tag_list,
 	tag_compound,
+	tag_int_array,
+	tag_long_array,
 
 	num_tags
 
@@ -51,6 +53,8 @@ typedef struct tag_s {
 		uint8_t *pb;
 		char *str;
 		struct tag_s **list;
+		int32_t *pi;
+		int64_t *pl;
 	};
 
 	// for entries in lists
@@ -68,6 +72,8 @@ tag_t *nbt_create_compound(const char *name);
 tag_t *nbt_create_list(const char *name, tag_e type, int32_t length);
 tag_t *nbt_create_string(const char *name, const char *val);
 tag_t *nbt_create_bytearray(const char *name, uint8_t *val, int32_t len);
+tag_t *nbt_create_intarray(const char *name, int32_t *val, int32_t len);
+tag_t *nbt_create_longarray(const char *name, int64_t *val, int32_t len);
 tag_t *nbt_copy_bytearray(const char *name, uint8_t *val, int32_t len);
 
 void nbt_destroy(tag_t *tag, bool destroy_values);
