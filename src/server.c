@@ -139,7 +139,13 @@ void server_tick(void) {
 	}
 
 	if (removed) {
-		server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
+		if (server.num_clients == 0) {
+			free(server.clients);
+			server.clients = NULL;
+		}
+		else {
+			server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
+		}
 	}
 
 	if (get_time_s() - server.last_heartbeat > HEARTBEAT_INTERVAL) {

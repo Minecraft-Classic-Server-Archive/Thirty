@@ -108,7 +108,13 @@ void map_tick(map_t *map) {
 	}
 
 	if (resized) {
-		map->ticks = realloc(map->ticks, sizeof(*map->ticks) * map->num_ticks);
+		if (map->num_ticks == 0) {
+			free(map->ticks);
+			map->ticks = 0;
+		}
+		else {
+			map->ticks = realloc(map->ticks, sizeof(*map->ticks) * map->num_ticks);
+		}
 	}
 }
 
