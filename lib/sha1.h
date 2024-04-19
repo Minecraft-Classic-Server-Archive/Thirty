@@ -42,6 +42,4 @@ void SHA1(
 	size_t len
 );
 
-void StringifySHA1(unsigned char digest[20], char output[41]);
-
 #endif /* SHA1_H */
