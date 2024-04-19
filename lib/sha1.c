@@ -290,11 +290,3 @@ void SHA1(
 	SHA1Final((unsigned char *)hash_out, &ctx);
 	hash_out[20] = '\0';
 }
-
-void StringifySHA1(unsigned char digest[20], char output[41])
-{
-	for (int i = 0; i < 20; i++)
-	{
-		sprintf(output + (i * 2), "%02x", digest[i]);
-	}
-}
