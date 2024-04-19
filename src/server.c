@@ -143,6 +143,7 @@ void server_tick(void) {
 		if (server.num_clients == 0) {
 			free(server.clients);
 			server.clients = NULL;
+			map_save(server.map);
 		}
 		else {
 			server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
