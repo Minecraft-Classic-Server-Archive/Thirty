@@ -1,4 +1,4 @@
-// classicserver, a ClassiCube (Minecraft Classic) server
+// Thirty, a ClassiCube (Minecraft Classic) server
 // Copyright (C) 2024 Sean Baggaley
 //
 // This program is free software: you can redistribute it and/or modify
@@ -40,7 +40,7 @@ void map_save(map_t *map) {
 	tag_t *z_size = nbt_create("Z"); nbt_set_int16(z_size, (int16_t)map->height);
 	tag_t *block_array = nbt_copy_bytearray("BlockArray", map->blocks, num_blocks);
 	tag_t *metadata = nbt_create_compound("Metadata");
-	tag_t *software_data = nbt_create_compound("classicserver");
+	tag_t *software_data = nbt_create_compound("Thirty");
 
 	tag_t *scheduled_ticks = nbt_create_list("ScheduledTicks", tag_compound, (int32_t)map->num_ticks);
 
