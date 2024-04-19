@@ -191,7 +191,7 @@ void nbt_write(tag_t *tag, buffer_t *buffer) {
 
 		case tag_list: {
 			buffer_write_uint8(buffer, (uint8_t) tag->array_type);
-			buffer_write_int32le(buffer, tag->array_size);
+			buffer_write_int32be(buffer, tag->array_size);
 
 			for (int32_t i = 0; i < tag->array_size; i++) {
 				if (tag->list[i] == NULL) continue;
