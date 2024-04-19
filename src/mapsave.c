@@ -22,7 +22,10 @@
 #include "nbt.h"
 #include "buffer.h"
 
-void map_save(map_t *map, const char *filename) {
+void map_save(map_t *map) {
+	char filename[256];
+	snprintf(filename, sizeof(filename), "%s.cw", map->name);
+
 	tag_t *root = nbt_create_compound("ClassicWorld");
 	uint8_t uuid[16];
 

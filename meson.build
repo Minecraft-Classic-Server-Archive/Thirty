@@ -28,6 +28,8 @@ source_files = [
     'src/buffer.h',
     'src/client.c',
     'src/client.h',
+    'src/config.c',
+    'src/config.h',
     'src/cpe.c',
     'src/heartbeat.c',
     'src/cpe.h',

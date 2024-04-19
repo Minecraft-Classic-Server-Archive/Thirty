@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "server.h"
 #include "sockets.h"
+#include "config.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -93,6 +94,10 @@ cleanup:
 }
 
 void server_heartbeat(void) {
+	if (config.server.offline) {
+		return;
+	}
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 

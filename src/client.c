@@ -31,6 +31,7 @@
 #include "md5.h"
 #include "sha1.h"
 #include "b64.h"
+#include "config.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -266,7 +267,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					}
 				}
 
-				if (!client_verify_key(username, key)) {
+				if (!config.server.offline && !client_verify_key(username, key)) {
 					client_disconnect(client, "Authentication failed.");
 					return;
 				}
@@ -473,8 +474,8 @@ void client_login(client_t *client) {
 
 	buffer_write_uint8(client->out_buffer, packet_ident);
 	buffer_write_uint8(client->out_buffer, 0x07);
-	buffer_write_mcstr(client->out_buffer, "hostname", cp437);
-	buffer_write_mcstr(client->out_buffer, "motd", cp437);
+	buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
+	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
 	buffer_write_uint8(client->out_buffer, 0x64);
 	client_flush(client);
 
