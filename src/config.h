@@ -32,6 +32,8 @@ typedef struct {
 		char *name;
 		unsigned width, depth, height;
 		char *generator;
+		bool random_seed;
+		int seed;
 	} map;
 } config_t;
 
