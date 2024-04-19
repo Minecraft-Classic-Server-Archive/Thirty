@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <getopt.h>
 #include "server.h"
 #include "sockets.h"
 #include "blocks.h"
@@ -29,13 +30,26 @@ static void signal_handler(int signum);
 static bool running = true;
 
 int main(int argc, char *argv[]) {
-	(void)argc;
-	(void)argv;
-	
 	setbuf(stdout, NULL);
 	setbuf(stderr, NULL);
 
-	config_init();
+	const char *config_file = "settings.ini";
+	int opt;
+	while ((opt = getopt(argc, argv, "c:")) != -1) {
+		switch (opt) {
+			case 'c': {
+				config_file = optarg;
+				break;
+			}
+
+			default: {
+				printf("Usage: %s [-c config]\n", argv[0]);
+				return 0;
+			}
+		}
+	}
+
+	config_init(config_file);
 	blocks_init();
 
 #ifdef _WIN32

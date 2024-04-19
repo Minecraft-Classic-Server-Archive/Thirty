@@ -35,7 +35,7 @@ typedef struct {
 	} map;
 } config_t;
 
-void config_init(void);
+void config_init(const char *config_path);
 void config_destroy(void);
 
 extern config_t config;

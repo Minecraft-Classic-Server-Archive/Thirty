@@ -252,10 +252,10 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 	}
 }
 
-void config_init(void) {
+void config_init(const char *config_path) {
 	memset(&config, 0, sizeof(config));
 
-	config_parse("settings.ini", cfg_callback);
+	config_parse(config_path, cfg_callback);
 
 	if (config.server.name == NULL) {
 		config.server.name = strdup("Unnamed server");

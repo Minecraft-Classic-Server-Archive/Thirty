@@ -4,3 +4,5 @@ build*/
 .idea/
 
 *.cw
+
+settings.custom.ini
