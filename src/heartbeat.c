@@ -38,13 +38,13 @@ static void *heartbeat_main(void *data) {
 			 "Host: www.classicube.net\r\n"
 			 "User-Agent: Thirty\r\n"
 			 "\r\n",
-			 25565,
-			 128,
-			 "False",
+			 config.server.port,
+			 config.server.max_players,
+			 config.server.public ? "True" : "False",
 			 server.salt,
 			 server.num_clients,
 			 "Thirty",
-			 "test"
+			 config.server.name
 	);
 
 	struct addrinfo hints, *result;
