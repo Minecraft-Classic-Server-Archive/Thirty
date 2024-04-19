@@ -32,7 +32,7 @@ void map_save(map_t *map) {
 	const size_t num_blocks = map->width * map->depth * map->height;
 
 	tag_t *format_version = nbt_create("FormatVersion"); nbt_set_int8(format_version, 1);
-	tag_t *name_tag = nbt_create_string("Name", strdup(filename));
+	tag_t *name_tag = nbt_create_string("Name", map->name);
 	tag_t *uuid_tag = nbt_copy_bytearray("UUID", uuid, 16);
 	tag_t *x_size = nbt_create("X"); nbt_set_int16(x_size, (int16_t)map->width);
 	tag_t *y_size = nbt_create("Y"); nbt_set_int16(y_size, (int16_t)map->depth);
