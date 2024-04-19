@@ -1,4 +1,4 @@
-# classicserver, a ClassiCube (Minecraft Classic) server
+# Thirty, a ClassiCube (Minecraft Classic) server
 # Copyright (C) 2024 Sean Baggaley
 #
 # This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-project('classicserver', 'c',
+project('thirty', 'c',
     default_options: [ 'warning_level=3' ]
 )
 
@@ -79,4 +79,4 @@ endif
 
 libdir = include_directories('lib')
 
-executable('classicserver', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir)
+executable('thirty', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir)

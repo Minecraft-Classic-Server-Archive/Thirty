@@ -1,4 +1,4 @@
-// classicserver, a ClassiCube (Minecraft Classic) server
+// Thirty, a ClassiCube (Minecraft Classic) server
 // Copyright (C) 2024 Sean Baggaley
 //
 // This program is free software: you can redistribute it and/or modify
@@ -282,7 +282,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 
 				if (supports_cpe) {
 					buffer_write_uint8(client->out_buffer, packet_extinfo);
-					buffer_write_mcstr(client->out_buffer, "classicserver", false);
+					buffer_write_mcstr(client->out_buffer, "Thirty", false);
 					buffer_write_uint16be(client->out_buffer, cpe_count_supported());
 
 					for (size_t i = 0; true; i++) {
@@ -670,7 +670,7 @@ void client_ws_upgrade(client_t *client, int r) {
 			 "\r\n",
 
 			 key_b64,
-			 "classicserver"
+			 "Thirty"
 	);
 
 	buffer_write(client->out_buffer, response, strlen(response));

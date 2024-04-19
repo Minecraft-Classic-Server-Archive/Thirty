@@ -1,4 +1,4 @@
-// classicserver, a ClassiCube (Minecraft Classic) server
+// Thirty, a ClassiCube (Minecraft Classic) server
 // Copyright (C) 2024 Sean Baggaley
 //
 // This program is free software: you can redistribute it and/or modify
@@ -36,7 +36,7 @@ static void *heartbeat_main(void *data) {
 	snprintf(url, sizeof(url),
 			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&name=%s HTTP/1.1\r\n"
 			 "Host: www.classicube.net\r\n"
-			 "User-Agent: classicserver\r\n"
+			 "User-Agent: Thirty\r\n"
 			 "\r\n",
 			 25565,
 			 128,

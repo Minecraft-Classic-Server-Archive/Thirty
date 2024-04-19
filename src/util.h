@@ -1,4 +1,4 @@
-// classicserver, a ClassiCube (Minecraft Classic) server
+// Thirty, a ClassiCube (Minecraft Classic) server
 // Copyright (C) 2024 Sean Baggaley
 //
 // This program is free software: you can redistribute it and/or modify
