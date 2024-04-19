@@ -26,6 +26,8 @@
 #include "blocks.h"
 
 void map_generate(map_t *map, const char *generator_name) {
+	map->generating = true;
+
 	if (strcmp(generator_name, "classic") == 0) {
 		mapgen_classic(map);
 	}
@@ -44,6 +46,8 @@ void map_generate(map_t *map, const char *generator_name) {
 	else {
 		fprintf(stderr, "Invalid generator name '%s', map will be empty\n", generator_name);
 	}
+
+	map->generating = false;
 }
 
 void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, uint8_t block) {
