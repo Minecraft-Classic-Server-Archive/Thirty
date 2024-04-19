@@ -43,12 +43,15 @@ tag_t *tag_create_empty(void) {
 
 tag_t *nbt_create(const char *name) {
 	tag_t *t = tag_create_empty();
-	t->no_header = false;
 
-	size_t nl = strlen(name);
-	t->name = calloc(nl + 1, sizeof(char));
-	strncpy(t->name, name, nl);
-	t->name[nl] = '\0';
+	if (name != NULL) {
+		t->no_header = false;
+
+		size_t nl = strlen(name);
+		t->name = calloc(nl + 1, sizeof(char));
+		strncpy(t->name, name, nl);
+		t->name[nl] = '\0';
+	}
 
 	return t;
 }
@@ -57,6 +60,16 @@ tag_t *nbt_create_compound(const char *name) {
 	tag_t *t = nbt_create(name);
 	t->type = tag_compound;
 	t->array_size = 32;
+	t->list = calloc(t->array_size, sizeof(*t->list));
+
+	return t;
+}
+
+tag_t *nbt_create_list(const char *name, tag_e type, int32_t length) {
+	tag_t *t = nbt_create(name);
+	t->type = tag_list;
+	t->array_type = type;
+	t->array_size = length;
 	t->list = calloc(t->array_size, sizeof(*t->list));
 
 	return t;
