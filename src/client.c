@@ -84,6 +84,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 }
 
 void client_destroy(client_t *client) {
+	free(client->extensions);
 	closesocket(client->socket_fd);
 	buffer_destroy(client->ws_out_buffer);
 	buffer_destroy(client->ws_frame);
