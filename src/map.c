@@ -32,7 +32,7 @@ map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map->depth = depth;
 	map->height = height;
 	map->blocks = malloc(width * depth * height);
-	map->generating = true;
+	map->generating = false;
 	map->num_ticks = 0;
 	map->ticks = NULL;
 
