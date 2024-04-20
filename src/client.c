@@ -372,7 +372,9 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_uint8(in_buffer, &unused);
 				buffer_read_mcstr(in_buffer, msg);
 
-				server_broadcast("&e%s: &f%s", client->name, msg);
+				if (client->spawned) {
+					server_broadcast("&e%s: &f%s", client->name, msg);
+				}
 
 				break;
 			}
