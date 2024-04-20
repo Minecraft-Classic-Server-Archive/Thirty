@@ -35,7 +35,6 @@ typedef struct genstate_s {
 
 static void gen_heightmap(map_t *map, genstate_t *state);
 static void gen_strata(map_t *map, genstate_t *state);
-static void gen_water(map_t *map, genstate_t *state);
 static void gen_lava(map_t *map, genstate_t *state);
 static void gen_surface(map_t *map, genstate_t *state);
 
@@ -46,11 +45,11 @@ void mapgen_classic(map_t *map) {
 
 	gen_heightmap(map, &state);
 	gen_strata(map, &state);
-	gen_caves(map, state.rng);
+	gen_caves(map, state.rng, true, air);
 	gen_ore(map, state.rng, gold_ore, 0.5f);
 	gen_ore(map, state.rng, iron_ore, 0.7f);
 	gen_ore(map, state.rng, coal_ore, 0.9f);
-	gen_water(map, &state);
+	gen_water(map, state.rng);
 	gen_lava(map, &state);
 	gen_surface(map, &state);
 	gen_plants(map, state.rng, state.heightmap);
@@ -119,7 +118,7 @@ void gen_strata(map_t *map, genstate_t *state) {
 	octavenoise_destroy(noise);
 }
 
-void gen_caves(map_t *map, rng_t *rng) {
+void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block) {
 	unsigned int numCaves = (map->width * map->depth * map->height) / 8192;
 
 	for (unsigned int i = 0; i < numCaves; i++) {
@@ -156,7 +155,7 @@ void gen_caves(map_t *map, rng_t *rng) {
 				radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
 				radius = radius * sin(len * M_PI / caveLength);
 
-				fill_oblate_spherioid(map, centreX, centreY, centreZ, radius, air);
+				fill_oblate_spherioid(map, centreX, centreY, centreZ, radius, filter_stone, block);
 			}
 		}
 	}
@@ -189,12 +188,12 @@ void gen_ore(map_t *map, rng_t *rng, int8_t block, float abundance) {
 
 			double radius = abundance * sin(len * M_PI / veinLength) + 1;
 
-			fill_oblate_spherioid(map, (int) veinX, (int) veinY, (int) veinZ, radius, block);
+			fill_oblate_spherioid(map, (int) veinX, (int) veinY, (int) veinZ, radius, true, block);
 		}
 	}
 }
 
-void gen_water(map_t *map, genstate_t *state) {
+void gen_water(map_t *map, rng_t *rng) {
 	int waterLevel = ((int)map->depth / 2) - 1;
 	int numSources = (int)(map->width * map->height) / 800;
 
@@ -209,9 +208,9 @@ void gen_water(map_t *map, genstate_t *state) {
 	}
 
 	for (int i = 0; i < numSources; i++) {
-		int x = rng_next2(state->rng, 0, (int)map->width);
-		int z = rng_next2(state->rng, 0, (int)map->height);
-		int y = waterLevel - rng_next2(state->rng, 0, 2);
+		int x = rng_next2(rng, 0, (int)map->width);
+		int z = rng_next2(rng, 0, (int)map->height);
+		int y = waterLevel - rng_next2(rng, 0, 2);
 
 		flood_fill(map, map_get_block_index(map, x, y, z), water);
 	}
