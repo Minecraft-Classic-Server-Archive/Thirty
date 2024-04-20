@@ -27,6 +27,8 @@
 // Experimental world generator I originally wrote for "real" Minecraft.
 // Works better with large (infinite...) worlds. But even then the terrain ends up pretty rough.
 
+#define CAVE_FILLER (magenta_wool)
+
 typedef struct {
 	rng_t *rng;
 	unsigned int *heightmap;
@@ -58,8 +60,9 @@ void mapgen_seantest(map_t *map) {
 	state.beachnoise = octavenoise_create(state.rng, 6);
 
 	gen_noise(map, &state);
+	gen_caves(map, state.rng, false, CAVE_FILLER);
+	gen_water(map, state.rng);
 	gen_surface(map, &state);
-	gen_caves(map, state.rng);
 	gen_ore(map, state.rng, gold_ore, 0.5f);
 	gen_ore(map, state.rng, iron_ore, 0.7f);
 	gen_ore(map, state.rng, coal_ore, 0.9f);
@@ -94,6 +97,7 @@ void gen_noise(map_t *map, genstate_t *state) {
 		}
 
 		unsigned int hm = 0;
+		unsigned int lm = map->depth;
 
 		double bh = waterLevel + hr;
 		double th = waterLevel + (combinednoise_compute2d(state->overhangheight, (double)x / 4.1, (double)z / 4.1) / 2.5) + (octavenoise_compute2d(state->overhangamplify, (double)x / 3.7, (double)z / 3.7) / 2.0);
@@ -104,10 +108,7 @@ void gen_noise(map_t *map, genstate_t *state) {
 			if ((double)y <= bh || ((double)y <= th && ts > tt)) {
 				map_set(map, x, y, z, stone);
 				if (y > hm) hm = y;
-			}
-			else if ((double)y <= waterLevel) {
-				map_set(map, x, y, z, water);
-				if (y > hm) hm = y;
+				if (y < lm) lm = y;
 			}
 		}
 
@@ -140,10 +141,13 @@ void gen_surface(map_t *map, genstate_t *state) {
 			int dirt_thickness = (int) octavenoise_compute2d(state->dirtthickness, (double)x, (double)z) / 24 + 4;
 
 			uint8_t newtype;
-			if (d < 3 && octavenoise_compute2d(state->beachnoise, (double)x / 1.3, (double)z / 1.3) / 6.0 > 1.0 && y >= waterLevel - 1 && y <= waterLevel + 1) {
+			if (t == CAVE_FILLER) {
+				newtype = air;
+			}
+			else if (d < 3 && octavenoise_compute2d(state->beachnoise, (double)x / 1.3, (double)z / 1.3) / 6.0 > 1.0 && y >= waterLevel - 1 && y <= waterLevel + 1) {
 				newtype = sand;
 			}
-			else if (d == 0 && !underwater) {
+			else if ((d == 0 && !underwater) || map_get_top(map, x, z) == (size_t)y) {
 				newtype = grass;
 			}
 			else if (d < dirt_thickness) {

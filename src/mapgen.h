@@ -35,14 +35,15 @@ void mapgen_flat(map_t *map);
 void mapgen_random(map_t *map);
 void mapgen_seantest(map_t *map);
 
-void gen_caves(map_t *map, rng_t *rng);
+void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block);
 void gen_ore(map_t *map, rng_t *rng, int8_t block, float abundance);
 void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap);
+void gen_water(map_t *map, rng_t *rng);
 
 bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height);
 void mapgen_grow_tree(struct map_s *map, rng_t *rng, int x, int y, int z, int height);
 
-void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, uint8_t block);
+void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, bool filter_stone, uint8_t block);
 void flood_fill(map_t *map, unsigned int startIndex, uint8_t block);
 
 fastintstack_t *fastintstack_create(unsigned int capacity);

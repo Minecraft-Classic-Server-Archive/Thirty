@@ -50,7 +50,7 @@ void map_generate(map_t *map, const char *generator_name) {
 	map->generating = false;
 }
 
-void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, uint8_t block) {
+void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, double radius, bool filter_stone, uint8_t block) {
 	int xStart = (int)floor(util_max(centreX - radius, 0));
 	int xEnd = (int)floor(util_min(centreX + radius, map->width - 1));
 	int yStart = (int)floor(util_max(centreY - radius, 0));
@@ -70,7 +70,7 @@ void fill_oblate_spherioid(map_t *map, int centreX, int centreY, int centreZ, do
 		int iz = (int)z;
 
 		if ((dx * dx + 2 * dy * dy + dz * dz) < (radius * radius) && map_pos_valid(map, ix, iy, iz)) {
-			if (map_get(map, ix, iy, iz) == stone) {
+			if ((!filter_stone || map_get(map, ix, iy, iz) == stone) && map_get(map, ix, iy, iz) != air) {
 				map_set(map, ix, iy, iz, block);
 			}
 		}
@@ -89,7 +89,7 @@ void flood_fill(map_t *map, unsigned int startIndex, uint8_t block) {
 
 		if (index >= blocklen) continue;
 
-		if (map->blocks[index] != air) continue;
+		if (map->blocks[index] != air && map->blocks[index] != magenta_wool) continue;
 		map->blocks[index] = block;
 
 		unsigned int x = index % map->width;
