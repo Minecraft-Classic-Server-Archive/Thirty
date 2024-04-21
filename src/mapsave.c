@@ -133,15 +133,19 @@ map_t *map_load(const char *name) {
 	snprintf(filename, sizeof(filename), "%s.cw", name);
 
 	map_t *map = NULL;
-	buffer_t *nbtbuf = buffer_allocate_memory(0, true);
+	uint8_t *inbuf = NULL, *outbuf = NULL;
+	tag_t *root = NULL;
+	buffer_t *nbtbuf = NULL;
 
 	FILE *fp = fopen(filename, "rb");
 	if (fp == NULL) {
-		return NULL;
+		goto cleanup;
 	}
 
-	uint8_t inbuf[8192];
-	uint8_t outbuf[8192];
+	const size_t inbufsize = 2 * 1024 * 1024;
+	inbuf = malloc(inbufsize);
+	const size_t outbufsize = 2 * 1024 * 1024;
+	outbuf = malloc(outbufsize);
 
 	z_stream strm;
 	strm.zalloc = Z_NULL;
@@ -150,13 +154,14 @@ map_t *map_load(const char *name) {
 
 	int ret = inflateInit2(&strm, 15 | 16);
 	if (ret != Z_OK) {
-		fclose(fp);
 		fprintf(stderr, "Failed to init zlib stream.");
-		return NULL;
+		goto cleanup;
 	}
 
+	nbtbuf = buffer_allocate_memory(0, true);
+
 	do {
-		strm.avail_in = fread(inbuf, 1, sizeof(inbuf), fp);
+		strm.avail_in = fread(inbuf, 1, inbufsize, fp);
 		if (ferror(fp)) {
 			inflateEnd(&strm);
 			return NULL;
@@ -169,22 +174,24 @@ map_t *map_load(const char *name) {
 		strm.next_in = inbuf;
 
 		do {
-			strm.avail_out = sizeof(outbuf);
+			strm.avail_out = outbufsize;
 			strm.next_out = outbuf;
 
 			ret = inflate(&strm, Z_NO_FLUSH);
 
-			unsigned have = sizeof(outbuf) - strm.avail_out;
+			unsigned have = outbufsize - strm.avail_out;
 			buffer_write(nbtbuf, outbuf, have);
 		} while (strm.avail_out == 0);
 	} while (ret != Z_STREAM_END);
 
-	fclose(fp);
+	fclose(fp); fp = NULL;
+	free(outbuf); outbuf = NULL;
+	free(inbuf); inbuf = NULL;
 
 	buffer_seek(nbtbuf, 0);
 
-	tag_t *root = nbt_read(nbtbuf, true);
-	buffer_destroy(nbtbuf);
+	root = nbt_read(nbtbuf, true);
+	buffer_destroy(nbtbuf); nbtbuf = NULL;
 
 	if (root == NULL) {
 		fprintf(stderr, "Not an NBT file: '%s'\n", filename);
@@ -244,6 +251,10 @@ map_t *map_load(const char *name) {
 
 cleanup:
 	nbt_destroy(root, true);
+	buffer_destroy(nbtbuf);
+	free(outbuf);
+	free(inbuf);
+	if (fp != NULL) fclose(fp);
 
 	return map;
 }
