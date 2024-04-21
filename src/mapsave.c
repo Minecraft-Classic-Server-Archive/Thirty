@@ -88,7 +88,7 @@ void map_save(map_t *map) {
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 
-	int err = deflateInit2(&strm, Z_BEST_COMPRESSION, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
+	int err = deflateInit2(&strm, Z_BEST_SPEED, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
 	if (err != Z_OK) {
 		fprintf(stderr, "Failed to init zlib stream.");
 		goto cleanup;
