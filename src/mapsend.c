@@ -59,7 +59,7 @@ void *mapsend_thread_start(void *data) {
 
 	outsize = stream.total_out;
 
-	info->client->mapgz_buffer = buffer_allocate_memory(outsize);
+	info->client->mapgz_buffer = buffer_allocate_memory(outsize, false);
 	buffer_write(info->client->mapgz_buffer, outbuf, outsize);
 	buffer_seek(info->client->mapgz_buffer, 0);
 
@@ -86,7 +86,7 @@ void *mapsend_fast_thread_start(void *data) {
 	uint8_t *inbuf = malloc(inbufsize);
 	uint8_t outbuf[OUTBUFSIZE];
 
-	buffer_t *packetbuffer = buffer_allocate_memory(32 * 1024);
+	buffer_t *packetbuffer = buffer_allocate_memory(32 * 1024, false);
 
 	z_stream strm;
 	strm.zalloc = Z_NULL;

@@ -48,6 +48,7 @@ void map_tick(map_t *map);
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until);
 
 void map_save(map_t *map);
+map_t *map_load(const char *name);
 
 static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
 	return x < map->width && y < map->depth && z < map->height;
@@ -55,4 +56,11 @@ static inline bool map_pos_valid(map_t *map, size_t x, size_t y, size_t z) {
 
 static inline size_t map_get_block_index(map_t *map, size_t x, size_t y, size_t z) {
 	return (y * map->height + z) * map->width + x;
+}
+
+static inline void map_index_to_pos(map_t *map, size_t index, size_t *x, size_t *y, size_t *z) {
+	*y = index / (map->width * map->depth);
+	index -= *y * map->width * map->depth;
+	*z = index / map->width;
+	*x = index % map->width;
 }
