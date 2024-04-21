@@ -94,15 +94,20 @@ bool server_init(void) {
 	printf("Server is listening on port %u\n", server.port);
 
 	printf("Preparing map...\n");
-	server.map = map_create(config.map.name, config.map.width, config.map.depth, config.map.height);
+	server.map = map_load(config.map.name);
 
-	printf("Generating map...\n");
-	double start = get_time_s();
-	map_generate(server.map, config.map.generator);
-	double duration = get_time_s() - start;
-	printf("Map generation took %f seconds\n", duration);
+	if (server.map == NULL) {
+		printf("Failed to load map '%s', generating new...\n", config.map.name);
+		server.map = map_create(config.map.name, config.map.width, config.map.depth, config.map.height);
 
-	map_save(server.map);
+		printf("Generating map...\n");
+		double start = get_time_s();
+		map_generate(server.map, config.map.generator);
+		double duration = get_time_s() - start;
+		printf("Map generation took %f seconds\n", duration);
+
+		map_save(server.map);
+	}
 
 	server_heartbeat();
 	server.last_heartbeat = get_time_s();

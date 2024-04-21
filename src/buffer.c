@@ -31,11 +31,12 @@ buffer_t *buffer_create_memory(uint8_t *data, size_t size) {
 	return buffer;
 }
 
-buffer_t *buffer_allocate_memory(size_t size) {
+buffer_t *buffer_allocate_memory(size_t size, bool grows) {
 	buffer_t *buffer = malloc(sizeof(*buffer));
 	buffer->type = buftype_memory;
 	buffer->owned = true;
-	buffer->mem.data = malloc(size);
+	buffer->mem.grows = grows;
+	buffer->mem.data = size > 0 ? malloc(size) : NULL;
 	buffer->mem.size = size;
 	buffer->mem.offset = 0;
 
@@ -136,6 +137,21 @@ size_t buffer_size(buffer_t *buffer) {
 	}
 }
 
+void buffer_resize(buffer_t *buffer, size_t newsize) {
+	if (buffer->type != buftype_memory) {
+		return;
+	}
+
+	if (newsize == 0 && buffer->mem.size != 0) {
+		free(buffer->mem.data);
+		buffer->mem.size = buffer->mem.offset = 0;
+	}
+	else {
+		buffer->mem.data = realloc(buffer->mem.data, newsize);
+		buffer->mem.size = newsize;
+		buffer->mem.offset = util_min(buffer->mem.offset, newsize);
+	}
+}
 
 size_t buffer_read(buffer_t *buffer, void *data, const size_t len) {
 	switch (buffer->type) {
@@ -157,9 +173,14 @@ size_t buffer_read(buffer_t *buffer, void *data, const size_t len) {
 size_t buffer_write(buffer_t *buffer, const void *data, const size_t len) {
 	switch (buffer->type) {
 		case buftype_memory: {
+			if (buffer->type == buftype_memory && buffer->mem.grows && buffer->mem.offset + len > buffer->mem.size) {
+				buffer_resize(buffer, buffer->mem.offset + len);
+			}
+
 			size_t written = util_min(len, buffer->mem.size - buffer->mem.offset);
 			memcpy(buffer->mem.data + buffer->mem.offset, data, written);
 			buffer->mem.offset += written;
+
 			return written;
 		}
 
@@ -224,22 +245,30 @@ GENERIC_READ(buffer_read_floatbe,     float, endian_tobigf)
 GENERIC_READ(buffer_read_doublele,   double, endian_tolittled)
 GENERIC_READ(buffer_read_doublebe,   double, endian_tobigd)
 
+#define CHECK_SIZE_MAYBE_GROW()                                     \
+	if (buffer_tell(buffer) + sizeof(c) > buffer_size(buffer)) {    \
+        if (buffer->type == buftype_memory && buffer->mem.grows) {  \
+            buffer_resize(buffer, buffer_size(buffer) + sizeof(c)); \
+		}                                                           \
+		else return false;                                          \
+	}
+
 #define GENERIC_WRITE(function_name, data_type, swap_function)      \
 	bool function_name (buffer_t *buffer, const data_type data) {   \
 		const data_type c = (data_type)swap_function(data);         \
-		CHECK_SIZE();                                               \
+		CHECK_SIZE_MAYBE_GROW();                                    \
 		buffer_write(buffer, &c, sizeof(c));                        \
 		return true;                                                \
 	}
 
 bool buffer_write_uint8(buffer_t *buffer, const uint8_t data) {
-	const uint8_t c = data; CHECK_SIZE();
+	const uint8_t c = data; CHECK_SIZE_MAYBE_GROW();
 	buffer_write(buffer, &c, sizeof(c));
 	return true;
 }
 
 bool buffer_write_int8(buffer_t *buffer, const int8_t data) {
-	const int8_t c = data; CHECK_SIZE();
+	const int8_t c = data; CHECK_SIZE_MAYBE_GROW();
 	buffer_write(buffer, &c, sizeof(c));
 	return true;
 }

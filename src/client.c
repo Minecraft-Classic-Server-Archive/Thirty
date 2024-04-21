@@ -57,8 +57,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->socket_fd = fd;
 	client->connected = true;
 	client->idx = idx;
-	client->in_buffer = buffer_allocate_memory(BUFFER_SIZE);
-	client->out_buffer = buffer_allocate_memory(BUFFER_SIZE);
+	client->in_buffer = buffer_allocate_memory(BUFFER_SIZE, false);
+	client->out_buffer = buffer_allocate_memory(BUFFER_SIZE, false);
 	client->mapsend_state = mapsend_none;
 	client->mapgz_buffer = NULL;
 	client->last_ping = 0;
@@ -678,7 +678,7 @@ void client_ws_upgrade(client_t *client, int r) {
 	buffer_write(client->out_buffer, response, strlen(response));
 	client_flush(client);
 	client->using_websocket = true;
-	client->ws_out_buffer = buffer_allocate_memory(BUFFER_SIZE + 4);
+	client->ws_out_buffer = buffer_allocate_memory(BUFFER_SIZE + 4, false);
 
 	free(key_b64);
 	util_httpheaders_destroy(headers, num_headers);
@@ -745,7 +745,7 @@ void client_ws_handle_chunk(client_t *client) {
 		data: {
 			if (client->ws_frame == NULL || client->ws_frame_len > buffer_size(client->ws_frame)) {
 				buffer_destroy(client->ws_frame);
-				client->ws_frame = buffer_allocate_memory(client->ws_frame_len);
+				client->ws_frame = buffer_allocate_memory(client->ws_frame_len, false);
 			}
 
 			buffer_seek(client->ws_frame, 0);

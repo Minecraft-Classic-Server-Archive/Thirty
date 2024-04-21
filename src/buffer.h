@@ -31,6 +31,7 @@ typedef struct buffer_s {
 
 	union {
 		struct {
+			bool grows;
 			uint8_t *data;
 			size_t size;
 			size_t offset;
@@ -43,7 +44,7 @@ typedef struct buffer_s {
 } buffer_t;
 
 buffer_t *buffer_create_memory(uint8_t *data, size_t size);
-buffer_t *buffer_allocate_memory(size_t size);
+buffer_t *buffer_allocate_memory(size_t size, bool grows);
 buffer_t *buffer_create_file(FILE *fp);
 buffer_t *buffer_open_file(const char *path, const char *mode);
 void buffer_destroy(buffer_t *buffer);
@@ -51,6 +52,7 @@ void buffer_destroy(buffer_t *buffer);
 size_t buffer_seek(buffer_t *buffer, size_t size);
 size_t buffer_tell(buffer_t *buffer);
 size_t buffer_size(buffer_t *buffer);
+void buffer_resize(buffer_t *buffer, size_t newsize);
 
 size_t buffer_read(buffer_t *buffer, void *data, size_t len);
 size_t buffer_write(buffer_t *buffer, const void *data, size_t len);

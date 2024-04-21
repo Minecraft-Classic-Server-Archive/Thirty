@@ -73,13 +73,14 @@ void map_save(map_t *map) {
 
 	// Now write it out and gzip it.
 
-	buffer_t *outbuf = buffer_allocate_memory(num_blocks + (1 * 1024 * 1024));
+	buffer_t *outbuf = buffer_allocate_memory(num_blocks, true);
 	nbt_write(root, outbuf);
 	buffer_seek(outbuf, 0);
 
-	size_t readbufsize = 16 * 1024 * 1024;
-	uint8_t *readbuf = malloc(16 * 1024 * 1024);
-	uint8_t gzbuf[2048];
+	size_t readbufsize = 2 * 1024 * 1024;
+	uint8_t *readbuf = malloc(readbufsize);
+	size_t gzbufsize = 2 * 1024 * 1024;
+	uint8_t *gzbuf = malloc(gzbufsize);
 	FILE *fp = fopen(filename, "wb");
 
 	z_stream strm;
@@ -101,7 +102,7 @@ void map_save(map_t *map) {
 		strm.next_in = readbuf;
 
 		do {
-			strm.avail_out = 2048;
+			strm.avail_out = gzbufsize;
 			strm.next_out = gzbuf;
 
 			err = deflate(&strm, flush);
@@ -110,7 +111,7 @@ void map_save(map_t *map) {
 				goto cleanup;
 			}
 
-			have = 2048 - strm.avail_out;
+			have = gzbufsize - strm.avail_out;
 
 			fwrite(gzbuf, 1, have, fp);
 		} while (strm.avail_out == 0);
@@ -120,8 +121,129 @@ cleanup:
 	deflateEnd(&strm);
 
 	fclose(fp);
+	free(gzbuf);
 	free(readbuf);
 	buffer_destroy(outbuf);
 
 	nbt_destroy(root, true);
+}
+
+map_t *map_load(const char *name) {
+	char filename[256];
+	snprintf(filename, sizeof(filename), "%s.cw", name);
+
+	map_t *map = NULL;
+	buffer_t *nbtbuf = buffer_allocate_memory(0, true);
+
+	FILE *fp = fopen(filename, "rb");
+	if (fp == NULL) {
+		return NULL;
+	}
+
+	uint8_t inbuf[8192];
+	uint8_t outbuf[8192];
+
+	z_stream strm;
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+
+	int ret = inflateInit2(&strm, 15 | 16);
+	if (ret != Z_OK) {
+		fclose(fp);
+		fprintf(stderr, "Failed to init zlib stream.");
+		return NULL;
+	}
+
+	do {
+		strm.avail_in = fread(inbuf, 1, sizeof(inbuf), fp);
+		if (ferror(fp)) {
+			inflateEnd(&strm);
+			return NULL;
+		}
+
+		if (strm.avail_in == 0) {
+			break;
+		}
+
+		strm.next_in = inbuf;
+
+		do {
+			strm.avail_out = sizeof(outbuf);
+			strm.next_out = outbuf;
+
+			ret = inflate(&strm, Z_NO_FLUSH);
+
+			unsigned have = sizeof(outbuf) - strm.avail_out;
+			buffer_write(nbtbuf, outbuf, have);
+		} while (strm.avail_out == 0);
+	} while (ret != Z_STREAM_END);
+
+	fclose(fp);
+
+	buffer_seek(nbtbuf, 0);
+
+	tag_t *root = nbt_read(nbtbuf, true);
+	buffer_destroy(nbtbuf);
+
+	if (root == NULL) {
+		fprintf(stderr, "Not an NBT file: '%s'\n", filename);
+	}
+
+	tag_t *format_version = nbt_get_tag(root, "FormatVersion");
+	if (format_version == NULL || format_version->type != tag_byte) {
+		fprintf(stderr, "Map format invalid: '%s'", filename);
+		goto cleanup;
+	}
+
+	if (format_version->b != 1) {
+		fprintf(stderr, "Unsupported ClassicWorld version: '%s'", filename);
+		goto cleanup;
+	}
+
+	size_t w, d, h;
+	tag_t *xsize = nbt_get_tag(root, "X");
+	tag_t *ysize = nbt_get_tag(root, "Y");
+	tag_t *zsize = nbt_get_tag(root, "Z");
+	tag_t *blocks = nbt_get_tag(root, "BlockArray");
+
+	if (xsize == NULL || xsize->type != tag_short || ysize == NULL || ysize->type != tag_short || zsize == NULL || zsize->type != tag_short || blocks == NULL || blocks->type != tag_byte_array) {
+		fprintf(stderr, "World file is invalid: '%s'\n", filename);
+		goto cleanup;
+	}
+
+	w = (size_t)xsize->s;
+	d = (size_t)ysize->s;
+	h = (size_t)zsize->s;
+	map = map_create(name, w, d, h);
+	memcpy(map->blocks, blocks->pb, w * d * h);
+
+	{
+		tag_t *metadata = nbt_get_tag(root, "Metadata");
+		if (metadata != NULL && metadata->type == tag_compound) {
+			tag_t *software_data = nbt_get_tag(metadata, "Thirty");
+			if (software_data != NULL && metadata->type == tag_compound) {
+				tag_t *scheduled_ticks = nbt_get_tag(software_data, "ScheduledTicks");
+				if (scheduled_ticks != NULL && metadata->type == tag_compound) {
+					tag_t *indices = nbt_get_tag(scheduled_ticks, "Indices");
+					tag_t *times = nbt_get_tag(scheduled_ticks, "Times");
+
+					if (indices != NULL && times != NULL && indices->type == tag_int_array && times->type == tag_int_array && indices->array_size == times->array_size) {
+						for (int32_t i = 0; i < indices->array_size; i++) {
+							size_t index = (size_t)indices->pi[i];
+							int32_t time = times->pi[i];
+							size_t x, y, z;
+							map_index_to_pos(map, index, &x, &y, &z);
+							map_add_tick(map, x, y, z, time);
+						}
+					}
+				}
+			}
+		}
+	}
+
+cleanup:
+	nbt_destroy(root, true);
+
+	return map;
 }
