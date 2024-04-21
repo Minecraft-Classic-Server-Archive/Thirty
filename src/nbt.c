@@ -122,6 +122,10 @@ tag_t *nbt_copy_bytearray(const char *name, uint8_t *val, int32_t len) {
 }
 
 void nbt_destroy(tag_t *tag, bool destroy_values) {
+	if (tag == NULL) {
+		return;
+	}
+
 	if (tag->type == tag_list || tag->type == tag_compound) {
 		for (int32_t i = 0; i < tag->array_size; i++) {
 			tag_t *t = tag->list[i];
