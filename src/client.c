@@ -372,6 +372,12 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_uint8(in_buffer, &unused);
 				buffer_read_mcstr(in_buffer, msg);
 
+				for (size_t i = 0; i < 64; i++) {
+					if (msg[i] == '%') {
+						msg[i] = '&';
+					}
+				}
+
 				if (client->spawned) {
 					server_broadcast("&e%s: &f%s", client->name, msg);
 				}
@@ -469,6 +475,7 @@ bool client_verify_key(char name[65], char key[65]) {
 void client_login(client_t *client) {
 	const bool cp437 = client_supports_extension(client, "FullCP437", 1);
 	const bool customblocks = client_supports_extension(client, "CustomBlocks", 1);
+	const bool textcolours = client_supports_extension(client, "TextColors", 1);
 
 	if (customblocks && client->customblocks_support == -1) {
 		buffer_write_uint8(client->out_buffer, packet_custom_block_support_level);
@@ -482,6 +489,17 @@ void client_login(client_t *client) {
 	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
 	buffer_write_uint8(client->out_buffer, 0x64);
 	client_flush(client);
+
+	if (textcolours) {
+		for (size_t i = 0; i < config.num_colours; i++) {
+			buffer_write_uint8(client->out_buffer, packet_set_text_colour);
+			buffer_write_uint8(client->out_buffer, config.colours[i].r);
+			buffer_write_uint8(client->out_buffer, config.colours[i].g);
+			buffer_write_uint8(client->out_buffer, config.colours[i].b);
+			buffer_write_uint8(client->out_buffer, config.colours[i].a);
+			buffer_write_uint8(client->out_buffer, (uint8_t)config.colours[i].code);
+		}
+	}
 
 	if (!customblocks) {
 		client_send_level(client);
