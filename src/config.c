@@ -277,8 +277,8 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			return;
 		}
 		if (strlen(value) != 8) {
-			//fprintf(stderr, "Colour value must be an 8-digit RGBA hex number.\n");
-			//return;
+			fprintf(stderr, "Colour value must be an 8-digit RGBA hex number.\n");
+			return;
 		}
 
 		uint32_t colour = (uint32_t) parse_uint(value, &ok, 16);
