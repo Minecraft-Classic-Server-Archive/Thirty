@@ -520,6 +520,8 @@ void nbt_dump(tag_t *tag, int indent) {
 		case tag_float: printf("%f\n", tag->f); break;
 		case tag_double: printf("%f\n", tag->d); break;
 		case tag_byte_array: printf("[%" PRId32 " bytes]\n", tag->array_size); break;
+		case tag_int_array: printf("[%" PRId32 " ints]\n", tag->array_size); break;
+		case tag_long_array: printf("[%" PRId32 " longs]\n", tag->array_size); break;
 
 		default: printf("\n"); break;
 	}
@@ -551,6 +553,10 @@ const char *tag_get_type_name(tag_e type) {
 			return "TAG_List";
 		case tag_compound:
 			return "TAG_Compound";
+		case tag_int_array:
+			return "TAG_Int_Array";
+		case tag_long_array:
+			return "TAG_Long_Array";
 		default:
 			return "Unknown";
 	}
