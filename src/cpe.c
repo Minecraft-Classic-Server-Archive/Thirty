@@ -23,6 +23,7 @@ cpeext_t supported_extensions[] = {
 		{ "FastMap", 1 },
 		{ "CustomBlocks", 1 },
 		{ "TwoWayPing", 1 },
+		{ "TextColors", 1 },
 
 		{ "", 0 }
 };

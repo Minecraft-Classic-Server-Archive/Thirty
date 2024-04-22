@@ -19,6 +19,11 @@
 #include <stdbool.h>
 
 typedef struct {
+	char code;
+	uint8_t r, g, b, a;
+} textcolour_t;
+
+typedef struct {
 	struct {
 		char *name;
 		char *motd;
@@ -35,6 +40,9 @@ typedef struct {
 		bool random_seed;
 		int seed;
 	} map;
+
+	textcolour_t *colours;
+	size_t num_colours;
 } config_t;
 
 void config_init(const char *config_path);

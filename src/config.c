@@ -34,7 +34,7 @@ enum parsestate_e {
 };
 
 static void config_parse(const char *filename, configcallback_t callback);
-static long parse_int(const char *ptr, bool *ok);
+static long parse_int(const char *ptr, bool *ok, int radix);
 static void cfg_callback(const char *section, const char *key, const char *value);
 
 config_t config;
@@ -173,10 +173,21 @@ void config_parse(const char *filename, configcallback_t callback) {
 	fclose(fp);
 }
 
-long parse_int(const char *ptr, bool *ok) {
+long parse_int(const char *ptr, bool *ok, int radix) {
 	char *end;
-	long value = strtol(ptr, &end, 10);
+	long value = strtol(ptr, &end, radix);
 	if (end == ptr || (errno == ERANGE && (value == LONG_MIN || value == LONG_MAX))) {
+		*ok = false;
+		return 0;
+	}
+	*ok = true;
+	return value;
+}
+
+unsigned long parse_uint(const char *ptr, bool *ok, int radix) {
+	char *end;
+	unsigned long value = strtoul(ptr, &end, radix);
+	if (end == ptr || (errno == ERANGE && value == ULONG_MAX)) {
 		*ok = false;
 		return 0;
 	}
@@ -195,7 +206,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			config.server.motd = strdup(value);
 		}
 		else if (strcmp(key, "port") == 0) {
-			long port = parse_int(value, &ok);
+			long port = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'port' as unsigned integer\n");
 			} else {
@@ -209,7 +220,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			config.server.offline = strcmp(value, "true") == 0;
 		}
 		else if (strcmp(key, "max_players") == 0) {
-			long max = parse_int(value, &ok);
+			long max = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'max_players' as unsigned integer\n");
 			} else {
@@ -223,7 +234,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			config.map.name = strdup(value);
 		}
 		else if (strcmp(key, "width") == 0) {
-			long size = parse_int(value, &ok);
+			long size = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'width' as unsigned integer\n");
 			} else {
@@ -231,7 +242,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			}
 		}
 		else if (strcmp(key, "depth") == 0) {
-			long size = parse_int(value, &ok);
+			long size = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'depth' as unsigned integer\n");
 			} else {
@@ -239,7 +250,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			}
 		}
 		else if (strcmp(key, "height") == 0) {
-			long size = parse_int(value, &ok);
+			long size = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'height' as unsigned integer\n");
 			} else {
@@ -250,7 +261,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			config.map.generator = strdup(value);
 		}
 		else if (strcmp(key, "seed") == 0) {
-			long seed = parse_int(value, &ok);
+			long seed = parse_int(value, &ok, 10);
 			if (!ok) {
 				fprintf(stderr, "Failed to parse 'seed' as unsigned integer\n");
 			} else {
@@ -258,6 +269,31 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 				config.map.random_seed = false;
 			}
 		}
+	}
+
+	else if (strcmp(section, "colours") == 0) {
+		if (strlen(key) != 1) {
+			fprintf(stderr, "Colour name must be exactly 1 character.\n");
+			return;
+		}
+		if (strlen(value) != 8) {
+			//fprintf(stderr, "Colour value must be an 8-digit RGBA hex number.\n");
+			//return;
+		}
+
+		uint32_t colour = (uint32_t) parse_uint(value, &ok, 16);
+		if (!ok) {
+			fprintf(stderr, "Colour value failed to parse, it must be an 8-digit RGBA hex number.\n");
+			return;
+		}
+
+		size_t idx = config.num_colours++;
+		config.colours = realloc(config.colours, sizeof(*config.colours) * config.num_colours);
+		config.colours[idx].code = key[0];
+		config.colours[idx].r = (colour >> 24U) & 0xFFU;
+		config.colours[idx].g = (colour >> 16U) & 0xFFU;
+		config.colours[idx].b = (colour >> 8U) & 0xFFU;
+		config.colours[idx].a = colour & 0xFFU;
 	}
 }
 
