@@ -205,7 +205,7 @@ void server_broadcast(const char *msg, ...) {
 	vsnprintf(buffer, 65, msg, args);
 	va_end(args);
 
-	puts(buffer);
+	util_print_coloured(buffer);
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_t *client = &server.clients[i];

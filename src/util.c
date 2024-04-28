@@ -18,7 +18,9 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "util.h"
+#include "config.h"
 
 double get_time_s(void) {
 	struct timespec ts;
@@ -109,4 +111,54 @@ void util_httpheaders_destroy(httpheader_t *list, size_t num_headers) {
 		free(list[i].value);
 	}
 	free(list);
+}
+
+void util_print_coloured(const char *msg) {
+	const size_t len = strlen(msg);
+
+	for (size_t i = 0; i < len; i++) {
+		const char c = msg[i];
+
+		if (c == '&' && i != len - 1) {
+			const char next = msg[++i];
+			char fmt[32];
+
+			switch (next) {
+				case '0': strncpy(fmt, "\033[0;30m", sizeof(fmt)); break;
+				case '1': strncpy(fmt, "\033[0;34m", sizeof(fmt)); break;
+				case '2': strncpy(fmt, "\033[0;32m", sizeof(fmt)); break;
+				case '3': strncpy(fmt, "\033[0;36m", sizeof(fmt)); break;
+				case '4': strncpy(fmt, "\033[0;31m", sizeof(fmt)); break;
+				case '5': strncpy(fmt, "\033[0;35m", sizeof(fmt)); break;
+				case '6': strncpy(fmt, "\033[0;33m", sizeof(fmt)); break;
+				case '7': strncpy(fmt, "\033[0;37m", sizeof(fmt)); break;
+				case '8': strncpy(fmt, "\033[0;90m", sizeof(fmt)); break;
+				case '9': strncpy(fmt, "\033[0;94m", sizeof(fmt)); break;
+				case 'a': strncpy(fmt, "\033[0;92m", sizeof(fmt)); break;
+				case 'b': strncpy(fmt, "\033[0;96m", sizeof(fmt)); break;
+				case 'c': strncpy(fmt, "\033[0;91m", sizeof(fmt)); break;
+				case 'd': strncpy(fmt, "\033[0;95m", sizeof(fmt)); break;
+				case 'e': strncpy(fmt, "\033[0;93m", sizeof(fmt)); break;
+				case 'f': strncpy(fmt, "\033[0;97m", sizeof(fmt)); break;
+				default: {
+					const textcolour_t *col = config_find_colour(next);
+					if (col != NULL) {
+						snprintf(fmt, sizeof(fmt), "\033[38;2;%u;%u;%um", col->r, col->g, col->b);
+					}
+					else {
+						snprintf(fmt, sizeof(fmt), "%c%c", c, next);
+					}
+
+					break;
+				}
+			}
+
+			printf("%s", fmt);
+		}
+		else {
+			printf("%c", c);
+		}
+	}
+
+	printf("\n");
 }
