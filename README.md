@@ -62,3 +62,9 @@ ninja
 ```
 
 An executable named `thirty` will be output to the build directory.
+
+### Install
+
+You can use [`meson install`] to install Thirty to `PREFIX/bin/thirty` and its config to `PREFIX/etc/thirty.ini`.
+
+If unspecified, `PREFIX` will likely be `/usr/local`.
