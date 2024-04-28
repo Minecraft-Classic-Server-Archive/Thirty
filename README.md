@@ -11,13 +11,6 @@
 
 See [the wiki](https://dev.firestick.games/sean/thirty/-/wikis/home) for documentation.
 
-## Things that need doing
-
-- Player and IP banning
-- WebSocket proxy support
-- Some sort of permissions system
-- Extensibility
-
 ## Building
 
 Thirty requires [Meson](https://mesonbuild.com/) to generate build files, which in most cases will be for `ninja`.
