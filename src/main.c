@@ -32,7 +32,7 @@ static bool running = true;
 bool args_disable_colour = false;
 
 int main(int argc, char *argv[]) {
-	const char *config_file = "settings.ini";
+	const char *config_file = NULL;
 	int opt;
 	while ((opt = getopt(argc, argv, "Cc:")) != -1) {
 		switch (opt) {

@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <unistd.h>
 #include "config.h"
 
 typedef void (*configcallback_t)(const char *section, const char *key, const char *value);
@@ -38,6 +39,14 @@ static long parse_int(const char *ptr, bool *ok, int radix);
 static void cfg_callback(const char *section, const char *key, const char *value);
 
 config_t config;
+
+static const char *config_default_paths[] = {
+	"/etc/thirty.ini",
+	"/usr/local/etc/thirty.ini",
+	"thirty.ini",
+
+	NULL
+};
 
 static void trim(char *p) {
 	size_t len = strlen(p);
@@ -63,6 +72,8 @@ static void trim(char *p) {
 }
 
 void config_parse(const char *filename, configcallback_t callback) {
+	printf("Loading configuration from '%s'.\n", filename);
+
 	FILE *fp = fopen(filename, "r");
 	if (fp == NULL) {
 		fprintf(stderr, "Failed to open config file '%s' for reading.\n", filename);
@@ -302,7 +313,19 @@ void config_init(const char *config_path) {
 
 	config.map.random_seed = true;
 
-	config_parse(config_path, cfg_callback);
+	if (config_path != NULL) {
+		config_parse(config_path, cfg_callback);
+	}
+	else {
+		for (size_t i = 0; config_default_paths[i] != NULL; i++) {
+			if (access(config_default_paths[i], R_OK) != 0) {
+				continue;
+			}
+
+			config_parse(config_default_paths[i], cfg_callback);
+			break;
+		}
+	}
 
 	if (config.server.name == NULL) {
 		config.server.name = strdup("Unnamed server");
