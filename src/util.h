@@ -35,3 +35,5 @@ typedef struct {
 httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers);
 const char *util_httpheaders_get(httpheader_t *headers, size_t num_headers, const char *key);
 void util_httpheaders_destroy(httpheader_t *list, size_t num_headers);
+
+void util_print_coloured(const char *msg);

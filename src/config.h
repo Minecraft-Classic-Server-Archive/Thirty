@@ -48,4 +48,6 @@ typedef struct {
 void config_init(const char *config_path);
 void config_destroy(void);
 
+const textcolour_t *config_find_colour(char code);
+
 extern config_t config;

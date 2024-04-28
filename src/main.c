@@ -30,9 +30,6 @@ static void signal_handler(int signum);
 static bool running = true;
 
 int main(int argc, char *argv[]) {
-	setbuf(stdout, NULL);
-	setbuf(stderr, NULL);
-
 	const char *config_file = "settings.ini";
 	int opt;
 	while ((opt = getopt(argc, argv, "c:")) != -1) {

@@ -349,3 +349,13 @@ void config_destroy(void) {
 
 	memset(&config, 0, sizeof(config));
 }
+
+const textcolour_t *config_find_colour(const char code) {
+	for (size_t i = 0; i < config.num_colours; i++) {
+		if (config.colours[i].code == code) {
+			return &config.colours[i];
+		}
+	}
+
+	return NULL;
+}
