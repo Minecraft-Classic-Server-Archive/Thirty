@@ -29,18 +29,25 @@ static void signal_handler(int signum);
 
 static bool running = true;
 
+bool args_disable_colour = false;
+
 int main(int argc, char *argv[]) {
 	const char *config_file = "settings.ini";
 	int opt;
-	while ((opt = getopt(argc, argv, "c:")) != -1) {
+	while ((opt = getopt(argc, argv, "Cc:")) != -1) {
 		switch (opt) {
+			case 'C': {
+				args_disable_colour = true;
+				break;
+			}
+
 			case 'c': {
 				config_file = optarg;
 				break;
 			}
 
 			default: {
-				printf("Usage: %s [-c config]\n", argv[0]);
+				printf("Usage: %s [-C] [-c config]\n", argv[0]);
 				return 0;
 			}
 		}
