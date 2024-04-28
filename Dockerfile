@@ -11,7 +11,7 @@ RUN \
 RUN hg clone https://dev.firestick.games/sean/thirty
 RUN \
   cd thirty && \
-  meson setup build --prefix=/thirty-install && \
+  meson setup build --buildtype=release --prefix=/thirty-install && \
   meson compile -C build && \
   meson install -C build
 
