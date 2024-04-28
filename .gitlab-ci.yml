@@ -34,7 +34,7 @@ docker:
   <<: *kaniko
   script:
     - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}/subterranean-server:dev"
+      --destination "${CI_REGISTRY_IMAGE}:dev"
   rules:
     - if: $CI_COMMIT_TAG
       when: never 
@@ -44,7 +44,7 @@ docker tagged:
   <<: *kaniko
   script:
     - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}/subterranean-server:${CI_COMMIT_TAG}"
-      --destination "${CI_REGISTRY_IMAGE}/subterranean-server:latest"
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
+      --destination "${CI_REGISTRY_IMAGE}:latest"
   rules:
      - if: $CI_COMMIT_TAG
