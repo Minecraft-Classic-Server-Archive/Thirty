@@ -79,4 +79,4 @@ endif
 
 libdir = include_directories('lib')
 
-executable('thirty', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir)
+executable('thirty', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir, install: true)
