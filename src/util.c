@@ -160,5 +160,5 @@ void util_print_coloured(const char *msg) {
 		}
 	}
 
-	printf("\n");
+	printf("\033[0m\n");
 }
