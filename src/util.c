@@ -22,6 +22,8 @@
 #include "util.h"
 #include "config.h"
 
+extern bool args_disable_colour;
+
 double get_time_s(void) {
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -146,19 +148,25 @@ void util_print_coloured(const char *msg) {
 						snprintf(fmt, sizeof(fmt), "\033[38;2;%u;%u;%um", col->r, col->g, col->b);
 					}
 					else {
-						snprintf(fmt, sizeof(fmt), "%c%c", c, next);
+						printf(fmt, sizeof(fmt), "%c%c", c, next);
 					}
 
 					break;
 				}
 			}
 
-			printf("%s", fmt);
+			if (!args_disable_colour) {
+				printf("%s", fmt);
+			}
 		}
 		else {
 			printf("%c", c);
 		}
 	}
 
-	printf("\033[0m\n");
+	if (!args_disable_colour) {
+		printf("\033[0m");
+	}
+
+	printf("\n");
 }
