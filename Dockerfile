@@ -8,12 +8,13 @@ RUN \
   apt-get -y install --option=Dpkg::Options::=--force-confdef \
     build-essential mercurial mercurial-evolve zlib1g-dev meson ninja-build
 
-RUN hg clone https://dev.firestick.games/sean/thirty
+COPY . /thirty
+
 RUN \
-  cd thirty && \
-  meson setup build --prefix=/thirty-install && \
-  meson compile -C build && \
-  meson install -C build
+  cd /thirty && \
+  meson setup docker-build --buildtype=release  --prefix=/thirty-install && \
+  meson compile -C docker-build && \
+  meson install -C docker-build
 
 FROM debian:stable-slim
 
