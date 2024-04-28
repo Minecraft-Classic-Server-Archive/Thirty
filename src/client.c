@@ -171,7 +171,7 @@ void client_tick(client_t *client) {
 
 					client->spawned = true;
 
-					server_broadcast("&f%s &ejoined the game.", client->name);
+					server_broadcast("&e%s &fjoined the game.", client->name);
 
 					break;
 				}
@@ -624,7 +624,7 @@ void client_disconnect(client_t *client, const char *msg) {
 
 	if (client->spawned) {
 		client->spawned = false;
-		server_broadcast("&f%s &edisconnected (&f%s&e)", client->name, msg);
+		server_broadcast("&e%s &fdisconnected (%s)", client->name, msg);
 
 		for (size_t i = 0; i < server.num_clients; i++) {
 			client_t *other = &server.clients[i];
