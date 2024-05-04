@@ -75,11 +75,7 @@ else
     deps += cc.find_library('m')
 endif
 
-if cc.get_id() == 'gcc' or cc.get_id() == 'clang'
-    ccflags += ['-ftree-vectorize']
-endif
-
 libdir = include_directories('lib')
 
-executable('thirty', source_files, dependencies: deps, c_args: ccflags, include_directories: libdir, install: true)
+executable('thirty', source_files, dependencies: deps, include_directories: libdir, install: true)
 install_data(sources: 'settings.ini', rename: 'thirty.ini', install_dir: 'etc')
