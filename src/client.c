@@ -274,6 +274,11 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					}
 				}
 
+				if (namelist_contains(server.banned_users, username)) {
+					client_disconnect(client, "You are banned from this server!");
+					return;
+				}
+
 				if (!config.server.offline && !client_verify_key(username, key)) {
 					client_disconnect(client, "Authentication failed.");
 					return;
