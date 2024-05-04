@@ -40,6 +40,7 @@ typedef struct server_s {
 	double last_heartbeat;
 
 	namelist_t *ops;
+	namelist_t *banned_users;
 } server_t;
 
 bool server_init(void);
