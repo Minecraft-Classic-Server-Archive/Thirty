@@ -41,6 +41,7 @@ typedef struct server_s {
 
 	namelist_t *ops;
 	namelist_t *banned_users;
+	namelist_t *banned_ips;
 	namelist_t *whitelist;
 } server_t;
 

@@ -112,6 +112,7 @@ bool server_init(void) {
 
 	server.ops = namelist_create("ops.txt");
 	server.banned_users = namelist_create("banned_users.txt");
+	server.banned_ips = namelist_create("banned_ips.txt");
 	server.whitelist = namelist_create("whitelist.txt");
 
 	server_heartbeat();
@@ -122,6 +123,7 @@ bool server_init(void) {
 
 void server_shutdown(void) {
 	namelist_destroy(server.whitelist);
+	namelist_destroy(server.banned_ips);
 	namelist_destroy(server.banned_users);
 	namelist_destroy(server.ops);
 	map_save(server.map);
@@ -195,14 +197,24 @@ void server_accept(void) {
 #endif
 
 	struct sockaddr_in *sin = (struct sockaddr_in *)&client_addr;
-
 	uint8_t *ip = (uint8_t *)&sin->sin_addr.s_addr;
-	printf("Incoming connection from %d.%d.%d.%d\n", ip[0], ip[1], ip[2], ip[3]);
+
+	char addrstr[64];
+	snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+
+	printf("Incoming connection from %s:%u\n", addrstr, sin->sin_port);
 
 	size_t conn_idx = server.num_clients++;
 	server.clients = realloc(server.clients, server.num_clients * sizeof(*server.clients));
 	client_t *client = &server.clients[conn_idx];
+	memcpy(client->address, &sin->sin_addr.s_addr, sizeof(client->address));
+	client->port = sin->sin_port;
 	client_init(client, acceptfd, conn_idx);
+
+	if (namelist_contains(server.banned_ips, addrstr)) {
+		printf("Client %s is banned!\n", addrstr);
+		client_disconnect(client, "You are banned from this server!");
+	}
 }
 
 void server_broadcast(const char *msg, ...) {

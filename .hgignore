@@ -8,4 +8,5 @@ build*/
 settings.custom.ini
 ops.txt
 banned_users.txt
+banned_ips.txt
 whitelist.txt
