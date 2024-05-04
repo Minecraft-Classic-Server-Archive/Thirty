@@ -15,10 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 project('thirty', 'c',
-    default_options: [
-        'warning_level=3',
-        'c_std=c99'
-    ]
+    default_options: [ 'warning_level=3' ]
 )
 
 cc = meson.get_compiler('c')
