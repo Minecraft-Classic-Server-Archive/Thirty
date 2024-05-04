@@ -510,7 +510,7 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x07);
 	buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
 	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
-	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x64);
+	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x00);
 	client_flush(client);
 
 	if (textcolours) {
