@@ -37,6 +37,9 @@ typedef struct client_s {
 	size_t idx;
 	bool is_op;
 
+	uint8_t address[4];
+	uint16_t port;
+
 	struct buffer_s *in_buffer;
 	struct buffer_s *out_buffer;
 	pthread_mutex_t out_mutex;
