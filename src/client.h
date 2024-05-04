@@ -35,6 +35,7 @@ typedef struct client_s {
 	socket_t socket_fd;
 	bool connected;
 	size_t idx;
+	bool is_op;
 
 	struct buffer_s *in_buffer;
 	struct buffer_s *out_buffer;
