@@ -238,6 +238,9 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 				config.server.max_players = (unsigned int) max;
 			}
 		}
+		else if (strcmp(key, "whitelist") == 0) {
+			config.server.enable_whitelist = strcmp(value, "true") == 0;
+		}
 	}
 
 	else if (strcmp(section, "map") == 0) {

@@ -284,6 +284,11 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					return;
 				}
 
+				if (config.server.enable_whitelist && !namelist_contains(server.whitelist, username)) {
+					client_disconnect(client, "You are not on the whitelist!");
+					return;
+				}
+
 				strncpy(client->name, username, 64);
 				client->is_op = namelist_contains(server.ops, client->name);
 

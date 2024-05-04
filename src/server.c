@@ -112,6 +112,7 @@ bool server_init(void) {
 
 	server.ops = namelist_create("ops.txt");
 	server.banned_users = namelist_create("banned_users.txt");
+	server.whitelist = namelist_create("whitelist.txt");
 
 	server_heartbeat();
 	server.last_heartbeat = get_time_s();
@@ -120,6 +121,7 @@ bool server_init(void) {
 }
 
 void server_shutdown(void) {
+	namelist_destroy(server.whitelist);
 	namelist_destroy(server.banned_users);
 	namelist_destroy(server.ops);
 	map_save(server.map);
