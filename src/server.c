@@ -32,6 +32,7 @@
 #include "util.h"
 #include "mapgen.h"
 #include "config.h"
+#include "namelist.h"
 
 #define HEARTBEAT_INTERVAL (45.0)
 
@@ -109,6 +110,8 @@ bool server_init(void) {
 		map_save(server.map);
 	}
 
+	server.ops = namelist_create("ops.txt");
+
 	server_heartbeat();
 	server.last_heartbeat = get_time_s();
 
@@ -116,6 +119,7 @@ bool server_init(void) {
 }
 
 void server_shutdown(void) {
+	namelist_destroy(server.ops);
 	map_save(server.map);
 	map_destroy(server.map);
 	closesocket(server.socket_fd);

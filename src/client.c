@@ -32,6 +32,7 @@
 #include "sha1.h"
 #include "b64.h"
 #include "config.h"
+#include "namelist.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -279,6 +280,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				}
 
 				strncpy(client->name, username, 64);
+				client->is_op = namelist_contains(server.ops, client->name);
 
 				if (supports_cpe) {
 					buffer_write_uint8(client->out_buffer, packet_extinfo);
@@ -487,7 +489,7 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x07);
 	buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
 	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
-	buffer_write_uint8(client->out_buffer, 0x64);
+	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x00);
 	client_flush(client);
 
 	if (textcolours) {

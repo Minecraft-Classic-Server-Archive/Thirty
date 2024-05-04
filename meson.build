@@ -43,6 +43,8 @@ source_files = [
     'src/mapgen_seantest.c',
     'src/mapsave.c',
     'src/mapsend.c',
+    'src/namelist.c',
+    'src/namelist.h',
     'src/nbt.c',
     'src/nbt.h',
     'src/perlin.c',

@@ -22,6 +22,7 @@
 typedef struct client_s client_t;
 typedef struct map_s map_t;
 typedef struct rng_s rng_t;
+typedef struct namelist_s namelist_t;
 
 typedef struct server_s {
 	socket_t socket_fd;
@@ -37,6 +38,8 @@ typedef struct server_s {
 
 	char salt[17];
 	double last_heartbeat;
+
+	namelist_t *ops;
 } server_t;
 
 bool server_init(void);
