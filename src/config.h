@@ -31,6 +31,7 @@ typedef struct {
 		bool public;
 		bool offline;
 		unsigned max_players;
+		bool enable_whitelist;
 	} server;
 
 	struct {
