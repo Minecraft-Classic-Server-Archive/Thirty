@@ -19,7 +19,7 @@
 #include <stdbool.h>
 
 typedef struct namelist_s {
-	const char *filename;
+	char *filename;
 	char **names;
 	size_t num_names;
 } namelist_t;
