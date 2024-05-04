@@ -34,12 +34,17 @@ void blocks_init(void) {
 	blockinfo[air].solid = false;
 	blockinfo[sand].tickfunc = blocktick_gravity;
 	blockinfo[gravel].tickfunc = blocktick_gravity;
+	blockinfo[bedrock].op_only = true;
 	blockinfo[water].solid = false;
 	blockinfo[water].tickfunc = blocktick_flow;
 	blockinfo[water].ticktime = 4;
+	blockinfo[water].op_only = true;
+	blockinfo[water_still].op_only = true;
 	blockinfo[lava].solid = false;
 	blockinfo[lava].tickfunc = blocktick_flow;
 	blockinfo[lava].ticktime = 8;
+	blockinfo[lava].op_only = true;
+	blockinfo[lava_still].op_only = true;
 	blockinfo[rose].solid = false;
 	blockinfo[dandelion].solid = false;
 	blockinfo[brown_mushroom].solid = false;

@@ -372,7 +372,18 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_uint8(in_buffer, &mode);
 				buffer_read_uint8(in_buffer, &block);
 
-				map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
+				uint8_t current = map_get(server.map, x, y, z);
+
+				if ((blockinfo[block].op_only || blockinfo[current].op_only) && !client->is_op) {
+					buffer_write_uint8(client->out_buffer, packet_set_block_server);
+					buffer_write_uint16be(client->out_buffer, x);
+					buffer_write_uint16be(client->out_buffer, y);
+					buffer_write_uint16be(client->out_buffer, z);
+					buffer_write_uint8(client->out_buffer, current);
+					client_flush(client);
+				} else {
+					map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
+				}
 
 				break;
 			}
@@ -499,7 +510,7 @@ void client_login(client_t *client) {
 	buffer_write_uint8(client->out_buffer, 0x07);
 	buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
 	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
-	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x00);
+	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x64);
 	client_flush(client);
 
 	if (textcolours) {

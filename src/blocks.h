@@ -98,6 +98,7 @@ enum {
 
 typedef struct blockinfo_s {
 	bool solid;
+	bool op_only;
 
 	blocktickfunc_t tickfunc;
 	uint64_t ticktime;
