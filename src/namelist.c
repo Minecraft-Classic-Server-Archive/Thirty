@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 #include "namelist.h"
 
 static void namelist_parse(namelist_t *list);
