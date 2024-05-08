@@ -19,11 +19,15 @@
 #include <stdbool.h>
 #include "blocks.h"
 #include "map.h"
+#include "mapgen.h"
+#include "rng.h"
+#include "server.h"
 
 static void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_grass_die(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_grass_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blocktick_tree_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 
 blockinfo_t blockinfo[num_blocks];
 
@@ -40,6 +44,7 @@ void blocks_init(void) {
 	blockinfo[dirt].random_tickfunc = blocktick_grass_grow;
 	blockinfo[sapling].solid = false;
 	blockinfo[sapling].block_light = false;
+	blockinfo[sapling].random_tickfunc = blocktick_tree_grow;
 	blockinfo[sand].tickfunc = blocktick_gravity;
 	blockinfo[gravel].tickfunc = blocktick_gravity;
 	blockinfo[bedrock].op_only = true;
@@ -121,6 +126,22 @@ void blocktick_grass_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t bloc
 	size_t top = map_get_top_lit(map, x, z);
 	if (top == y) {
 		map_set(map, x, y, z, grass);
+	}
+}
+
+void blocktick_tree_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	if (block != sapling) {
+		return;
+	}
+
+	size_t top = map_get_top_lit(map, x, z);
+	if (top > y) {
+		return;
+	}
+
+	int treeHeight = rng_next2(server.global_rng, 1, 3) + 4;
+	if (mapgen_space_for_tree(map, x, y, z, treeHeight)) {
+		mapgen_grow_tree(map, server.global_rng, x, y, z, treeHeight);
 	}
 }
 

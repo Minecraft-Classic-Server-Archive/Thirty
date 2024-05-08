@@ -150,9 +150,6 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 	}
 
 	uint8_t here = map_get(map, x, y, z);
-	if (here == sapling) {
-		map_set(map, x, y, z, air);
-	}
 
 	for (int xx = x - 1; xx <= x + 1; xx++)
 		for (int yy = y; yy < y + height; yy++)
@@ -161,7 +158,7 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 					return false;
 				}
 
-				if (map_get(map, xx, yy, zz) != air) {
+				if (blockinfo[map_get(map, xx, yy, zz)].solid) {
 					return false;
 				}
 			}
@@ -175,14 +172,10 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 					return false;
 				}
 
-				if (map_get(map, xx, yy, zz) != air) {
+				if (blockinfo[map_get(map, xx, yy, zz)].solid) {
 					return false;
 				}
 			}
-
-	if (here == sapling) {
-		map_set(map, x, y, z, sapling);
-	}
 
 	return true;
 }
