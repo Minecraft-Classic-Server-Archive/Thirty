@@ -34,6 +34,7 @@ void mapgen_debug(map_t *map);
 void mapgen_flat(map_t *map);
 void mapgen_random(map_t *map);
 void mapgen_seantest(map_t *map);
+void mapgen_growtest(map_t *map);
 
 void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block);
 void gen_ore(map_t *map, rng_t *rng, int8_t block, float abundance);
