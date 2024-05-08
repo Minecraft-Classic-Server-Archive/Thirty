@@ -23,6 +23,7 @@
 #include "client.h"
 #include "packet.h"
 #include "blocks.h"
+#include "rng.h"
 #include "util.h"
 
 map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
@@ -81,15 +82,44 @@ uint8_t map_get(map_t *map, size_t x, size_t y, size_t z) {
 }
 
 size_t map_get_top(map_t *map, size_t x, size_t z) {
-	size_t yy = map->depth;
+	size_t yy;
 
-	while (map_get(map, x, --yy, z) == air && yy > 0) ;
+	for (yy = map->depth; yy > 0; yy--) {
+		const uint8_t block = map_get(map, x, yy, z);
+		if (block != air) {
+			break;
+		}
+	}
+
+	return yy;
+}
+
+size_t map_get_top_lit(map_t *map, size_t x, size_t z) {
+	size_t yy;
+
+	for (yy = map->depth; yy > 0; yy--) {
+		const uint8_t block = map_get(map, x, yy, z);
+		if (blockinfo[block].block_light) {
+			break;
+		}
+	}
 
 	return yy;
 }
 
 void map_tick(map_t *map) {
 	bool resized = false;
+
+	size_t random_ticks = (map->width * map->depth * map->height) / (16 * 16 * 16);
+	for (size_t i = 0; i < random_ticks; i++) {
+		size_t x = rng_next(server.global_rng, map->width);
+		size_t y = rng_next(server.global_rng, map->depth);
+		size_t z = rng_next(server.global_rng, map->height);
+		uint8_t block = map_get(map, x, y, z);
+		if (blockinfo[block].random_tickfunc != NULL) {
+			blockinfo[block].random_tickfunc(map, x, y, z, block);
+		}
+	}
 
 	for (size_t i = 0; i < map->num_ticks; i++) {
 		scheduledtick_t *tick = &map->ticks[i];

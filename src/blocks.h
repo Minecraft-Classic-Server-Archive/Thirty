@@ -98,10 +98,12 @@ enum {
 
 typedef struct blockinfo_s {
 	bool solid;
+	bool block_light;
 	bool op_only;
 
 	blocktickfunc_t tickfunc;
 	uint64_t ticktime;
+	blocktickfunc_t random_tickfunc;
 } blockinfo_t;
 
 extern blockinfo_t blockinfo[num_blocks];

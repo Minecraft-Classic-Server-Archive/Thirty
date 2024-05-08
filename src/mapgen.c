@@ -43,6 +43,9 @@ void map_generate(map_t *map, const char *generator_name) {
 	else if (strcmp(generator_name, "random") == 0) {
 		mapgen_random(map);
 	}
+	else if (strcmp(generator_name, "growtest") == 0) {
+		mapgen_growtest(map);
+	}
 	else {
 		fprintf(stderr, "Invalid generator name '%s', map will be empty\n", generator_name);
 	}

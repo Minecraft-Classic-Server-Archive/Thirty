@@ -51,3 +51,17 @@ void mapgen_random(map_t *map) {
 
 	rng_destroy(rng);
 }
+
+void mapgen_growtest(map_t *map) {
+	for (size_t x = 0; x < map->width; x++)
+	for (size_t z = 0; z < map->height; z++) {
+		if (x < map->width / 2) {
+			map_set(map, x, 0, z, grass);
+			map_set(map, x, 5, z, z < map->height / 2 ? stone : glass);
+		}
+		else {
+			map_set(map, x, 0, z, dirt);
+			map_set(map, x, 5, z, z < map->height / 2 ? glass : stone);
+		}
+	}
+}

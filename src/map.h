@@ -43,6 +43,7 @@ void map_destroy(map_t *map);
 void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z);
 size_t map_get_top(map_t *map, size_t x, size_t z);
+size_t map_get_top_lit(map_t *map, size_t x, size_t z);
 
 void map_tick(map_t *map);
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until);

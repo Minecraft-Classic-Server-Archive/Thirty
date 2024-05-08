@@ -22,6 +22,8 @@
 
 static void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blocktick_grass_die(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blocktick_grass_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 
 blockinfo_t blockinfo[num_blocks];
 
@@ -29,9 +31,15 @@ void blocks_init(void) {
 	memset(blockinfo, 0, sizeof(blockinfo));
 	for (size_t i = 0; i < num_blocks; i++) {
 		blockinfo[i].solid = true;
+		blockinfo[i].block_light = true;
 	}
 
 	blockinfo[air].solid = false;
+	blockinfo[air].block_light = false;
+	blockinfo[grass].random_tickfunc = blocktick_grass_die;
+	blockinfo[dirt].random_tickfunc = blocktick_grass_grow;
+	blockinfo[sapling].solid = false;
+	blockinfo[sapling].block_light = false;
 	blockinfo[sand].tickfunc = blocktick_gravity;
 	blockinfo[gravel].tickfunc = blocktick_gravity;
 	blockinfo[bedrock].op_only = true;
@@ -45,12 +53,19 @@ void blocks_init(void) {
 	blockinfo[lava].ticktime = 8;
 	blockinfo[lava].op_only = true;
 	blockinfo[lava_still].op_only = true;
+	blockinfo[glass].block_light = false;
 	blockinfo[rose].solid = false;
+	blockinfo[rose].block_light = false;
 	blockinfo[dandelion].solid = false;
+	blockinfo[dandelion].block_light = false;
 	blockinfo[brown_mushroom].solid = false;
+	blockinfo[brown_mushroom].block_light = false;
 	blockinfo[red_mushroom].solid = false;
+	blockinfo[red_mushroom].block_light = false;
 	blockinfo[rope].solid = false;
+	blockinfo[rope].block_light = false;
 	blockinfo[fire].solid = false;
+	blockinfo[fire].block_light = false;
 	blockinfo[snow].solid = false;
 }
 
@@ -83,6 +98,29 @@ void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 	}
 	if (!blockinfo[map_get(map, x, y - 1, z)].solid) {
 		map_set(map, x, y - 1, z, block);
+	}
+}
+
+
+void blocktick_grass_die(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	if (block != grass) {
+		return;
+	}
+
+	size_t top = map_get_top_lit(map, x, z);
+	if (top > y) {
+		map_set(map, x, y, z, dirt);
+	}
+}
+
+void blocktick_grass_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	if (block != dirt) {
+		return;
+	}
+
+	size_t top = map_get_top_lit(map, x, z);
+	if (top == y) {
+		map_set(map, x, y, z, grass);
 	}
 }
 
