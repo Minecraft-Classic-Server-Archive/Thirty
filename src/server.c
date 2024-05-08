@@ -34,6 +34,10 @@
 #include "config.h"
 #include "namelist.h"
 
+#ifndef _WIN32
+#include <netinet/tcp.h>
+#endif
+
 #define HEARTBEAT_INTERVAL (45.0)
 
 void server_accept(void);
@@ -196,9 +200,12 @@ void server_accept(void) {
 
 	int yes = 1;
 #ifdef _WIN32
-	ioctlsocket(server.socket_fd, FIONBIO, (u_long *)&yes);
+	const char *i_hate_winsock = 1;
+	ioctlsocket(acceptfd, FIONBIO, (u_long *)&yes);
+	setsockopt(acceptfd, IPPROTO_TCP, TCP_NODELAY, &i_hate_winsock, sizeof(i_hate_winsock));
 #else
-	ioctlsocket(server.socket_fd, FIONBIO, &yes);
+	ioctlsocket(acceptfd, FIONBIO, &yes);
+	setsockopt(acceptfd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
 #endif
 
 	struct sockaddr_in *sin = (struct sockaddr_in *)&client_addr;
