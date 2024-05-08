@@ -32,6 +32,9 @@ typedef struct {
 		bool offline;
 		unsigned max_players;
 		bool enable_whitelist;
+
+		char **allowed_web_proxies;
+		size_t num_proxies;
 	} server;
 
 	struct {

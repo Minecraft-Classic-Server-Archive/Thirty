@@ -212,9 +212,9 @@ void server_accept(void) {
 	size_t conn_idx = server.num_clients++;
 	server.clients = realloc(server.clients, server.num_clients * sizeof(*server.clients));
 	client_t *client = &server.clients[conn_idx];
-	memcpy(client->address, &sin->sin_addr.s_addr, sizeof(client->address));
-	client->port = sin->sin_port;
 	client_init(client, acceptfd, conn_idx);
+	memcpy(client->address, ip, sizeof(client->address));
+	client->port = sin->sin_port;
 
 	if (namelist_contains(server.banned_ips, addrstr)) {
 		printf("Client %s is banned!\n", addrstr);

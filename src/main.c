@@ -32,6 +32,8 @@ static bool running = true;
 bool args_disable_colour = false;
 
 int main(int argc, char *argv[]) {
+	setbuf(stdout, NULL);
+
 	const char *config_file = NULL;
 	int opt;
 	while ((opt = getopt(argc, argv, "Cc:")) != -1) {
