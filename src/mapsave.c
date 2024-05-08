@@ -27,6 +27,8 @@ void map_save(map_t *map) {
 	char filename[256];
 	snprintf(filename, sizeof(filename), "%s.cw", map->name);
 
+	printf("Saving map to '%s'\n", filename);
+
 	tag_t *root = nbt_create_compound("ClassicWorld");
 	uint8_t uuid[16];
 
@@ -116,6 +118,8 @@ void map_save(map_t *map) {
 			fwrite(gzbuf, 1, have, fp);
 		} while (strm.avail_out == 0);
 	} while (flush != Z_FINISH);
+
+	printf("Saved!\n");
 
 cleanup:
 	deflateEnd(&strm);
