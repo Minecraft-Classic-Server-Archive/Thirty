@@ -149,8 +149,6 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 		return false;
 	}
 
-	uint8_t here = map_get(map, x, y, z);
-
 	for (int xx = x - 1; xx <= x + 1; xx++)
 		for (int yy = y; yy < y + height; yy++)
 			for (int zz = z - 1; zz <= z + 1; zz++) {
