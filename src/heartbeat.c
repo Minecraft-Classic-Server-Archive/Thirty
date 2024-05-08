@@ -28,6 +28,8 @@
 #include <netdb.h>
 #endif
 
+static bool heartbeat_url_printed = false;
+
 static void *heartbeat_main(void *data) {
 	(void)data;
 
@@ -86,7 +88,10 @@ static void *heartbeat_main(void *data) {
 	if (strncmp(response, expected, strlen(expected)) != 0) {
 		fprintf(stderr, "Heartbeat failed:\n%s\n", response);
 	}
-	else printf("%s\n", response);
+	else if (!heartbeat_url_printed) {
+		printf("%s\n", response);
+		heartbeat_url_printed = false;
+	}
 
 cleanup:
 	closesocket(sock);
