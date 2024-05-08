@@ -46,7 +46,12 @@ bool server_init(void) {
 	server.global_rng = rng_create((int)time(NULL));
 	server.last_heartbeat = 0.0;
 
-	server_generate_salt(server.salt, 16);
+	if (config.debug.fixed_salt[0] == '\0') {
+		server_generate_salt(server.salt, 16);
+	}
+	else {
+		strncpy(server.salt, config.debug.fixed_salt, 16);
+	}
 
 	int err;
 
