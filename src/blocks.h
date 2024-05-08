@@ -99,6 +99,7 @@ enum {
 typedef struct blockinfo_s {
 	bool solid : 1;
 	bool block_light : 1;
+	bool liquid : 1;
 	bool op_only_place : 1;
 	bool op_only_break : 1;
 

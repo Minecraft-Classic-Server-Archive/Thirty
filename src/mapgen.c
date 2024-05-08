@@ -139,6 +139,10 @@ void fastintstack_destroy(fastintstack_t *s) {
 	free(s);
 }
 
+static inline bool tree_test_block(uint8_t block) {
+	return blockinfo[block].solid || blockinfo[block].liquid;
+}
+
 bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 	if (!map_pos_valid(map, x, y, z) || !map_pos_valid(map, x, y - 1, z)) {
 		return false;
@@ -156,7 +160,7 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 					return false;
 				}
 
-				if (blockinfo[map_get(map, xx, yy, zz)].solid) {
+				if (tree_test_block(map_get(map, xx, yy, zz))) {
 					return false;
 				}
 			}
@@ -170,7 +174,7 @@ bool mapgen_space_for_tree(struct map_s *map, int x, int y, int z, int height) {
 					return false;
 				}
 
-				if (blockinfo[map_get(map, xx, yy, zz)].solid) {
+				if (tree_test_block(map_get(map, xx, yy, zz))) {
 					return false;
 				}
 			}
