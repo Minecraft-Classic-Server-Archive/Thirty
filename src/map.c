@@ -84,7 +84,7 @@ uint8_t map_get(map_t *map, size_t x, size_t y, size_t z) {
 size_t map_get_top(map_t *map, size_t x, size_t z) {
 	size_t yy;
 
-	for (yy = map->depth; yy > 0; yy--) {
+	for (yy = map->depth - 1; yy > 0; yy--) {
 		const uint8_t block = map_get(map, x, yy, z);
 		if (block != air) {
 			break;
@@ -97,7 +97,7 @@ size_t map_get_top(map_t *map, size_t x, size_t z) {
 size_t map_get_top_lit(map_t *map, size_t x, size_t z) {
 	size_t yy;
 
-	for (yy = map->depth; yy > 0; yy--) {
+	for (yy = map->depth - 1; yy > 0; yy--) {
 		const uint8_t block = map_get(map, x, yy, z);
 		if (blockinfo[block].block_light) {
 			break;
