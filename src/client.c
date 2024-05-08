@@ -372,9 +372,21 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_uint8(in_buffer, &mode);
 				buffer_read_uint8(in_buffer, &block);
 
-				uint8_t current = map_get(server.map, x, y, z);
+				const bool is_break = mode == 0x00;
+				const uint8_t current = map_get(server.map, x, y, z);
 
-				if ((blockinfo[block].op_only || blockinfo[current].op_only) && !client->is_op) {
+				bool can_perform = true;
+
+				if (!client->is_op) {
+					if (is_break) {
+						can_perform = !blockinfo[current].op_only_break;
+					}
+					else {
+						can_perform = !blockinfo[current].op_only_break && !blockinfo[block].op_only_place;
+					}
+				}
+
+				if (!can_perform) {
 					buffer_write_uint8(client->out_buffer, packet_set_block_server);
 					buffer_write_uint16be(client->out_buffer, x);
 					buffer_write_uint16be(client->out_buffer, y);
@@ -382,7 +394,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					buffer_write_uint8(client->out_buffer, current);
 					client_flush(client);
 				} else {
-					map_set(server.map, x, y, z, mode == 0x00 ? 0x00 : block);
+					map_set(server.map, x, y, z, is_break ? 0x00 : block);
 				}
 
 				break;
