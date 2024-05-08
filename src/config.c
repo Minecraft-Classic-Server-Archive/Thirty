@@ -309,6 +309,12 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		config.colours[idx].b = (colour >> 8U) & 0xFFU;
 		config.colours[idx].a = colour & 0xFFU;
 	}
+
+	else if (strcmp(section, "debug") == 0) {
+		if (strcmp(key, "fixed_salt") == 0) {
+			strncpy(config.debug.fixed_salt, value, sizeof(config.debug.fixed_salt));
+		}
+	}
 }
 
 void config_init(const char *config_path) {

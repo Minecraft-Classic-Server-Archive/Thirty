@@ -42,6 +42,10 @@ typedef struct {
 		int seed;
 	} map;
 
+	struct {
+		char fixed_salt[17];
+	} debug;
+
 	textcolour_t *colours;
 	size_t num_colours;
 } config_t;
