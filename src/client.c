@@ -694,6 +694,29 @@ void client_ws_upgrade(client_t *client, int r) {
 		return;
 	}
 
+	const char *real_ip = util_httpheaders_get(headers, num_headers, "X-Real-IP");
+	if (real_ip != NULL) {
+		char addrstr[64];
+		snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", client->address[0], client->address[1], client->address[2], client->address[3]);
+
+		bool allowed = false;
+
+		for (size_t i = 0; i < config.server.num_proxies; i++) {
+			if (strcasecmp(config.server.allowed_web_proxies[i], addrstr) == 0) {
+				allowed = true;
+				break;
+			}
+		}
+
+		if (!allowed) {
+			printf("Client is claiming to actually be from a different IP, but is not using a proxy in the web_proxies list. Disconnecting.\n");
+			client_disconnect(client, "");
+			return;
+		}
+
+		printf("...actually using address %s\n", addrstr);
+	}
+
 	char key[512];
 	snprintf(key, 512, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Key"));
 

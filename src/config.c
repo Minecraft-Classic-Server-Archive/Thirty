@@ -241,6 +241,37 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "whitelist") == 0) {
 			config.server.enable_whitelist = strcmp(value, "true") == 0;
 		}
+		else if (strcmp(key, "web_proxies") == 0) {
+			for (size_t i = 0; i < config.server.num_proxies; i++) {
+				free(config.server.allowed_web_proxies[i]);
+			}
+			
+			free(config.server.allowed_web_proxies);
+			config.server.allowed_web_proxies = NULL;
+			config.server.num_proxies = 0;
+			
+			char buf[64];
+			size_t bufp = 0;
+			const size_t vallen = strlen(value);
+			for (size_t i = 0; i <= vallen; i++) {
+				const char c = value[i];
+				if (c == ' ' || i == vallen) {
+					if (bufp == 0) {
+						continue;
+					}
+
+					trim(buf);
+					size_t idx = config.server.num_proxies++;
+					config.server.allowed_web_proxies = realloc(config.server.allowed_web_proxies, sizeof(char *) * config.server.num_proxies);
+					config.server.allowed_web_proxies[idx] = strdup(buf);
+					bufp = 0;
+				}
+				else if (bufp <= sizeof(buf) - 1) {
+					buf[bufp++] = c;
+					buf[bufp] = '\0';
+				}
+			}
+		}
 	}
 
 	else if (strcmp(section, "map") == 0) {
@@ -322,6 +353,10 @@ void config_init(const char *config_path) {
 
 	config.map.random_seed = true;
 
+	config.server.allowed_web_proxies = malloc(sizeof(char *));
+	config.server.allowed_web_proxies[0] = strdup("34.223.5.250");
+	config.server.num_proxies = 1;
+
 	if (config_path != NULL) {
 		config_parse(config_path, cfg_callback);
 	}
@@ -374,6 +409,14 @@ void config_init(const char *config_path) {
 }
 
 void config_destroy(void) {
+	for (size_t i = 0; i < config.server.num_proxies; i++) {
+		free(config.server.allowed_web_proxies[i]);
+	}
+
+	free(config.server.allowed_web_proxies);
+	config.server.allowed_web_proxies = NULL;
+	config.server.num_proxies = 0;
+	
 	free(config.server.name);
 	free(config.server.motd);
 	free(config.map.name);
