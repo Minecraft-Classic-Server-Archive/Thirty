@@ -63,6 +63,7 @@ void blocks_init(void) {
 	blockinfo[lava].op_only_place = true;
 	blockinfo[lava_still].liquid = true;
 	blockinfo[lava_still].op_only_place = true;
+	blockinfo[leaves].block_light = false;
 	blockinfo[glass].block_light = false;
 	blockinfo[rose].solid = false;
 	blockinfo[rose].block_light = false;
