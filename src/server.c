@@ -200,7 +200,7 @@ void server_accept(void) {
 
 	int yes = 1;
 #ifdef _WIN32
-	const char *i_hate_winsock = 1;
+	const char i_hate_winsock = 1;
 	ioctlsocket(acceptfd, FIONBIO, (u_long *)&yes);
 	setsockopt(acceptfd, IPPROTO_TCP, TCP_NODELAY, &i_hate_winsock, sizeof(i_hate_winsock));
 #else
