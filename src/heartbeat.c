@@ -88,18 +88,20 @@ static void *heartbeat_main(void *data) {
 	httpheaders_t headers;
 	if (util_httpheaders_parse(&headers, response)) {
 		if (headers.code == 200) {
-			char *url = strstr(headers.end, "http");
-			if (url == NULL) {
-				url = (char *)headers.end;
-			}
+			if (!heartbeat_url_printed) {
+				char *url = strstr(headers.end, "http");
+				if (url == NULL) {
+					url = (char *)headers.end;
+				}
 
-			char *cr = strstr(url, "\r");
-			if (cr != NULL) {
-				*cr = '\0';
-			}
+				char *cr = strstr(url, "\r");
+				if (cr != NULL) {
+					*cr = '\0';
+				}
 
-			printf("Server URL: %s\n", url);
-			heartbeat_url_printed = true;
+				printf("Server URL: %s\n", url);
+				heartbeat_url_printed = true;
+			}
 		}
 		else {
 			fprintf(stderr, "Heartbeat failed: %s\n", headers.end);
