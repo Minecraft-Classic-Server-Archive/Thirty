@@ -54,7 +54,7 @@ bool server_init(void) {
 		server_generate_salt(server.salt, 16);
 	}
 	else {
-		strncpy(server.salt, config.debug.fixed_salt, 16);
+		memcpy(server.salt, config.debug.fixed_salt, 16);
 	}
 
 	int err;

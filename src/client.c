@@ -289,7 +289,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					return;
 				}
 
-				strncpy(client->name, username, 64);
+				memcpy(client->name, username, 65);
 				client->is_op = namelist_contains(server.ops, client->name);
 
 				if (supports_cpe) {
