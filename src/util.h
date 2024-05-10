@@ -29,11 +29,14 @@
 double get_time_s(void);
 
 typedef struct {
-	char *key, *value;
-} httpheader_t;
+	int code;
+	const char *end;
+	char **data;
+	size_t num_headers;
+} httpheaders_t;
 
-httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers);
-const char *util_httpheaders_get(httpheader_t *headers, size_t num_headers, const char *key);
-void util_httpheaders_destroy(httpheader_t *list, size_t num_headers);
+bool util_httpheaders_parse(httpheaders_t *result, const char *text);
+const char *util_httpheaders_get(httpheaders_t *headers, const char *key);
+void util_httpheaders_destroy(httpheaders_t *list);
 
 void util_print_coloured(const char *msg);

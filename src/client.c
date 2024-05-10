@@ -688,26 +688,27 @@ bool client_supports_extension(client_t *client, const char *name, int version) 
 void client_ws_upgrade(client_t *client, int r) {
 	client->in_buffer->mem.data[r + 1] = 0;
 
-	size_t num_headers;
-	httpheader_t *headers = util_httpheaders_parse((const char *) client->in_buffer->mem.data, &num_headers);
+	char *header_start = strstr((const char *)client->in_buffer->mem.data, "\r\n");
+	httpheaders_t headers;
+	util_httpheaders_parse(&headers, (const char *) header_start + 2);
 
 	bool is_valid =
-			util_httpheaders_get(headers, num_headers, "Connection") != NULL
-			&& (strstr(util_httpheaders_get(headers, num_headers, "Connection"), "upgrade") || strstr(util_httpheaders_get(headers, num_headers, "Connection"), "Upgrade"))
-			&& util_httpheaders_get(headers, num_headers, "Upgrade") != NULL
-			&& strcasecmp(util_httpheaders_get(headers, num_headers, "Upgrade"), "WebSocket") == 0
-			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Version") != NULL
-			&& strcmp(util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Version"), "13") == 0
-			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Protocol") != NULL
-			&& strcasecmp(util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Protocol"), "ClassiCube") == 0
-			&& util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Key") != NULL;
+			util_httpheaders_get(&headers, "Connection") != NULL
+			&& (strstr(util_httpheaders_get(&headers, "Connection"), "upgrade") || strstr(util_httpheaders_get(&headers, "Connection"), "Upgrade"))
+			&& util_httpheaders_get(&headers, "Upgrade") != NULL
+			&& strcasecmp(util_httpheaders_get(&headers, "Upgrade"), "WebSocket") == 0
+			&& util_httpheaders_get(&headers, "Sec-WebSocket-Version") != NULL
+			&& strcmp(util_httpheaders_get(&headers, "Sec-WebSocket-Version"), "13") == 0
+			&& util_httpheaders_get(&headers, "Sec-WebSocket-Protocol") != NULL
+			&& strcasecmp(util_httpheaders_get(&headers, "Sec-WebSocket-Protocol"), "ClassiCube") == 0
+			&& util_httpheaders_get(&headers, "Sec-WebSocket-Key") != NULL;
 
 	if (!is_valid) {
 		client_disconnect(client, "");
 		return;
 	}
 
-	const char *real_ip = util_httpheaders_get(headers, num_headers, "X-Real-IP");
+	const char *real_ip = util_httpheaders_get(&headers, "X-Real-IP");
 	if (real_ip != NULL) {
 		char addrstr[64];
 		snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", client->address[0], client->address[1], client->address[2], client->address[3]);
@@ -727,11 +728,12 @@ void client_ws_upgrade(client_t *client, int r) {
 			return;
 		}
 
-		printf("...actually using address %s\n", addrstr);
+		printf("...actually using address %s\n", real_ip);
 	}
 
+	const char *wskey = util_httpheaders_get(&headers, "Sec-WebSocket-Key");
 	char key[512];
-	snprintf(key, 512, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", util_httpheaders_get(headers, num_headers, "Sec-WebSocket-Key"));
+	snprintf(key, 512, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", wskey);
 
 	unsigned char key_sha1[20];
 	SHA1(key_sha1, key, strlen(key));
@@ -758,7 +760,7 @@ void client_ws_upgrade(client_t *client, int r) {
 	client->ws_out_buffer = buffer_allocate_memory(BUFFER_SIZE + 4, false);
 
 	free(key_b64);
-	util_httpheaders_destroy(headers, num_headers);
+	util_httpheaders_destroy(&headers);
 }
 
 void client_ws_handle_packet(client_t *client, int len) {

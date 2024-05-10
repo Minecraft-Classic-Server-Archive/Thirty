@@ -22,6 +22,7 @@
 #include "server.h"
 #include "sockets.h"
 #include "config.h"
+#include "util.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -84,14 +85,30 @@ static void *heartbeat_main(void *data) {
 		goto cleanup;
 	}
 
-	const char *expected = "HTTP/1.1 200 OK\r\n";
-	if (strncmp(response, expected, strlen(expected)) != 0) {
-		fprintf(stderr, "Heartbeat failed:\n%s\n", response);
+	httpheaders_t headers;
+	if (util_httpheaders_parse(&headers, response)) {
+		if (headers.code == 200) {
+			char *url = strstr(headers.end, "http");
+			if (url == NULL) {
+				url = (char *)headers.end;
+			}
+
+			char *cr = strstr(url, "\r");
+			if (cr != NULL) {
+				*cr = '\0';
+			}
+
+			printf("Server URL: %s\n", url);
+			heartbeat_url_printed = true;
+		}
+		else {
+			fprintf(stderr, "Heartbeat failed: %s\n", headers.end);
+		}
 	}
-	else if (!heartbeat_url_printed) {
-		printf("%s\n", response);
-		heartbeat_url_printed = false;
+	else {
+		fprintf(stderr, "Invalid heartbeat response: %s\n", response);
 	}
+	util_httpheaders_destroy(&headers);
 
 cleanup:
 	closesocket(sock);

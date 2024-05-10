@@ -30,9 +30,10 @@ double get_time_s(void) {
 	return (double)ts.tv_sec + ((double)ts.tv_nsec / 1000000000.0);
 }
 
-httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers) {
+bool util_httpheaders_parse(httpheaders_t *result, const char *text) {
+	memset(result, 0, sizeof(*result));
+
 	size_t n = 0;
-	httpheader_t *result = NULL;
 	size_t inlen = strlen(text);
 
 	char *key = NULL, *value = NULL;
@@ -41,8 +42,20 @@ httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers) {
 	size_t bufi = 0;
 	bool parsevalue = false;
 
-	for (size_t i = 0; i < inlen; i++) {
+	const char *start = "HTTP/1.1 ";
+	const size_t startlen = strlen(start);
+	// 14 is the length of "HTTP/1.1 XXX\r\n"
+	if (inlen >= 14 && memcmp(text, start, startlen) == 0) {
+		long value = strtol(text + startlen, NULL, 10);
+		result->code = (int)value;
+		text = strstr(text, "\r\n") + 2;
+	}
+
+	size_t i;
+	for (i = 0; i < inlen; i++) {
 		const char c = text[i];
+		bool end = false;
+
 		switch (c) {
 			case '\r': {
 				continue;
@@ -50,6 +63,10 @@ httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers) {
 
 			case '\n': {
 				if (!parsevalue) {
+					if (bufi == 0) {
+						end = true;
+					}
+
 					break;
 				}
 
@@ -58,10 +75,13 @@ httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers) {
 				bufi = 0;
 				parsevalue = false;
 
-				size_t idx = n++;
-				result = realloc(result, sizeof(*result) * n);
-				result[idx].key = key;
-				result[idx].value = value;
+				size_t idx = (n++) * 2;
+				result->data = realloc(result->data, sizeof(*result->data) * n * 2);
+				result->data[idx] = key;
+				result->data[idx + 1] = value;
+
+				key = NULL;
+				value = NULL;
 
 				break;
 			}
@@ -87,32 +107,37 @@ httpheader_t *util_httpheaders_parse(const char *text, size_t *num_headers) {
 			default:
 			_default: {
 				buf[bufi++] = c;
+				buf[bufi] = '\0';
 
 				break;
 			}
 		}
+
+		if (end) {
+			break;
+		}
 	}
 
-	*num_headers = n;
+	result->num_headers = n;
+	result->end = text + i;
 	return result;
 }
 
-const char *util_httpheaders_get(httpheader_t *headers, size_t num_headers, const char *key) {
-	for (size_t i = 0; i < num_headers; i++) {
-		if (strcasecmp(headers[i].key, key) == 0) {
-			return headers[i].value;
+const char *util_httpheaders_get(httpheaders_t *headers, const char *key) {
+	for (size_t i = 0; i < headers->num_headers * 2; i += 2) {
+		if (strcasecmp(headers->data[i], key) == 0) {
+			return headers->data[i + 1];
 		}
 	}
 
 	return NULL;
 }
 
-void util_httpheaders_destroy(httpheader_t *list, size_t num_headers) {
-	for (size_t i = 0; i < num_headers; i++) {
-		free(list[i].key);
-		free(list[i].value);
+void util_httpheaders_destroy(httpheaders_t *list) {
+	for (size_t i = 0; i < list->num_headers * 2; i++) {
+		free(list->data[i]);
 	}
-	free(list);
+	free(list->data);
 }
 
 void util_print_coloured(const char *msg) {
