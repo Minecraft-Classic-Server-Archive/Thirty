@@ -120,7 +120,8 @@ bool util_httpheaders_parse(httpheaders_t *result, const char *text) {
 
 	result->num_headers = n;
 	result->end = text + i;
-	return result;
+	
+	return true;
 }
 
 const char *util_httpheaders_get(httpheaders_t *headers, const char *key) {
