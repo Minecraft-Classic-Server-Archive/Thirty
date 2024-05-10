@@ -51,7 +51,7 @@ typedef struct client_s {
 	double ping;
 	uint16_t ping_key;
 
-	char name[64];
+	char name[65];
 
 	bool spawned;
 	float x, y, z;

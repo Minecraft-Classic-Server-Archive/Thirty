@@ -343,7 +343,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 
 	else if (strcmp(section, "debug") == 0) {
 		if (strcmp(key, "fixed_salt") == 0) {
-			strncpy(config.debug.fixed_salt, value, sizeof(config.debug.fixed_salt));
+			strncpy(config.debug.fixed_salt, value, sizeof(config.debug.fixed_salt) - 1);
 		}
 	}
 }

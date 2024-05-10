@@ -49,7 +49,7 @@ tag_t *nbt_create(const char *name) {
 
 		size_t nl = strlen(name);
 		t->name = calloc(nl + 1, sizeof(char));
-		strncpy(t->name, name, nl);
+		memcpy(t->name, name, nl);
 		t->name[nl] = '\0';
 	}
 
@@ -81,7 +81,7 @@ tag_t *nbt_create_string(const char *name, const char *val){
 
 	t->array_size = (int32_t) strlen(val);
 	t->str = malloc(t->array_size + 1);
-	strncpy(t->str, val, t->array_size);
+	memcpy(t->str, val, t->array_size);
 	t->str[t->array_size] = '\0';
 
 	return t;
