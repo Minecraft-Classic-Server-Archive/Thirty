@@ -22,6 +22,10 @@ project('thirty', 'c',
 cc = meson.get_compiler('c')
 ccflags = []
 
+version_h = configure_file(input: 'version.h.in', output: 'version.h', configuration: {
+    'project_version': meson.project_version()
+})
+
 hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{node|short}', '-r', '.'], input: 'version.h.in', output: 'version.h', replace_string: '@hg_changeset@')
 
 source_files = [
@@ -67,6 +71,8 @@ source_files = [
     'lib/md5.h',
     'lib/sha1.c',
     'lib/sha1.h',
+
+    version_h,
 ]
 
 deps = [
