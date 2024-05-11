@@ -19,13 +19,12 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
-#include <version.h>
-
 #include "server.h"
 #include "sockets.h"
 #include "config.h"
 #include "util.h"
 #include "log.h"
+#include "version.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
