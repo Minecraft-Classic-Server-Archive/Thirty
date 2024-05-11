@@ -25,6 +25,7 @@
 #include "util.h"
 #include "config.h"
 #include "log.h"
+#include "version.h"
 
 static void signal_handler(int signum);
 
@@ -57,6 +58,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	log_init();
+	log_printf(log_info, "Thirty %s", HG_CHANGESET_HASH);
+
 	config_init(config_file);
 	blocks_init();
 
