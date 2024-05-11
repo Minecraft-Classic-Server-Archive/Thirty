@@ -222,6 +222,7 @@ void client_receive(client_t *client) {
 		}
 
 		log_printf(log_error, "recv error %d", e);
+		client_disconnect(client, "Socket read error");
 		return;
 	}
 
@@ -589,6 +590,7 @@ void client_send(client_t *client, buffer_t *buffer) {
 		}
 
 		log_printf(log_error, "send error %d", e);
+		client_disconnect(client, "Socket write error");
 	}
 }
 
