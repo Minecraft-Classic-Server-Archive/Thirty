@@ -24,6 +24,7 @@
 #include "blocks.h"
 #include "util.h"
 #include "config.h"
+#include "log.h"
 
 static void signal_handler(int signum);
 
@@ -55,6 +56,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	log_init();
 	config_init(config_file);
 	blocks_init();
 
@@ -70,14 +72,14 @@ int main(int argc, char *argv[]) {
 
 	server_init();
 
-	printf("Ready!\n");
+	log_printf(log_info, "Ready!");
 
 	while (running) {
 		double start = get_time_s();
 		server_tick();
 		double end = get_time_s();
 		if (end - start > 1.0 / 20.0) {
-			printf("Server lagged: Tick %" PRIu64 " took too long (%f ms)\n", server.tick - 1, (end - start) * 1000.0);
+			log_printf(log_info, "Server lagged: Tick %" PRIu64 " took too long (%f ms)", server.tick - 1, (end - start) * 1000.0);
 		}
 
 		usleep(1000000 / 20);
@@ -85,6 +87,7 @@ int main(int argc, char *argv[]) {
 
 	server_shutdown();
 	config_destroy();
+	log_shutdown();
 
 #ifdef _WIN32
 	WSACleanup();
@@ -94,6 +97,6 @@ int main(int argc, char *argv[]) {
 }
 
 void signal_handler(int signum) {
-	printf("Received signal %d, will exit.\n", signum);
+	log_printf(log_info, "Received signal %d, will exit.", signum);
 	running = false;
 }

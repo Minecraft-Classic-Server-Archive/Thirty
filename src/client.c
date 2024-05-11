@@ -33,6 +33,7 @@
 #include "b64.h"
 #include "config.h"
 #include "namelist.h"
+#include "log.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -220,7 +221,7 @@ void client_receive(client_t *client) {
 			return;
 		}
 
-		fprintf(stderr, "recv error %d\n", e);
+		log_printf(log_error, "recv error %d", e);
 		return;
 	}
 
@@ -327,7 +328,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				client->num_extensions = (size_t)extcount;
 				client->extensions = calloc(extcount, sizeof(*client->extensions));
 
-				printf("Client using %s with %d extensions\n", appname, extcount);
+				log_printf(log_info, "Client using %s with %d extensions", appname, extcount);
 
 				break;
 			}
@@ -342,7 +343,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				size_t i;
 				for (i = 0; i < client->num_extensions; i++) {
 					if (i == client->num_extensions) {
-						fprintf(stderr, "extension overrun!\n");
+						log_printf(log_error, "extension overrun!");
 						client_disconnect(client, "Invalid data.");
 						return;
 					}
@@ -486,7 +487,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 			}
 
 			default: {
-				fprintf(stderr, "client %zu (%s) sent unknown packet 0x%02x\n", client->idx, client->name, packet_id);
+				log_printf(log_error, "client %zu (%s) sent unknown packet 0x%02x", client->idx, client->name, packet_id);
 				client_disconnect(client, "Received malformed data.");
 				break;
 			};
@@ -587,7 +588,7 @@ void client_send(client_t *client, buffer_t *buffer) {
 			return;
 		}
 
-		fprintf(stderr, "send error %d\n", e);
+		log_printf(log_error, "send error %d", e);
 	}
 }
 
@@ -723,12 +724,12 @@ void client_ws_upgrade(client_t *client, int r) {
 		}
 
 		if (!allowed) {
-			printf("Client is claiming to actually be from a different IP, but is not using a proxy in the web_proxies list. Disconnecting.\n");
+			log_printf(log_info, "Client is claiming to actually be from a different IP, but is not using a proxy in the web_proxies list. Disconnecting.");
 			client_disconnect(client, "");
 			return;
 		}
 
-		printf("...actually using address %s\n", real_ip);
+		log_printf(log_info, "...actually using address %s", real_ip);
 	}
 
 	const char *wskey = util_httpheaders_get(&headers, "Sec-WebSocket-Key");

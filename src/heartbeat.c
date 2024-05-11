@@ -23,6 +23,7 @@
 #include "sockets.h"
 #include "config.h"
 #include "util.h"
+#include "log.h"
 
 #ifndef _WIN32
 #include <sys/types.h>
@@ -57,31 +58,31 @@ static void *heartbeat_main(void *data) {
 
 	int err = getaddrinfo("www.classicube.net", "80", &hints, &result);
 	if (err != 0) {
-		fprintf(stderr, "getaddrinfo error: %d\n", err);
+		log_printf(log_error, "getaddrinfo error: %d", err);
 		return NULL;
 	}
 
 	socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET) {
-		fprintf(stderr, "socket error: %d\n", socket_error());
+		log_printf(log_error, "socket error: %d", socket_error());
 		goto cleanup;
 	}
 
 	err = connect(sock, result->ai_addr, result->ai_addrlen);
 	if (err == SOCKET_ERROR) {
-		fprintf(stderr, "connect error: %d\n", socket_error());
+		log_printf(log_error, "connect error: %d", socket_error());
 		goto cleanup;
 	}
 
 	err = send(sock, url, strlen(url), 0);
 	if (err == SOCKET_ERROR) {
-		fprintf(stderr, "send error: %d\n", socket_error());
+		log_printf(log_error, "send error: %d", socket_error());
 		goto cleanup;
 	}
 
 	err = recv(sock, response, sizeof(response), 0);
 	if (err == SOCKET_ERROR) {
-		fprintf(stderr, "recv error: %d\n", socket_error());
+		log_printf(log_error, "recv error: %d", socket_error());
 		goto cleanup;
 	}
 
@@ -99,16 +100,16 @@ static void *heartbeat_main(void *data) {
 					*cr = '\0';
 				}
 
-				printf("Server URL: %s\n", url);
+				log_printf(log_info, "Server URL: %s", url);
 				heartbeat_url_printed = true;
 			}
 		}
 		else {
-			fprintf(stderr, "Heartbeat failed: %s\n", headers.end);
+			log_printf(log_error, "Heartbeat failed: %s", headers.end);
 		}
 	}
 	else {
-		fprintf(stderr, "Invalid heartbeat response: %s\n", response);
+		log_printf(log_error, "Invalid heartbeat response: %s", response);
 	}
 	util_httpheaders_destroy(&headers);
 

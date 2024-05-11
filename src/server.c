@@ -32,6 +32,7 @@
 #include "util.h"
 #include "mapgen.h"
 #include "config.h"
+#include "log.h"
 #include "namelist.h"
 
 #ifndef _WIN32
@@ -101,20 +102,20 @@ bool server_init(void) {
 	ioctlsocket(server.socket_fd, FIONBIO, &yes);
 #endif
 
-	printf("Server is listening on port %u\n", server.port);
+	log_printf(log_info, "Server is listening on port %u", server.port);
 
-	printf("Preparing map...\n");
+	log_printf(log_info, "Preparing map...");
 	server.map = map_load(config.map.name);
 
 	if (server.map == NULL) {
-		printf("Failed to load map '%s', generating new...\n", config.map.name);
+		log_printf(log_info, "Failed to load map '%s', generating new...", config.map.name);
 		server.map = map_create(config.map.name, config.map.width, config.map.depth, config.map.height);
 
-		printf("Generating map...\n");
+		log_printf(log_info, "Generating map...");
 		double start = get_time_s();
 		map_generate(server.map, config.map.generator);
 		double duration = get_time_s() - start;
-		printf("Map generation took %f seconds\n", duration);
+		log_printf(log_info, "Map generation took %f seconds", duration);
 
 		map_save(server.map);
 	}
@@ -194,7 +195,7 @@ void server_accept(void) {
 			return;
 		}
 
-		fprintf(stderr, "accept error %d\n", e);
+		log_printf(log_error, "accept error %d", e);
 		return;
 	}
 
@@ -214,7 +215,7 @@ void server_accept(void) {
 	char addrstr[64];
 	snprintf(addrstr, sizeof(addrstr), "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
 
-	printf("Incoming connection from %s:%u\n", addrstr, sin->sin_port);
+	log_printf(log_info, "Incoming connection from %s:%u", addrstr, sin->sin_port);
 
 	size_t conn_idx = server.num_clients++;
 	server.clients = realloc(server.clients, server.num_clients * sizeof(*server.clients));
@@ -224,7 +225,7 @@ void server_accept(void) {
 	client->port = sin->sin_port;
 
 	if (namelist_contains(server.banned_ips, addrstr)) {
-		printf("Client %s is banned!\n", addrstr);
+		log_printf(log_info, "Client %s is banned!", addrstr);
 		client_disconnect(client, "You are banned from this server!");
 	}
 }
@@ -237,7 +238,7 @@ void server_broadcast(const char *msg, ...) {
 	vsnprintf(buffer, 65, msg, args);
 	va_end(args);
 
-	util_print_coloured(buffer);
+	log_printf(log_info, "%s", buffer);
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_t *client = &server.clients[i];

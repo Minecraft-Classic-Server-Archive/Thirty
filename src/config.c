@@ -24,6 +24,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include "config.h"
+#include "log.h"
 
 typedef void (*configcallback_t)(const char *section, const char *key, const char *value);
 
@@ -72,11 +73,11 @@ static void trim(char *p) {
 }
 
 void config_parse(const char *filename, configcallback_t callback) {
-	printf("Loading configuration from '%s'.\n", filename);
+	log_printf(log_info, "Loading configuration from '%s'.", filename);
 
 	FILE *fp = fopen(filename, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Failed to open config file '%s' for reading.\n", filename);
+		log_printf(log_error, "Failed to open config file '%s' for reading.", filename);
 		return;
 	}
 
@@ -100,7 +101,7 @@ void config_parse(const char *filename, configcallback_t callback) {
 				}
 
 				if (sectionp >= sizeof(sectionbuf) - 1) {
-					fprintf(stderr, "Section name is too long and will be truncated: '%s'\n", sectionbuf);
+					log_printf(log_error, "Section name is too long and will be truncated: '%s'", sectionbuf);
 					break;
 				}
 
@@ -134,7 +135,7 @@ void config_parse(const char *filename, configcallback_t callback) {
 				}
 
 				if (keyp >= sizeof(keybuf) - 1) {
-					fprintf(stderr, "Key name is too long and will be truncated: '%s'\n", keybuf);
+					log_printf(log_error, "Key name is too long and will be truncated: '%s'", keybuf);
 					break;
 				}
 
@@ -161,7 +162,7 @@ void config_parse(const char *filename, configcallback_t callback) {
 				}
 
 				if (valuep >= sizeof(valuebuf) - 1) {
-					fprintf(stderr, "Value is too long and will be truncated: '%s'\n", valuebuf);
+					log_printf(log_error, "Value is too long and will be truncated: '%s'", valuebuf);
 					break;
 				}
 
@@ -219,7 +220,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "port") == 0) {
 			long port = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'port' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'port' as unsigned integer");
 			} else {
 				config.server.port = (uint16_t) port;
 			}
@@ -233,7 +234,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "max_players") == 0) {
 			long max = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'max_players' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'max_players' as unsigned integer");
 			} else {
 				config.server.max_players = (unsigned int) max;
 			}
@@ -281,7 +282,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "width") == 0) {
 			long size = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'width' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'width' as unsigned integer");
 			} else {
 				config.map.width = size;
 			}
@@ -289,7 +290,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "depth") == 0) {
 			long size = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'depth' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'depth' as unsigned integer");
 			} else {
 				config.map.depth = size;
 			}
@@ -297,7 +298,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "height") == 0) {
 			long size = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'height' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'height' as unsigned integer");
 			} else {
 				config.map.height = size;
 			}
@@ -308,7 +309,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "seed") == 0) {
 			long seed = parse_int(value, &ok, 10);
 			if (!ok) {
-				fprintf(stderr, "Failed to parse 'seed' as unsigned integer\n");
+				log_printf(log_error, "Failed to parse 'seed' as unsigned integer");
 			} else {
 				config.map.seed = seed;
 				config.map.random_seed = false;
@@ -318,17 +319,17 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 
 	else if (strcmp(section, "colours") == 0) {
 		if (strlen(key) != 1) {
-			fprintf(stderr, "Colour name must be exactly 1 character.\n");
+			log_printf(log_error, "Colour name must be exactly 1 character.");
 			return;
 		}
 		if (strlen(value) != 8) {
-			fprintf(stderr, "Colour value must be an 8-digit RGBA hex number.\n");
+			log_printf(log_error, "Colour value must be an 8-digit RGBA hex number.");
 			return;
 		}
 
 		uint32_t colour = (uint32_t) parse_uint(value, &ok, 16);
 		if (!ok) {
-			fprintf(stderr, "Colour value failed to parse, it must be an 8-digit RGBA hex number.\n");
+			log_printf(log_error, "Colour value failed to parse, it must be an 8-digit RGBA hex number.");
 			return;
 		}
 

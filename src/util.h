@@ -15,6 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
+#include <stdbool.h>
+#include <stdio.h>
 
 #define util_max(x, y) (((x) > (y)) ? (x) : (y))
 #define util_min(x, y) (((x) < (y)) ? (x) : (y))
@@ -39,4 +41,5 @@ bool util_httpheaders_parse(httpheaders_t *result, const char *text);
 const char *util_httpheaders_get(httpheaders_t *headers, const char *key);
 void util_httpheaders_destroy(httpheaders_t *list);
 
-void util_print_coloured(const char *msg);
+void util_print_coloured(FILE *file, const char *msg);
+void util_print_strip_colours(FILE *file, const char *msg);

@@ -24,6 +24,7 @@
 #include "perlin.h"
 #include "util.h"
 #include "blocks.h"
+#include "log.h"
 
 void map_generate(map_t *map, const char *generator_name) {
 	map->generating = true;
@@ -47,7 +48,7 @@ void map_generate(map_t *map, const char *generator_name) {
 		mapgen_growtest(map);
 	}
 	else {
-		fprintf(stderr, "Invalid generator name '%s', map will be empty\n", generator_name);
+		log_printf(log_error, "Invalid generator name '%s', map will be empty", generator_name);
 	}
 
 	map->generating = false;

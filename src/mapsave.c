@@ -22,12 +22,13 @@
 #include "nbt.h"
 #include "buffer.h"
 #include "server.h"
+#include "log.h"
 
 void map_save(map_t *map) {
 	char filename[256];
 	snprintf(filename, sizeof(filename), "%s.cw", map->name);
 
-	printf("Saving map to '%s'\n", filename);
+	log_printf(log_info, "Saving map to '%s'", filename);
 
 	tag_t *root = nbt_create_compound("ClassicWorld");
 	uint8_t uuid[16];
@@ -92,7 +93,7 @@ void map_save(map_t *map) {
 
 	int err = deflateInit2(&strm, Z_BEST_SPEED, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
 	if (err != Z_OK) {
-		fprintf(stderr, "Failed to init zlib stream.");
+		log_printf(log_error, "Failed to init zlib stream.");
 		goto cleanup;
 	}
 
@@ -109,7 +110,7 @@ void map_save(map_t *map) {
 
 			err = deflate(&strm, flush);
 			if (err == Z_STREAM_ERROR) {
-				fprintf(stderr, "Failed to compress data.");
+				log_printf(log_error, "Failed to compress data.");
 				goto cleanup;
 			}
 
@@ -119,7 +120,7 @@ void map_save(map_t *map) {
 		} while (strm.avail_out == 0);
 	} while (flush != Z_FINISH);
 
-	printf("Saved!\n");
+	log_printf(log_info, "Saved!");
 
 cleanup:
 	deflateEnd(&strm);
@@ -158,7 +159,7 @@ map_t *map_load(const char *name) {
 
 	int ret = inflateInit2(&strm, 15 | 16);
 	if (ret != Z_OK) {
-		fprintf(stderr, "Failed to init zlib stream.");
+		log_printf(log_error, "Failed to init zlib stream.");
 		goto cleanup;
 	}
 
@@ -198,17 +199,17 @@ map_t *map_load(const char *name) {
 	buffer_destroy(nbtbuf); nbtbuf = NULL;
 
 	if (root == NULL) {
-		fprintf(stderr, "Not an NBT file: '%s'\n", filename);
+		log_printf(log_error, "Not an NBT file: '%s'", filename);
 	}
 
 	tag_t *format_version = nbt_get_tag(root, "FormatVersion");
 	if (format_version == NULL || format_version->type != tag_byte) {
-		fprintf(stderr, "Map format invalid: '%s'", filename);
+		log_printf(log_error, "Map format invalid: '%s'", filename);
 		goto cleanup;
 	}
 
 	if (format_version->b != 1) {
-		fprintf(stderr, "Unsupported ClassicWorld version: '%s'", filename);
+		log_printf(log_error, "Unsupported ClassicWorld version: '%s'", filename);
 		goto cleanup;
 	}
 
@@ -219,7 +220,7 @@ map_t *map_load(const char *name) {
 	tag_t *blocks = nbt_get_tag(root, "BlockArray");
 
 	if (xsize == NULL || xsize->type != tag_short || ysize == NULL || ysize->type != tag_short || zsize == NULL || zsize->type != tag_short || blocks == NULL || blocks->type != tag_byte_array) {
-		fprintf(stderr, "World file is invalid: '%s'\n", filename);
+		log_printf(log_error, "World file is invalid: '%s'", filename);
 		goto cleanup;
 	}
 

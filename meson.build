@@ -32,6 +32,8 @@ source_files = [
     'src/config.h',
     'src/cpe.c',
     'src/heartbeat.c',
+    'src/log.c',
+    'src/log.h',
     'src/cpe.h',
     'src/main.c',
     'src/map.c',
