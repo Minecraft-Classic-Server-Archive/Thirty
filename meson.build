@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 project('thirty', 'c',
+    version: '0.1.0',
     default_options: [ 'warning_level=3' ]
 )
 
