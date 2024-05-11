@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "util.h"
 #include "config.h"
+#include "log.h"
 
 extern bool args_disable_colour;
 
@@ -141,7 +142,7 @@ void util_httpheaders_destroy(httpheaders_t *list) {
 	free(list->data);
 }
 
-void util_print_coloured(const char *msg) {
+void util_print_coloured(FILE *file, const char *msg) {
 	const size_t len = strlen(msg);
 
 	for (size_t i = 0; i < len; i++) {
@@ -174,7 +175,7 @@ void util_print_coloured(const char *msg) {
 						snprintf(fmt, sizeof(fmt), "\033[38;2;%u;%u;%um", col->r, col->g, col->b);
 					}
 					else {
-						printf(fmt, sizeof(fmt), "%c%c", c, next);
+						snprintf(fmt, sizeof(fmt), "%c%c", c, next);
 					}
 
 					break;
@@ -182,17 +183,41 @@ void util_print_coloured(const char *msg) {
 			}
 
 			if (!args_disable_colour) {
-				printf("%s", fmt);
+				fprintf(file, "%s", fmt);
 			}
 		}
 		else {
-			printf("%c", c);
+			fprintf(file, "%c", c);
 		}
 	}
 
 	if (!args_disable_colour) {
-		printf("\033[0m");
+		fprintf(file, "\033[0m");
 	}
 
-	printf("\n");
+	fprintf(file, "\n");
+}
+
+void util_print_strip_colours(FILE *file, const char *msg) {
+	const size_t len = strlen(msg);
+
+	for (size_t i = 0; i < len; i++) {
+		const char c = msg[i];
+
+		if (c == '&' && i != len - 1) {
+			const char next = msg[++i];
+
+			if ((next >= '0' && next <= '9') || (next >= 'a' && next <= 'f') || (config_find_colour(next) != NULL)) {
+				continue;
+			}
+			else {
+				fprintf(file, "&%c", next);
+			}
+		}
+		else {
+			fwrite(&c, sizeof(char), 1, file);
+		}
+	}
+
+	fprintf(file, "\n");
 }

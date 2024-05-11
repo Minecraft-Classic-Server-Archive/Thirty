@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include "namelist.h"
+#include "log.h"
 
 static void namelist_parse(namelist_t *list);
 
@@ -39,7 +40,7 @@ namelist_t *namelist_create(const char *filename) {
 void namelist_parse(namelist_t *list) {
 	FILE *fp = fopen(list->filename, "r");
 	if (fp == NULL) {
-		fprintf(stderr, "Failed to open '%s' for reading: %s\n", list->filename, strerror(errno));
+		log_printf(log_error, "Failed to open '%s' for reading: %s", list->filename, strerror(errno));
 		return;
 	}
 

@@ -20,6 +20,7 @@
 #include <inttypes.h>
 #include "nbt.h"
 #include "buffer.h"
+#include "log.h"
 
 static void write_len_str(buffer_t *buffer, const char *s);
 
@@ -255,7 +256,7 @@ void nbt_write(tag_t *tag, buffer_t *buffer) {
 		}
 
 		default: {
-			fprintf(stderr, "unknown tag type %d\n", tag->type);
+			log_printf(log_error, "unknown tag type %d", tag->type);
 			break;
 		}
 	}
@@ -471,7 +472,7 @@ tag_t *nbt_get_tag(tag_t *tag, const char *n) {
 		}
 	}
 
-	fprintf(stderr, "tag %s('%s') has no sub-tag %s\n", tag_get_type_name(tag->type), tag->name, n);
+	log_printf(log_error, "tag %s('%s') has no sub-tag %s", tag_get_type_name(tag->type), tag->name, n);
 
 	return NULL;
 }
