@@ -31,6 +31,7 @@ typedef struct map_s {
 	uint8_t *blocks;
 
 	bool generating;
+	bool modified;
 
 	size_t num_ticks;
 	size_t ticks_size;

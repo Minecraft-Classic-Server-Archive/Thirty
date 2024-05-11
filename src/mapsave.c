@@ -25,6 +25,10 @@
 #include "log.h"
 
 void map_save(map_t *map) {
+	if (!map->modified) {
+		return;
+	}
+
 	char filename[256];
 	snprintf(filename, sizeof(filename), "%s.cw", map->name);
 
@@ -120,6 +124,7 @@ void map_save(map_t *map) {
 		} while (strm.avail_out == 0);
 	} while (flush != Z_FINISH);
 
+	map->modified = false;
 	log_printf(log_info, "Saved!");
 
 cleanup:
@@ -253,6 +258,8 @@ map_t *map_load(const char *name) {
 			}
 		}
 	}
+
+	map->modified = false;
 
 cleanup:
 	nbt_destroy(root, true);

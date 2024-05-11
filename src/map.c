@@ -36,6 +36,7 @@ map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map->generating = false;
 	map->num_ticks = 0;
 	map->ticks = NULL;
+	map->modified = true;
 
 	memset(map->blocks, 0, width * depth * height);
 
@@ -75,6 +76,8 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 		buffer_write_uint16be(client->out_buffer, z);
 		buffer_write_uint8(client->out_buffer, block);
 	}
+
+	map->modified = true;
 }
 
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z) {
