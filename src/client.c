@@ -34,6 +34,7 @@
 #include "config.h"
 #include "namelist.h"
 #include "log.h"
+#include "version.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -295,8 +296,10 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				client->is_op = namelist_contains(server.ops, client->name);
 
 				if (supports_cpe) {
+					char server_version[65];
+					snprintf(server_version, sizeof(server_version), "Thirty %s", HG_CHANGESET_HASH);
 					buffer_write_uint8(client->out_buffer, packet_extinfo);
-					buffer_write_mcstr(client->out_buffer, "Thirty", false);
+					buffer_write_mcstr(client->out_buffer, server_version, false);
 					buffer_write_uint16be(client->out_buffer, cpe_count_supported());
 
 					for (size_t i = 0; true; i++) {
@@ -750,11 +753,11 @@ void client_ws_upgrade(client_t *client, int r) {
 			 "Upgrade: websocket\r\n"
 			 "Sec-WebSocket-Accept: %s\r\n"
 			 "Sec-WebSocket-Protocol: ClassiCube\r\n"
-			 "Server: %s\r\n"
+			 "Server: %s %s\r\n"
 			 "\r\n",
 
 			 key_b64,
-			 "Thirty"
+			 "Thirty", HG_CHANGESET_HASH
 	);
 
 	buffer_write(client->out_buffer, response, strlen(response));

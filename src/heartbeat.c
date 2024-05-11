@@ -19,6 +19,8 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
+#include <version.h>
+
 #include "server.h"
 #include "sockets.h"
 #include "config.h"
@@ -38,17 +40,18 @@ static void *heartbeat_main(void *data) {
 	char url[2048];
 	char response[2048];
 	snprintf(url, sizeof(url),
-			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&software=%s&name=%s HTTP/1.1\r\n"
+			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&software=%s%%20%s&name=%s HTTP/1.1\r\n"
 			 "Host: www.classicube.net\r\n"
-			 "User-Agent: Thirty\r\n"
+			 "User-Agent: Thirty %s\r\n"
 			 "\r\n",
 			 config.server.port,
 			 config.server.max_players,
 			 config.server.public ? "True" : "False",
 			 server.salt,
 			 server.num_clients,
-			 "Thirty",
-			 config.server.name
+			 "Thirty", HG_CHANGESET_HASH,
+			 config.server.name,
+			 HG_CHANGESET_HASH
 	);
 
 	struct addrinfo hints, *result;
