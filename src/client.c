@@ -489,7 +489,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 			default: {
 				log_printf(log_error, "client %zu (%s) sent unknown packet 0x%02x", client->idx, client->name, packet_id);
 				client_disconnect(client, "Received malformed data.");
-				break;
+				return;
 			};
 		}
 	}
