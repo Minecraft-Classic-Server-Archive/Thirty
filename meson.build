@@ -22,12 +22,12 @@ project('thirty', 'c',
 cc = meson.get_compiler('c')
 ccflags = []
 
-version_h = configure_file(input: 'version.h.in', output: 'tmp_version.h', configuration: {
+version_h = configure_file(input: 'version.h.in', output: 'version.h', configuration: {
     'project_version': meson.project_version(),
     'hg_changeset': '@hg_changeset@'
 })
 
-hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{node|short}', '-r', '.'], input: version_h, output: 'version.h', replace_string: '@hg_changeset@')
+hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{node|short}', '-r', '.'], input: 'hginfo.h.in', output: 'hginfo.h', replace_string: '@hg_changeset@')
 
 source_files = [
     'src/blocks.c',
@@ -73,12 +73,12 @@ source_files = [
     'lib/sha1.c',
     'lib/sha1.h',
 
-    version_h,
+    version_h, hg_identify
 ]
 
 deps = [
     dependency('threads', required: true),
-    dependency('zlib', required: true)
+    dependency('zlib', required: true),
 ]
 
 if build_machine.system() == 'windows'

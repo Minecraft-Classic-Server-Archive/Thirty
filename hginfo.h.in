@@ -1,0 +1,3 @@
+#pragma once
+
+#define HG_CHANGESET_HASH "@hg_changeset@"

@@ -1,4 +1,4 @@
 #pragma once
+#include "hginfo.h"
 
 #define THIRTY_VERSION "@project_version@"
-#define HG_CHANGESET_HASH "@hg_changeset@"
