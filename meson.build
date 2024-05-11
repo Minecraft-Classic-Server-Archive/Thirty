@@ -21,12 +21,7 @@ project('thirty', 'c',
 cc = meson.get_compiler('c')
 ccflags = []
 
-hg_identify = run_command(['hg', 'identify', '-T', '{node|short}', '-r', '.'], capture: true, check: true)
-hg_changeset = hg_identify.stdout()
-
-version_h = configure_file(input: 'version.h.in', output: 'version.h', configuration: {
-    'hg_changeset': hg_changeset
-})
+hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{node|short}', '-r', '.'], input: 'version.h.in', output: 'version.h', replace_string: 'hg_changeset')
 
 source_files = [
     'src/blocks.c',
