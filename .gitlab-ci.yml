@@ -6,7 +6,7 @@ build:
   stage: build
   image: debian:latest
   before_script:
-    - export DEBIAN_FRONTEND=noninteractive && export TZ=Etc/UTC && apt-get update && apt-get -y dist-upgrade && apt-get -y install build-essential meson ninja-build zlib1g-dev
+    - export DEBIAN_FRONTEND=noninteractive && export TZ=Etc/UTC && apt-get update && apt-get -y dist-upgrade && apt-get -y install mercurial build-essential meson ninja-build zlib1g-dev
   script:
     - meson setup build
     - cd build && ninja
@@ -15,7 +15,7 @@ build alpine:
   stage: build
   image: alpine:latest
   before_script:
-    - apk add --update alpine-sdk zlib-dev samurai meson
+    - apk add --update mercurial alpine-sdk zlib-dev samurai meson
   script:
     - meson setup build
     - cd build && ninja
