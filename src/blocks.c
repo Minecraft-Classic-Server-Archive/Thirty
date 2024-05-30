@@ -23,11 +23,17 @@
 #include "rng.h"
 #include "server.h"
 
+static bool can_liquid_flow_to(map_t *map, size_t x, size_t y, size_t z);
+
 static void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_grass_die(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_grass_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 static void blocktick_tree_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+
+static void blockplace_sponge(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blockbreak_sponge(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
+static void blockplace_liquid(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 
 blockinfo_t blockinfo[num_blocks];
 
@@ -54,16 +60,22 @@ void blocks_init(void) {
 	blockinfo[water].tickfunc = blocktick_flow;
 	blockinfo[water].ticktime = 4;
 	blockinfo[water].op_only_place = true;
+	blockinfo[water].placefunc = blockplace_liquid;
 	blockinfo[water_still].liquid = true;
 	blockinfo[water_still].op_only_place = true;
+	blockinfo[water].placefunc = blockplace_liquid;
 	blockinfo[lava].solid = false;
 	blockinfo[lava].liquid = true;
 	blockinfo[lava].tickfunc = blocktick_flow;
 	blockinfo[lava].ticktime = 8;
 	blockinfo[lava].op_only_place = true;
+	blockinfo[water].placefunc = blockplace_liquid;
 	blockinfo[lava_still].liquid = true;
 	blockinfo[lava_still].op_only_place = true;
+	blockinfo[water].placefunc = blockplace_liquid;
 	blockinfo[leaves].block_light = false;
+	blockinfo[sponge].placefunc = blockplace_sponge;
+	blockinfo[sponge].breakfunc = blockbreak_sponge;
 	blockinfo[glass].block_light = false;
 	blockinfo[rose].solid = false;
 	blockinfo[rose].block_light = false;
@@ -78,6 +90,23 @@ void blocks_init(void) {
 	blockinfo[fire].solid = false;
 	blockinfo[fire].block_light = false;
 	blockinfo[snow].solid = false;
+}
+
+bool can_liquid_flow_to(map_t *map, size_t x, size_t y, size_t z) {
+	const uint8_t block = map_get(map, x, y, z);
+	if (blockinfo[block].solid) {
+		return false;
+	}
+
+	for (size_t xx = x - 2; xx <= x + 2; xx++)
+		for (size_t yy = y - 2; yy <= y + 2; yy++)
+			for (size_t zz = z - 2; zz <= z + 2; zz++) {
+				if (map_get(map, xx, yy, zz) == sponge) {
+					return false;
+				}
+			}
+
+	return true;
 }
 
 void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
@@ -95,19 +124,19 @@ void blocktick_gravity(map_t *map, size_t x, size_t y, size_t z, uint8_t block) 
 }
 
 void blocktick_flow(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
-	if (!blockinfo[map_get(map, x - 1, y, z)].solid) {
+	if (can_liquid_flow_to(map, x - 1, y, z)) {
 		map_set(map, x - 1, y, z, block);
 	}
-	if (!blockinfo[map_get(map, x + 1, y, z)].solid) {
+	if (can_liquid_flow_to(map, x + 1, y, z)) {
 		map_set(map, x + 1, y, z, block);
 	}
-	if (!blockinfo[map_get(map, x, y, z - 1)].solid) {
+	if (can_liquid_flow_to(map, x, y, z - 1)) {
 		map_set(map, x, y, z - 1, block);
 	}
-	if (!blockinfo[map_get(map, x, y, z + 1)].solid) {
+	if (can_liquid_flow_to(map, x, y, z + 1)) {
 		map_set(map, x, y, z + 1, block);
 	}
-	if (!blockinfo[map_get(map, x, y - 1, z)].solid) {
+	if (can_liquid_flow_to(map, x, y - 1, z)) {
 		map_set(map, x, y - 1, z, block);
 	}
 }
@@ -148,6 +177,43 @@ void blocktick_tree_grow(map_t *map, size_t x, size_t y, size_t z, uint8_t block
 	int treeHeight = rng_next2(server.global_rng, 1, 3) + 4;
 	if (mapgen_space_for_tree(map, x, y, z, treeHeight)) {
 		mapgen_grow_tree(map, server.global_rng, x, y, z, treeHeight);
+	}
+}
+
+void blockplace_sponge(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	(void) block;
+
+	for (size_t xx = x - 2; xx <= x + 2; xx++)
+	for (size_t yy = y - 2; yy <= y + 2; yy++)
+	for (size_t zz = z - 2; zz <= z + 2; zz++) {
+		if (blockinfo[map_get(map, xx, yy, zz)].liquid) {
+			map_set(map, xx, yy, zz, air);
+		}
+	}
+}
+
+void blockbreak_sponge(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	(void) block;
+
+	for (size_t xx = x - 3; xx <= x + 3; xx++)
+	for (size_t yy = y - 3; yy <= y + 3; yy++)
+	for (size_t zz = z - 3; zz <= z + 3; zz++) {
+		const uint8_t block = map_get(map, xx, yy, zz);
+		if (blockinfo[block].liquid) {
+			map_add_tick(map, xx, yy, zz, blockinfo[block].ticktime);
+		}
+	}
+}
+
+void blockplace_liquid(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
+	(void) block;
+	
+	for (size_t xx = x - 2; xx <= x + 2; xx++)
+	for (size_t yy = y - 2; yy <= y + 2; yy++)
+	for (size_t zz = z - 2; zz <= z + 2; zz++) {
+		if (map_get(map, xx, yy, zz) == sponge) {
+			map_set(map, x, y, z, air);
+		}
 	}
 }
 

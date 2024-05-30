@@ -54,9 +54,19 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 		return;
 	}
 
+	const uint8_t old_block = map_get(map, x, y, z);
+
 	map->blocks[map_get_block_index(map, x, y, z)] = block;
 
 	if (!map->generating) {
+		if (blockinfo[old_block].breakfunc != NULL) {
+			blockinfo[old_block].breakfunc(map, x, y, z, old_block);
+		}
+
+		if (blockinfo[block].placefunc != NULL) {
+			blockinfo[block].placefunc(map, x, y, z, block);
+		}
+
 		uint64_t ticktime = blockinfo[block].ticktime;
 		uint64_t dist = ticktime == 0 ? 0 : (((server.tick / ticktime) + 1) * ticktime) - server.tick;
 		map_add_tick(map, x, y, z, dist);
@@ -74,7 +84,7 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 		buffer_write_uint16be(client->out_buffer, x);
 		buffer_write_uint16be(client->out_buffer, y);
 		buffer_write_uint16be(client->out_buffer, z);
-		buffer_write_uint8(client->out_buffer, block);
+		buffer_write_uint8(client->out_buffer, map_get(map, x, y, z));
 	}
 
 	map->modified = true;
