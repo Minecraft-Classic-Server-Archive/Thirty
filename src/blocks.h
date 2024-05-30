@@ -106,6 +106,8 @@ typedef struct blockinfo_s {
 	blocktickfunc_t tickfunc;
 	uint64_t ticktime;
 	blocktickfunc_t random_tickfunc;
+	blocktickfunc_t placefunc;
+	blocktickfunc_t breakfunc;
 } blockinfo_t;
 
 extern blockinfo_t blockinfo[num_blocks];
