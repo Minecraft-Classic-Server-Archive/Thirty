@@ -23,9 +23,14 @@
 #include "buffer.h"
 #include "server.h"
 #include "log.h"
+#include "config.h"
 
 void map_save(map_t *map) {
 	if (!map->modified) {
+		return;
+	}
+
+	if (config.debug.disable_save) {
 		return;
 	}
 

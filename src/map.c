@@ -23,6 +23,8 @@
 #include "client.h"
 #include "packet.h"
 #include "blocks.h"
+#include "config.h"
+#include "mapimage.h"
 #include "rng.h"
 #include "util.h"
 
@@ -158,6 +160,11 @@ void map_tick(map_t *map) {
 		else {
 			map->ticks = realloc(map->ticks, sizeof(*map->ticks) * map->num_ticks);
 		}
+	}
+
+	int image_interval = config.map.image_interval * 20;
+	if (image_interval > 0 && server.tick % image_interval == 0) {
+		map_save_image_threaded(map, config.map.image_path);
 	}
 }
 

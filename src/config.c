@@ -315,6 +315,17 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 				config.map.random_seed = false;
 			}
 		}
+		else if (strcmp(key, "image_path") == 0) {
+			config.map.image_path = strdup(value);
+		}
+		else if (strcmp(key, "image_interval") == 0) {
+			long size = parse_int(value, &ok, 10);
+			if (!ok) {
+				log_printf(log_error, "Failed to parse 'image_interval' as unsigned integer");
+			} else {
+				config.map.image_interval = size;
+			}
+		}
 	}
 
 	else if (strcmp(section, "colours") == 0) {
@@ -345,6 +356,9 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 	else if (strcmp(section, "debug") == 0) {
 		if (strcmp(key, "fixed_salt") == 0) {
 			strncpy(config.debug.fixed_salt, value, sizeof(config.debug.fixed_salt) - 1);
+		}
+		else if (strcmp(key, "disable_save") == 0) {
+			config.debug.disable_save = strcmp(value, "true") == 0;
 		}
 	}
 }
@@ -407,6 +421,10 @@ void config_init(const char *config_path) {
 	if (config.map.generator == NULL) {
 		config.map.generator = strdup("classic");
 	}
+
+	if (config.map.image_path == NULL) {
+		config.map.image_path = strdup("");
+	}
 }
 
 void config_destroy(void) {
@@ -420,6 +438,7 @@ void config_destroy(void) {
 	
 	free(config.server.name);
 	free(config.server.motd);
+	free(config.map.image_path);
 	free(config.map.name);
 	free(config.map.generator);
 
