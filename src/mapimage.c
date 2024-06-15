@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <sys/types.h>
 #include "mapimage.h"
 #include "stb_image_write.h"
 #include "map.h"
