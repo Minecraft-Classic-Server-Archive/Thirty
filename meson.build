@@ -51,6 +51,8 @@ source_files = [
     'src/mapgen_debug.c',
     'src/mapgen_flat.c',
     'src/mapgen_seantest.c',
+    'src/mapimage.c',
+    'src/mapimage.h',
     'src/mapsave.c',
     'src/mapsend.c',
     'src/namelist.c',
@@ -72,6 +74,8 @@ source_files = [
     'lib/md5.h',
     'lib/sha1.c',
     'lib/sha1.h',
+    'lib/stb_image_write.c',
+    'lib/stb_image_write.h',
 
     version_h, hg_identify
 ]

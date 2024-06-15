@@ -43,10 +43,13 @@ typedef struct {
 		char *generator;
 		bool random_seed;
 		int seed;
+		char *image_path;
+		int image_interval;
 	} map;
 
 	struct {
 		char fixed_salt[17];
+		bool disable_save;
 	} debug;
 
 	textcolour_t *colours;

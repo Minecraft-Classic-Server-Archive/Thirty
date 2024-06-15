@@ -34,6 +34,7 @@
 #include "config.h"
 #include "log.h"
 #include "namelist.h"
+#include "mapimage.h"
 
 #ifndef _WIN32
 #include <netinet/tcp.h>

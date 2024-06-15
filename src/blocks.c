@@ -42,6 +42,7 @@ void blocks_init(void) {
 	for (size_t i = 0; i < num_blocks; i++) {
 		blockinfo[i].solid = true;
 		blockinfo[i].block_light = true;
+		blockinfo[i].colour = 0xFF00FF;
 	}
 
 	blockinfo[air].solid = false;
@@ -90,6 +91,57 @@ void blocks_init(void) {
 	blockinfo[fire].solid = false;
 	blockinfo[fire].block_light = false;
 	blockinfo[snow].solid = false;
+
+	blockinfo[air].colour = 0x000000U;
+	blockinfo[stone].colour = 0x7f7f7fU;
+	blockinfo[grass].colour = 0x86b556U;
+	blockinfo[dirt].colour = 0x966c4aU;
+	blockinfo[cobblestone].colour = 0x515151U;
+	blockinfo[wood_planks].colour = 0xbc9862U;
+	blockinfo[sapling].colour = 0x168700U;
+	blockinfo[bedrock].colour = 0x333333U;
+	blockinfo[water].colour = 0x0000FFU;
+	blockinfo[water_still].colour = 0x0000FFU;
+	blockinfo[lava].colour = 0xFF8000U;
+	blockinfo[lava_still].colour = 0xFF8000U;
+	blockinfo[sand].colour = 0xE7DBAFU;
+	blockinfo[gravel].colour = 0x9A8285U;
+	blockinfo[gold_ore].colour = 0xFCEE4BU;
+	blockinfo[iron_ore].colour = 0xE2C0AAU;
+	blockinfo[coal_ore].colour = 0x373737U;
+	blockinfo[wood].colour = 0x6A5534U;
+	blockinfo[leaves].colour = 0x5cfc3cU;
+	blockinfo[sponge].colour = 0xCECE46U;
+	blockinfo[glass].colour = 0xC0F5FEU;
+	blockinfo[red_wool].colour = 0xE73434U;
+	blockinfo[orange_wool].colour = 0xE58C34U;
+	blockinfo[yellow_wool].colour = 0xEEEE36U;
+	blockinfo[lime_wool].colour = 0x9CFF3AU;
+	blockinfo[green_wool].colour = 0x34E834U;
+	blockinfo[aquagreen_wool].colour = 0x34E58CU;
+	blockinfo[cyan_wool].colour = 0x34E8E8U;
+	blockinfo[blue_wool].colour = 0x69A5E0U;
+	blockinfo[purple_wool].colour = 0x7B7BE4U;
+	blockinfo[indigo_wool].colour = 0x8F35EBU;
+	blockinfo[violet_wool].colour = 0xA144CDU;
+	blockinfo[magenta_wool].colour = 0xFF3AFFU;
+	blockinfo[pink_wool].colour = 0xE8348EU;
+	blockinfo[black_wool].colour = 0x525252U;
+	blockinfo[grey_wool].colour = 0x9B9B9BU;
+	blockinfo[white_wool].colour = 0xFFFFFFU;
+	blockinfo[dandelion].colour = 0xCCD302U;
+	blockinfo[rose].colour = 0xD10609U;
+	blockinfo[brown_mushroom].colour = 0x916D55U;
+	blockinfo[red_mushroom].colour = 0xFE2A2AU;
+	blockinfo[gold_block].colour = 0xFFFE73U;
+	blockinfo[iron_block].colour = 0xFF0000U;
+	blockinfo[double_slab].colour = 0xCDCDCDU;
+	blockinfo[slab].colour = 0xCDCDCDU;
+	blockinfo[bricks].colour = 0xDB441AU;
+	blockinfo[tnt].colour = 0xDB441AU;
+	blockinfo[bookshelf].colour = 0xBC9862U;
+	blockinfo[mossy_cobblestoe].colour = 0x214B21U;
+	blockinfo[obsidian].colour = 0x3C3056U;
 }
 
 bool can_liquid_flow_to(map_t *map, size_t x, size_t y, size_t z) {

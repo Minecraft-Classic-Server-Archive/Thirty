@@ -103,6 +103,8 @@ typedef struct blockinfo_s {
 	bool op_only_place : 1;
 	bool op_only_break : 1;
 
+	uint32_t colour;
+
 	blocktickfunc_t tickfunc;
 	uint64_t ticktime;
 	blocktickfunc_t random_tickfunc;
