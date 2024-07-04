@@ -23,7 +23,7 @@
 #include "util.h"
 
 static FILE *log_fp = NULL;
-static pthread_mutex_t log_mutex;
+static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static const char *level_prefixes[] = {
 	"INFO",

@@ -84,6 +84,8 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->ws_mask_read = 0;
 	client->ws_frame = NULL;
 	client->ws_out_buffer = NULL;
+
+	pthread_mutex_init(&client->out_mutex, NULL);
 }
 
 void client_destroy(client_t *client) {
