@@ -22,7 +22,7 @@
 #include "version.h"
 #include "cpe.h"
 
-typedef void (*commandfunc_t)(int argc, char **argv, client_t *client);
+typedef void (*commandfunc_t)(int argc, const char **argv, client_t *client);
 
 typedef struct commanddef_s {
 	const char *name;
@@ -48,7 +48,7 @@ void command_execute(client_t *client, const char *command) {
 	char buffer[64];
 	size_t bufferp = 0;
 
-	for (int i = 0; i <= strlen(command); i++) {
+	for (size_t i = 0; i <= strlen(command); i++) {
 		const char c = command[i];
 
 		if (c == ' ' || c == '\0') {
@@ -71,7 +71,7 @@ void command_execute(client_t *client, const char *command) {
 	if (args != NULL) {
 		commanddef_t *command = command_find(args[0]);
 		if (command != NULL) {
-			command->func(argc, args, client);
+			command->func(argc, (const char **)args, client);
 		}
 
 		for (int i = 0; i < argc; i++) {
@@ -83,7 +83,7 @@ void command_execute(client_t *client, const char *command) {
 }
 
 commanddef_t *command_find(const char *name) {
-	for (int i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
+	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
 		if (strcmp(name, commands[i].name) == 0) {
 			return &commands[i];
 		}
@@ -93,6 +93,9 @@ commanddef_t *command_find(const char *name) {
 }
 
 void command_version(int argc, const char **argv, client_t *client) {
+	(void) argc;
+	(void) argv;
+
 	client_send_message(client, "&fThis server is running &eThirty %s", THIRTY_VERSION);
 	client_send_message(client, "&fMercurial changeset: &e%s", HG_CHANGESET_HASH);
 	client_send_message(client, "Thirty is licenced under the GNU AGPL v3 or later, and its");
@@ -100,7 +103,10 @@ void command_version(int argc, const char **argv, client_t *client) {
 }
 
 void command_help(int argc, const char **argv, client_t *client) {
-	for (int i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
+	(void) argc;
+	(void) argv;
+
+	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
 		commanddef_t *command = &commands[i];
 
 		client_send_message(client, "&e%s&f - %s", command->name, command->helpline);
@@ -108,10 +114,13 @@ void command_help(int argc, const char **argv, client_t *client) {
 }
 
 void command_info(int argc, const char **argv, client_t *client) {
+	(void) argc;
+	(void) argv;
+
 	client_send_message(client, "&eProtocol version: &f%d", client->protocol_version);
 
 	client_send_message(client, "&eCPE extensions:&f (&amutual&f | &bclient&f | &dserver&f)");
-	for (int j = 0; j < client->num_extensions; j++) {
+	for (size_t j = 0; j < client->num_extensions; j++) {
 		cpeext_t *ext = &client->extensions[j];
 		const char colour = cpe_extension_supported(ext->name, ext->version) ? 'a' : 'b';
 		client_send_message(client, "&f - &%c%s v%d", colour, ext->name, ext->version);
