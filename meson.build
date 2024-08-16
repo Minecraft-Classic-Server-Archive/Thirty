@@ -36,6 +36,8 @@ source_files = [
     'src/buffer.h',
     'src/client.c',
     'src/client.h',
+    'src/commands.c',
+    'src/commands.h',
     'src/config.c',
     'src/config.h',
     'src/cpe.c',

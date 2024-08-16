@@ -81,6 +81,8 @@ void client_disconnect(client_t *client, const char *msg);
 bool client_supports_extension(client_t *client, const char *name, int version);
 uint8_t client_filter_block(client_t *client, uint8_t block);
 
+void client_send_message(client_t *client, const char *fmt, ...);
+
 typedef struct {
 	client_t *client;
 	uint8_t *data;

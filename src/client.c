@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <math.h>
+#include <stdarg.h>
 #include "client.h"
 #include "server.h"
 #include "buffer.h"
@@ -35,6 +36,7 @@
 #include "namelist.h"
 #include "log.h"
 #include "version.h"
+#include "commands.h"
 
 #define BUFFER_SIZE (32 * 1024)
 #define PING_INTERVAL (1.0)
@@ -437,7 +439,10 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 					}
 				}
 
-				if (client->spawned) {
+				if (msg[0] == '/') {
+					command_execute(client, msg);
+				}
+				else if (client->spawned) {
 					server_broadcast("&e%s: &f%s", client->name, msg);
 				}
 
@@ -729,6 +734,25 @@ uint8_t client_filter_block(client_t *client, uint8_t block) {
 	}
 
 	return block;
+}
+
+void client_send_message(client_t *client, const char *fmt, ...) {
+	if (client->protocol_version < 3) {
+		return;
+	}
+
+	char buffer[65];
+	{
+		va_list args;
+		va_start(args, fmt);
+		vsnprintf(buffer, sizeof(buffer), fmt, args);
+		va_end(args);
+	}
+
+	buffer_write_uint8(client->out_buffer, packet_message);
+	buffer_write_uint8(client->out_buffer, 0x7F);
+	buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));
+	client_flush(client);
 }
 
 void client_ws_upgrade(client_t *client, int r) {
