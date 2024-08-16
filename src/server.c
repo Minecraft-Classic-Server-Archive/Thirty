@@ -243,6 +243,10 @@ void server_broadcast(const char *msg, ...) {
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_t *client = &server.clients[i];
+		if (client->protocol_version < 3) {
+			continue;
+		}
+
 		buffer_write_uint8(client->out_buffer, packet_message);
 		buffer_write_uint8(client->out_buffer, 0x7F);
 		buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));

@@ -253,17 +253,34 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 
 		switch (packet_id) {
 			case packet_ident: {
-				uint8_t protocol_version;
 				char username[65];
 				char key[65];
-				uint8_t unused;
+				uint8_t unused = 0;
 
 				client->ws_can_switch = false;
 
-				buffer_read_uint8(in_buffer, &protocol_version);
+				buffer_read_uint8(in_buffer, &client->protocol_version);
+
+				if (!config.server.enable_old_clients && client->protocol_version != 7) {
+					client_disconnect(client, "Client is too old!");
+				}
+
+				// Make a guess if this is a "version 1" client.
+				// Really old protocols have _only_ the username in the login packet.
+				if (client->protocol_version >= 'A' && client->protocol_version <= 'z') {
+					client->protocol_version = 1;
+					buffer_seek(in_buffer, buffer_tell(in_buffer) - 1);
+				}
+
 				buffer_read_mcstr(in_buffer, username);
-				buffer_read_mcstr(in_buffer, key);
-				buffer_read_uint8(in_buffer, &unused);
+
+				if (client->protocol_version >= 1) {
+					buffer_read_mcstr(in_buffer, key);
+				}
+
+				if (client->protocol_version >= 6) {
+					buffer_read_uint8(in_buffer, &unused);
+				}
 
 				const bool supports_cpe = unused == 0x42;
 
@@ -527,10 +544,18 @@ void client_login(client_t *client) {
 	}
 
 	buffer_write_uint8(client->out_buffer, packet_ident);
-	buffer_write_uint8(client->out_buffer, 0x07);
-	buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
-	buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
-	buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x00);
+	if (client->protocol_version >= 3) {
+		buffer_write_uint8(client->out_buffer, client->protocol_version);
+		buffer_write_mcstr(client->out_buffer, config.server.name, cp437);
+		buffer_write_mcstr(client->out_buffer, config.server.motd, cp437);
+		if (client->protocol_version >= 6) {
+			buffer_write_uint8(client->out_buffer, client->is_op ? 0x64 : 0x00);
+		}
+	}
+	else {
+		// unused on early protocols
+		buffer_write_mcstr(client->out_buffer, "", false);
+	}
 	client_flush(client);
 
 	if (textcolours) {

@@ -32,7 +32,18 @@ void *mapsend_thread_start(void *data) {
 
 	if (!client_supports_extension(info->client, "CustomBlocks", 1)) {
 		for (size_t i = 0; i < num_blocks; i++) {
-			info->data[i] = block_get_fallback(info->data[i]);
+			if (info->client->protocol_version <= 4 && info->data[i] > leaves) {
+				info->data[i] = air;
+			}
+			if (info->client->protocol_version <= 5 && info->data[i] > glass) {
+				info->data[i] = air;
+			}
+			else if (info->client->protocol_version <= 6 && info->data[i] > gold_block) {
+				info->data[i] = air;
+			}
+			else {
+				info->data[i] = block_get_fallback(info->data[i]);
+			}
 		}
 	}
 
