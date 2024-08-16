@@ -61,3 +61,18 @@ An executable named `thirty` will be output to the build directory.
 You can use [`meson install`] to install Thirty to `PREFIX/bin/thirty` and its config to `PREFIX/etc/thirty.ini`.
 
 If unspecified, `PREFIX` will likely be `/usr/local`.
+
+## Docker
+
+An experimental Docker image is also available from this project's [container registry](https://dev.firestick.games/sean/thirty/container_registry).
+It takes a volume, mounted at `/data`, which stores the configuration, levels, and logs.
+Since no release of Thirty has been made yet, the only tag available is `dev`, which points to the latest changeset.
+
+To use the Docker image, first choose a directory where you want the aforementioned data to be stored.
+Then, copy the [default `settings.ini`](https://dev.firestick.games/sean/thirty/-/blob/branch/default/settings.ini) to that location, and edit it to your liking.
+
+Use a Docker command like below, replacing `YOUR_DATA_DIRECTORY` with the directory on your real filesystem you chose to store the data.
+
+```bash
+docker run -it -v YOUR_DATA_DIRECTORY:/data registry.firestick.games/sean/thirty:dev
+```
