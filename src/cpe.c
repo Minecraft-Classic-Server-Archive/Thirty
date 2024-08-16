@@ -16,6 +16,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 #include "cpe.h"
 
 cpeext_t supported_extensions[] = {
@@ -34,4 +35,14 @@ size_t cpe_count_supported(void) {
 			return i;
 		}
 	}
+}
+
+bool cpe_extension_supported(const char *name, int version) {
+	for (size_t i = 0; i < cpe_count_supported(); i++) {
+		if (supported_extensions[i].version >= version && strcmp(supported_extensions[i].name, name) == 0) {
+			return true;
+		}
+	}
+
+	return false;
 }

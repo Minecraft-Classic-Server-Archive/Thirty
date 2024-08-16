@@ -20,6 +20,7 @@
 #include "client.h"
 #include "log.h"
 #include "version.h"
+#include "cpe.h"
 
 typedef void (*commandfunc_t)(int argc, char **argv, client_t *client);
 
@@ -33,9 +34,11 @@ static commanddef_t *command_find(const char *name);
 
 static void command_version(int argc, const char **argv, client_t *client);
 static void command_help(int argc, const char **argv, client_t *client);
+static void command_info(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
 	{ "help", command_help, "List available commands" },
+	{ "info", command_info, "View client info" },
 	{ "version", command_version, "Display software version" },
 };
 
@@ -101,5 +104,23 @@ void command_help(int argc, const char **argv, client_t *client) {
 		commanddef_t *command = &commands[i];
 
 		client_send_message(client, "&e%s&f - %s", command->name, command->helpline);
+	}
+}
+
+void command_info(int argc, const char **argv, client_t *client) {
+	client_send_message(client, "&eProtocol version: &f%d", client->protocol_version);
+
+	client_send_message(client, "&eCPE extensions:&f (&amutual&f | &bclient&f | &dserver&f)");
+	for (int j = 0; j < client->num_extensions; j++) {
+		cpeext_t *ext = &client->extensions[j];
+		const char colour = cpe_extension_supported(ext->name, ext->version) ? 'a' : 'b';
+		client_send_message(client, "&f - &%c%s v%d", colour, ext->name, ext->version);
+	}
+
+	for (size_t j = 0; j < cpe_count_supported(); j++) {
+		const cpeext_t *ext = &supported_extensions[j];
+		if (!client_supports_extension(client, ext->name, ext->version)) {
+			client_send_message(client, "&f - &d%s v%d", ext->name, ext->version);
+		}
 	}
 }

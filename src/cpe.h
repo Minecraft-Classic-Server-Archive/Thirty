@@ -24,4 +24,4 @@ typedef struct {
 extern cpeext_t supported_extensions[];
 
 size_t cpe_count_supported(void);
-
+bool cpe_extension_supported(const char *name, int version);
