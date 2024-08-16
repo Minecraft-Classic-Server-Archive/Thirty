@@ -718,6 +718,19 @@ bool client_supports_extension(client_t *client, const char *name, int version) 
 	return false;
 }
 
+uint8_t client_filter_block(client_t *client, uint8_t block) {
+	if ((client->protocol_version <= 4 && block > leaves)
+		|| (client->protocol_version <= 5 && block > glass)
+		|| (client->protocol_version <= 6 && block > gold_block)) {
+		return stone;
+	}
+	else if (!client_supports_extension(client, "CustomBlocks", 1)) {
+		return block_get_fallback(block);
+	}
+
+	return block;
+}
+
 void client_ws_upgrade(client_t *client, int r) {
 	client->in_buffer->mem.data[r + 1] = 0;
 

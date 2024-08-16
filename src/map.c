@@ -86,7 +86,7 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block) {
 		buffer_write_uint16be(client->out_buffer, x);
 		buffer_write_uint16be(client->out_buffer, y);
 		buffer_write_uint16be(client->out_buffer, z);
-		buffer_write_uint8(client->out_buffer, map_get(map, x, y, z));
+		buffer_write_uint8(client->out_buffer, client_filter_block(client, map_get(map, x, y, z)));
 	}
 
 	map->modified = true;

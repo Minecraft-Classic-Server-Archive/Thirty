@@ -79,6 +79,7 @@ void client_flush_buffer(client_t *client, struct buffer_s *buffer);
 void client_disconnect(client_t *client, const char *msg);
 
 bool client_supports_extension(client_t *client, const char *name, int version);
+uint8_t client_filter_block(client_t *client, uint8_t block);
 
 typedef struct {
 	client_t *client;
