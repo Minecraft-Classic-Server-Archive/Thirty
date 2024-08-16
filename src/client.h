@@ -40,6 +40,8 @@ typedef struct client_s {
 	uint8_t address[4];
 	uint16_t port;
 
+	uint8_t protocol_version;
+
 	struct buffer_s *in_buffer;
 	struct buffer_s *out_buffer;
 	pthread_mutex_t out_mutex;

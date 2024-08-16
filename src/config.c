@@ -273,6 +273,9 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 				}
 			}
 		}
+		else if (strcmp(key, "enable_old_clients") == 0) {
+			config.server.enable_old_clients = strcmp(value, "true") == 0;
+		}
 	}
 
 	else if (strcmp(section, "map") == 0) {
