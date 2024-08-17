@@ -28,4 +28,5 @@ namelist_t *namelist_create(const char *filename);
 void namelist_destroy(namelist_t *list);
 
 bool namelist_contains(namelist_t *list, const char *name);
-
+void namelist_add(namelist_t *list, const char *name);
+void namelist_remove(namelist_t *list, const char *name);

@@ -18,10 +18,12 @@
 #include <stdlib.h>
 #include "commands.h"
 #include "client.h"
+#include "config.h"
 #include "log.h"
 #include "version.h"
 #include "cpe.h"
 #include "server.h"
+#include "namelist.h"
 
 typedef void (*commandfunc_t)(int argc, const char **argv, client_t *client);
 
@@ -29,6 +31,7 @@ typedef struct commanddef_s {
 	const char *name;
 	commandfunc_t func;
 	const char *helpline;
+	bool op_only;
 } commanddef_t;
 
 static commanddef_t *command_find(const char *name);
@@ -37,12 +40,20 @@ static void command_version(int argc, const char **argv, client_t *client);
 static void command_help(int argc, const char **argv, client_t *client);
 static void command_info(int argc, const char **argv, client_t *client);
 static void command_teleport(int argc, const char **argv, client_t *client);
+static void command_ban(int argc, const char **argv, client_t *client);
+static void command_ipban(int argc, const char **argv, client_t *client);
+static void command_whitelist(int argc, const char **argv, client_t *client);
+static void command_op(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
-	{ "help", command_help, "List available commands" },
-	{ "info", command_info, "View client info" },
-	{ "teleport", command_teleport, "Teleport a player" },
-	{ "version", command_version, "Display software version" },
+	{ "ban", command_ban, "Manage username bans", true },
+	{ "ban-ip", command_ipban, "Manage IP bans", true },
+	{ "help", command_help, "List available commands", false },
+	{ "info", command_info, "View client info", false },
+	{ "op", command_op, "Manage server admins", false },
+	{ "teleport", command_teleport, "Teleport a player", false },
+	{ "version", command_version, "Display software version", false },
+	{ "whitelist", command_whitelist, "Manage server whitelist", true },
 };
 
 void command_execute(client_t *client, const char *command) {
@@ -74,7 +85,7 @@ void command_execute(client_t *client, const char *command) {
 	if (args != NULL) {
 		commanddef_t *command = command_find(args[0]);
 		if (command != NULL) {
-			command->func(argc, (const char **)args, client);
+			command->func(argc - 1, (const char **)args, client);
 		}
 
 		for (int i = 0; i < argc; i++) {
@@ -112,6 +123,10 @@ void command_help(int argc, const char **argv, client_t *client) {
 	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
 		commanddef_t *command = &commands[i];
 
+		if (command->op_only && !client->is_op) {
+			continue;
+		}
+
 		client_send_message(client, "&e%s&f - %s", command->name, command->helpline);
 	}
 }
@@ -145,7 +160,7 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 
 	int o = 0;
 	client_t *target = NULL;
-	if (argc == 5) {
+	if (argc == 4) {
 		if (!client->is_op && strcasecmp(argv[1], client->name) != 0) {
 			client_send_message(client, "&eOnly ops can teleport other players");
 			return;
@@ -174,4 +189,56 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 	float z = strtof(argv[3 + o], NULL);
 
 	client_teleport(target, x, y, z, 0.0f, 0.0f);
+}
+
+static void namelist_command(int argc, const char **argv, client_t *client, namelist_t *namelist, const char *addWord, const char *removeWord, const char *listTitle) {
+	if (!client->is_op) {
+		client_send_message(client, "&cThis command is op-only");
+		return;
+	}
+
+	const char *subcommand = argv[1];
+	if (argc >= 2 && strcasecmp(argv[1], "add") == 0) {
+		const char *player = argv[2];
+		namelist_add(namelist, player);
+
+		client_send_message(client, "&aPlayer '%s' has been %s.", player, addWord);
+	}
+	else if (argc >= 2 && strcasecmp(argv[1], "remove") == 0) {
+		const char *player = argv[2];
+		namelist_remove(namelist, player);
+
+		client_send_message(client, "&aPlayer '%s' has been %s.", player, removeWord);
+	}
+	else if (argc >= 1 && strcasecmp(argv[1], "list") == 0) {
+		client_send_message(client, "&e%s:", listTitle);
+		for (size_t i = 0; i < namelist->num_names; i++) {
+			if (namelist->names[i] != NULL) {
+				client_send_message(client, "&f- &e%s", namelist->names[i]);
+			}
+		}
+	} else {
+		client_send_message(client, "&e Syntax: &f/%s <add | remove | list> [player]", argv[0]);
+	}
+}
+
+void command_ban(int argc, const char **argv, client_t *client) {
+	namelist_command(argc, argv, client, server.banned_users, "banned", "unbanned", "Banned users");
+}
+
+void command_ipban(int argc, const char **argv, client_t *client) {
+	namelist_command(argc, argv, client, server.banned_ips, "banned", "unbanned", "Banned IPs");
+}
+
+void command_whitelist(int argc, const char **argv, client_t *client) {
+	if (!config.server.enable_whitelist) {
+		client_send_message(client, "&cThe server whitelist is not enabled.");
+		return;
+	}
+
+	namelist_command(argc, argv, client, server.whitelist, "added", "removed", "Whitelisted users");
+}
+
+void command_op(int argc, const char **argv, client_t *client) {
+	namelist_command(argc, argv, client, server.ops, "opped", "deopped", "Operators");
 }

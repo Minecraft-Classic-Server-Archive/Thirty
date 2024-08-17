@@ -22,6 +22,7 @@
 #include "log.h"
 
 static void namelist_parse(namelist_t *list);
+static void namelist_save(namelist_t *list);
 
 namelist_t *namelist_create(const char *filename) {
 	namelist_t *list = malloc(sizeof(*list));
@@ -124,10 +125,49 @@ void namelist_destroy(namelist_t *list) {
 
 bool namelist_contains(namelist_t *list, const char *name) {
 	for (size_t i = 0; i < list->num_names; i++) {
-		if (strcasecmp(list->names[i], name) == 0) {
+		if (list->names[i] != NULL && strcasecmp(list->names[i], name) == 0) {
 			return true;
 		}
 	}
 
 	return false;
+}
+
+void namelist_add(namelist_t *list, const char *name) {
+	if (namelist_contains(list, name)) {
+		return;
+	}
+
+	size_t idx = list->num_names++;
+	list->names = realloc(list->names, list->num_names * sizeof(*list->names));
+	list->names[idx] = strdup(name);
+
+	namelist_save(list);
+}
+
+void namelist_remove(namelist_t *list, const char *name) {
+	for (size_t i = 0; i < list->num_names; i++) {
+		if (list->names[i] != NULL && strcasecmp(list->names[i], name) == 0) {
+			free(list->names[i]);
+			list->names[i] = NULL;
+		}
+	}
+
+	namelist_save(list);
+}
+
+void namelist_save(namelist_t *list) {
+	FILE *fp = fopen(list->filename, "w");
+	if (fp == NULL) {
+		log_printf(log_error, "Failed to open '%s' for writing: %s", list->filename, strerror(errno));
+		return;
+	}
+
+	for (size_t i = 0; i < list->num_names; i++) {
+		if (list->names[i] != NULL) {
+			fprintf(fp, "%s\n", list->names[i]);
+		}
+	}
+
+	fclose(fp);
 }
