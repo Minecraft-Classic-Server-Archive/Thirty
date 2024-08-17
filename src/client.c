@@ -220,8 +220,9 @@ void client_receive(client_t *client) {
 			return;
 		}
 
+		client->connected = false;
+
 		if (e == EPIPE || e == SOCKET_ECONNABORTED || e == SOCKET_ECONNRESET) {
-			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
 		}
@@ -618,8 +619,9 @@ void client_send(client_t *client, buffer_t *buffer) {
 			return;
 		}
 
+		client->connected = false;
+
 		if (e == EPIPE || e == SOCKET_ECONNABORTED || e == SOCKET_ECONNRESET) {
-			client->connected = false;
 			client_disconnect(client, "Disconnected");
 			return;
 		}
