@@ -755,6 +755,27 @@ void client_send_message(client_t *client, const char *fmt, ...) {
 	client_flush(client);
 }
 
+void client_teleport(client_t *client, float x, float y, float z, float yaw, float pitch) {
+	client->x = x;
+	client->y = y;
+	client->z = z;
+	client->yaw = yaw;
+	client->pitch = pitch;
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *other = &server.clients[i];
+
+		buffer_write_uint8(other->out_buffer, packet_player_pos_angle);
+		buffer_write_uint8(other->out_buffer, other == client ? -1 : other->idx);
+		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->x));
+		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->y));
+		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->z));
+		buffer_write_uint8(other->out_buffer, util_degrees2fixed(client->yaw));
+		buffer_write_uint8(other->out_buffer, util_degrees2fixed(client->pitch));
+		client_flush(other);
+	}
+}
+
 void client_ws_upgrade(client_t *client, int r) {
 	client->in_buffer->mem.data[r + 1] = 0;
 

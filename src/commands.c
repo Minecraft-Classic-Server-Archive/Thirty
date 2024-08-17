@@ -21,6 +21,7 @@
 #include "log.h"
 #include "version.h"
 #include "cpe.h"
+#include "server.h"
 
 typedef void (*commandfunc_t)(int argc, const char **argv, client_t *client);
 
@@ -35,10 +36,12 @@ static commanddef_t *command_find(const char *name);
 static void command_version(int argc, const char **argv, client_t *client);
 static void command_help(int argc, const char **argv, client_t *client);
 static void command_info(int argc, const char **argv, client_t *client);
+static void command_teleport(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
 	{ "help", command_help, "List available commands" },
 	{ "info", command_info, "View client info" },
+	{ "teleport", command_teleport, "Teleport a player" },
 	{ "version", command_version, "Display software version" },
 };
 
@@ -132,4 +135,43 @@ void command_info(int argc, const char **argv, client_t *client) {
 			client_send_message(client, "&f - &d%s v%d", ext->name, ext->version);
 		}
 	}
+}
+
+void command_teleport(int argc, const char **argv, client_t *client) {
+	if (argc <= 3) {
+		client_send_message(client, "&eSyntax: &f/%s [player] <x> <y> <z>", argv[0]);
+		return;
+	}
+
+	int o = 0;
+	client_t *target = NULL;
+	if (argc == 5) {
+		if (!client->is_op && strcasecmp(argv[1], client->name) != 0) {
+			client_send_message(client, "&eOnly ops can teleport other players");
+			return;
+		}
+
+		const char *player = argv[1];
+		for (size_t i = 0; i < server.num_clients; i++) {
+			if (strcasecmp(server.clients[i].name, player) == 0) {
+				target = &server.clients[i];
+				break;
+			}
+		}
+
+		if (target == NULL) {
+			client_send_message(client, "&c'&f%s&c' is not a player", player);
+			return;
+		}
+		o = 1;
+	}
+	else {
+		target = client;
+	}
+
+	float x = strtof(argv[1 + o], NULL);
+	float y = strtof(argv[2 + o], NULL);
+	float z = strtof(argv[3 + o], NULL);
+
+	client_teleport(target, x, y, z, 0.0f, 0.0f);
 }
