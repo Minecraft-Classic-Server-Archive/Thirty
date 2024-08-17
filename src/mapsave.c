@@ -34,6 +34,10 @@ void map_save(map_t *map) {
 		return;
 	}
 
+	if (server.num_clients > 0) {
+		server_broadcast("&eSaving level, server might lag for a second...");
+	}
+
 	char filename[256];
 	snprintf(filename, sizeof(filename), "%s.cw", map->name);
 

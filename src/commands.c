@@ -22,6 +22,7 @@
 #include "log.h"
 #include "version.h"
 #include "cpe.h"
+#include "map.h"
 #include "server.h"
 #include "namelist.h"
 
@@ -44,13 +45,15 @@ static void command_ban(int argc, const char **argv, client_t *client);
 static void command_ipban(int argc, const char **argv, client_t *client);
 static void command_whitelist(int argc, const char **argv, client_t *client);
 static void command_op(int argc, const char **argv, client_t *client);
+static void command_save(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
 	{ "ban", command_ban, "Manage username bans", true },
 	{ "ban-ip", command_ipban, "Manage IP bans", true },
 	{ "help", command_help, "List available commands", false },
 	{ "info", command_info, "View client info", false },
-	{ "op", command_op, "Manage server admins", false },
+	{ "op", command_op, "Manage server admins", true },
+	{ "save", command_save, "Save the level", true },
 	{ "teleport", command_teleport, "Teleport a player", false },
 	{ "version", command_version, "Display software version", false },
 	{ "whitelist", command_whitelist, "Manage server whitelist", true },
@@ -198,19 +201,19 @@ static void namelist_command(int argc, const char **argv, client_t *client, name
 	}
 
 	const char *subcommand = argv[1];
-	if (argc >= 2 && strcasecmp(argv[1], "add") == 0) {
+	if (argc >= 2 && strcasecmp(subcommand, "add") == 0) {
 		const char *player = argv[2];
 		namelist_add(namelist, player);
 
 		client_send_message(client, "&aPlayer '%s' has been %s.", player, addWord);
 	}
-	else if (argc >= 2 && strcasecmp(argv[1], "remove") == 0) {
+	else if (argc >= 2 && strcasecmp(subcommand, "remove") == 0) {
 		const char *player = argv[2];
 		namelist_remove(namelist, player);
 
 		client_send_message(client, "&aPlayer '%s' has been %s.", player, removeWord);
 	}
-	else if (argc >= 1 && strcasecmp(argv[1], "list") == 0) {
+	else if (argc >= 1 && strcasecmp(subcommand, "list") == 0) {
 		client_send_message(client, "&e%s:", listTitle);
 		for (size_t i = 0; i < namelist->num_names; i++) {
 			if (namelist->names[i] != NULL) {
@@ -241,4 +244,16 @@ void command_whitelist(int argc, const char **argv, client_t *client) {
 
 void command_op(int argc, const char **argv, client_t *client) {
 	namelist_command(argc, argv, client, server.ops, "opped", "deopped", "Operators");
+}
+
+void command_save(int argc, const char **argv, client_t *client) {
+	(void) argc;
+	(void) argv;
+
+	if (!client->is_op) {
+		client_send_message(client, "&cThis command is op-only");
+		return;
+	}
+
+	map_save(server.map);
 }
