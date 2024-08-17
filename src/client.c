@@ -766,7 +766,7 @@ void client_teleport(client_t *client, float x, float y, float z, float yaw, flo
 		client_t *other = &server.clients[i];
 
 		buffer_write_uint8(other->out_buffer, packet_player_pos_angle);
-		buffer_write_uint8(other->out_buffer, other == client ? -1 : other->idx);
+		buffer_write_uint8(other->out_buffer, other == client ? 0xFF : other->idx);
 		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->x));
 		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->y));
 		buffer_write_uint16be(other->out_buffer, util_float2fixed(client->z));
