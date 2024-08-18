@@ -156,7 +156,7 @@ void command_info(int argc, const char **argv, client_t *client) {
 }
 
 void command_teleport(int argc, const char **argv, client_t *client) {
-	if (argc <= 3) {
+	if (argc < 3) {
 		client_send_message(client, "&eSyntax: &f/%s [player] <x> <y> <z>", argv[0]);
 		return;
 	}
