@@ -191,6 +191,11 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 	float y = strtof(argv[2 + o], NULL);
 	float z = strtof(argv[3 + o], NULL);
 
+	if (x < 0.0f || x >= server.map->width || y < 0.0f || y >= server.map->depth || z < 0.0f || z >= server.map->height) {
+		client_send_message(client, "&cThat position is outside of the world");
+		return;
+	}
+
 	client_teleport(target, x, y, z, 0.0f, 0.0f);
 }
 
