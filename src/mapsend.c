@@ -30,8 +30,9 @@ void *mapsend_thread_start(void *data) {
 	mapsend_t *info = (mapsend_t *)data;
 	const uint32_t num_blocks = info->width * info->height * info->depth;
 
+	uint8_t *blocks = info->data + sizeof(uint32_t);
 	for (size_t i = 0; i < num_blocks; i++) {
-		info->data[i] = client_filter_block(info->client, info->data[i]);
+		blocks[i] = client_filter_block(info->client, blocks[i]);
 	}
 
 	int outsize = ((num_blocks + sizeof(uint32_t)) * 1.1) + 12;
