@@ -266,6 +266,7 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 
 				if (!config.server.enable_old_clients && client->protocol_version != 7) {
 					client_disconnect(client, "Client is too old!");
+					return;
 				}
 
 				// Make a guess if this is a "version 1" client.
