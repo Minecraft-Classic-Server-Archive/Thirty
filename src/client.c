@@ -708,7 +708,7 @@ void client_disconnect(client_t *client, const char *msg) {
 				continue;
 			}
 
-			buffer_write_uint8(other->out_buffer, packet_player_despawn);
+			buffer_write_uint8(other->out_buffer, other->protocol_version == 1 ? 0x09 : packet_player_despawn);
 			buffer_write_int8(other->out_buffer, client->idx);
 			client_flush(other);
 		}
