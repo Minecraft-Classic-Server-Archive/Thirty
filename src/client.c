@@ -344,6 +344,10 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				break;
 			}
 
+			case packet_ping: {
+				break;
+			}
+
 			case packet_extinfo: {
 				char appname[65];
 				uint16_t extcount;
