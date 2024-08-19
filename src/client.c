@@ -86,6 +86,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->ws_mask_read = 0;
 	client->ws_frame = NULL;
 	client->ws_out_buffer = NULL;
+	client->last_receive = 0.0;
 
 	pthread_mutex_init(&client->out_mutex, NULL);
 }
@@ -202,6 +203,11 @@ void client_tick(client_t *client) {
 			buffer_write_mcstr(client->out_buffer, "Failed to send map data", false);
 			client_flush(client);
 		}
+	}
+
+	const double idle_period = client->spawned ? 15.0 : 5.0;
+	if (get_time_s() - client->last_receive >= idle_period && client->mapsend_state < mapsend_preparing && client->mapsend_state > mapsend_running) {
+		client_disconnect(client, "Client timed out");
 	}
 
 	client_flush(client);
@@ -526,6 +532,8 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				return;
 			};
 		}
+
+		client->last_receive = get_time_s();
 	}
 }
 
@@ -675,6 +683,8 @@ void client_start_mapsave(client_t *client) {
 	buffer_write(buf, server.map->blocks, num_blocks);
 	buffer_destroy(buf);
 
+	client->mapsend_state = mapsend_preparing;
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 
@@ -683,6 +693,8 @@ void client_start_mapsave(client_t *client) {
 }
 
 void client_start_fast_mapsave(client_t *client) {
+	client->mapsend_state = mapsend_running;
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 

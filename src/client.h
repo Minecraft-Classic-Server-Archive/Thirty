@@ -25,6 +25,7 @@ struct buffer_s;
 
 enum {
 	mapsend_none,
+	mapsend_preparing,
 	mapsend_running,
 	mapsend_success,
 	mapsend_sent,
@@ -52,6 +53,7 @@ typedef struct client_s {
 	double last_ping;
 	double ping;
 	uint16_t ping_key;
+	double last_receive;
 
 	char name[65];
 
