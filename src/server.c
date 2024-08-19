@@ -51,6 +51,8 @@ bool server_init(void) {
 	server.port = config.server.port;
 	server.global_rng = rng_create((int)time(NULL));
 	server.last_heartbeat = 0.0;
+	server.num_clients = 0;
+	server.num_spawned_clients = 0;
 
 	if (config.debug.fixed_salt[0] == '\0') {
 		server_generate_salt(server.salt, 16);
@@ -173,6 +175,14 @@ void server_tick(void) {
 		}
 		else {
 			server.clients = realloc(server.clients, sizeof(*server.clients) * server.num_clients);
+		}
+	}
+
+	// Calculate this here, to avoid race condition when the heartbeat thread accesses it.
+	server.num_spawned_clients = 0;
+	for (size_t i = 0; i < server.num_clients; i++) {
+		if (server.clients[i].spawned) {
+			server.num_spawned_clients++;
 		}
 	}
 

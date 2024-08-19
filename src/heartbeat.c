@@ -47,7 +47,7 @@ static void *heartbeat_main(void *data) {
 			 config.server.max_players,
 			 config.server.public ? "True" : "False",
 			 server.salt,
-			 server.num_clients,
+			 server.num_spawned_clients,
 			 "Thirty", HG_CHANGESET_HASH,
 			 config.server.name,
 			 HG_CHANGESET_HASH

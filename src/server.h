@@ -32,6 +32,7 @@ typedef struct server_s {
 
 	client_t *clients;
 	size_t num_clients;
+	size_t num_spawned_clients;
 
 	map_t *map;
 	rng_t *global_rng;
