@@ -702,6 +702,8 @@ void client_disconnect(client_t *client, const char *msg) {
 	}
 
 	client->connected = false;
+	closesocket(client->socket_fd);
+	client->socket_fd = 0;
 
 	if (client->spawned) {
 		client->spawned = false;
