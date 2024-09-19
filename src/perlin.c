@@ -140,8 +140,9 @@ combinednoise_t *combinednoise_create(octavenoise_t *n1, octavenoise_t *n2) {
 }
 
 double combinednoise_compute3d(combinednoise_t *noise, double x, double y, double z) {
-	double offset = octavenoise_compute3d(noise->n2, x, y, z);
-	return octavenoise_compute3d(noise->n1, x + offset, y, z);
+	double offsetX = octavenoise_compute3d(noise->n2, x, y, z);
+	double offsetY = octavenoise_compute3d(noise->n2, x, y - offsetX, z);
+	return octavenoise_compute3d(noise->n1, x + offsetX, y + offsetY, z - offsetX);
 }
 
 double combinednoise_compute2d(combinednoise_t *noise, double x, double y) {

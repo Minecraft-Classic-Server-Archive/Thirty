@@ -36,7 +36,7 @@ typedef struct {
 	octavenoise_t *basenoise3;
 	combinednoise_t *overhangheight;
 	octavenoise_t *overhangthreshold;
-	octavenoise_t *overhangamplify;
+	combinednoise_t *overhangamplify;
 	octavenoise_t *overhangsample;
 	octavenoise_t *dirtthickness;
 	octavenoise_t *beachnoise;
@@ -55,7 +55,7 @@ void mapgen_seantest(map_t *map) {
 	state.overhangheight = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
 	state.overhangsample = octavenoise_create(state.rng, 8);
 	state.overhangthreshold = octavenoise_create(state.rng, 4);
-	state.overhangamplify = octavenoise_create(state.rng, 8);
+	state.overhangamplify = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
 	state.dirtthickness = octavenoise_create(state.rng, 8);
 	state.beachnoise = octavenoise_create(state.rng, 6);
 
@@ -70,7 +70,7 @@ void mapgen_seantest(map_t *map) {
 
 	octavenoise_destroy(state.beachnoise);
 	octavenoise_destroy(state.dirtthickness);
-	octavenoise_destroy(state.overhangamplify);
+	combinednoise_destroy(state.overhangamplify);
 	octavenoise_destroy(state.overhangthreshold);
 	octavenoise_destroy(state.overhangsample);
 	combinednoise_destroy(state.overhangheight);
@@ -100,8 +100,8 @@ void gen_noise(map_t *map, genstate_t *state) {
 		unsigned int lm = map->depth;
 
 		double bh = waterLevel + hr;
-		double th = waterLevel + (combinednoise_compute2d(state->overhangheight, (double)x / 4.1, (double)z / 4.1) / 2.5) + (octavenoise_compute2d(state->overhangamplify, (double)x / 3.7, (double)z / 3.7) / 2.0);
-		double tt = (octavenoise_compute2d(state->overhangthreshold, (double)x / 4.1, (double)z / 4.1) / 3.0) - (octavenoise_compute2d(state->overhangamplify, (double)x, (double)z) / 3.0);
+		double th = waterLevel + (combinednoise_compute2d(state->overhangheight, (double)x / 4.1, (double)z / 4.1) / 2.5) + (combinednoise_compute2d(state->overhangamplify, (double)x / 3.7, (double)z / 3.7) / 2.0);
+		double tt = (octavenoise_compute2d(state->overhangthreshold, (double)x / 4.1, (double)z / 4.1) / 3.0) - (combinednoise_compute2d(state->overhangamplify, (double)x, (double)z) / 3.0);
 
 		for (size_t y = 0; y < map->depth; y++) {
 			double ts = octavenoise_compute3d(state->overhangsample, (double)x / 3.3, (double)y, (double)z / 3.3) / 3.0;
