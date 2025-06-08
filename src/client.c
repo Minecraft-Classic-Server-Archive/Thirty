@@ -847,7 +847,7 @@ void client_ws_upgrade(client_t *client, int r) {
 	char key[512];
 	snprintf(key, 512, "%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11", wskey);
 
-	unsigned char key_sha1[20];
+	unsigned char key_sha1[21];
 	SHA1(key_sha1, key, strlen(key));
 
 	char *key_b64 = base64_enc_malloc(key_sha1, 20);
