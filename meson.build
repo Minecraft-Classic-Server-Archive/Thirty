@@ -96,4 +96,4 @@ endif
 libdir = include_directories('lib')
 
 executable('thirty', source_files, dependencies: deps, include_directories: libdir, install: true)
-install_data(sources: 'settings.ini', rename: 'thirty.ini', install_dir: 'etc')
+install_data(sources: 'settings.ini', rename: 'thirty.ini', install_dir: '/etc')
