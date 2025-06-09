@@ -85,6 +85,7 @@ source_files = [
 deps = [
     dependency('threads', required: true),
     dependency('zlib', required: true),
+    dependency('libcurl', required: true),
 ]
 
 if build_machine.system() == 'windows'

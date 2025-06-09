@@ -19,105 +19,87 @@
 #include <pthread.h>
 #include <string.h>
 #include <stdlib.h>
+#include <curl/curl.h>
 #include "server.h"
-#include "sockets.h"
 #include "config.h"
-#include "util.h"
 #include "log.h"
+#include "util.h"
 #include "version.h"
 
-#ifndef _WIN32
-#include <sys/types.h>
-#include <netdb.h>
-#endif
+#define HTTP_RESPONSE_LEN 4096
 
 static bool heartbeat_url_printed = false;
+
+static size_t heartbeat_curl_write_func(char *ptr, size_t size, size_t nmemb, void *userdata) {
+	(void) size;
+	(void) nmemb;
+
+	char *ptrs = malloc(nmemb + 1);
+	memcpy(ptrs, ptr, nmemb);
+	ptrs[nmemb] = '\0';
+
+	char *str = (char *)userdata;
+	strncat(str, ptrs, util_min(strlen(ptrs), HTTP_RESPONSE_LEN - strlen(str) - 1));
+
+	free(ptrs);
+	return nmemb;
+}
 
 static void *heartbeat_main(void *data) {
 	(void)data;
 
-	char url[2048];
-	char response[2048];
-	snprintf(url, sizeof(url),
-			 "GET /server/heartbeat/?port=%" PRIu16 "&web=True&max=%d&public=%s&version=7&salt=%s&users=%zu&software=%s%%20%s&name=%s HTTP/1.1\r\n"
-			 "Host: www.classicube.net\r\n"
-			 "User-Agent: Thirty %s\r\n"
-			 "\r\n",
-			 config.server.port,
-			 config.server.max_players,
-			 config.server.public ? "True" : "False",
-			 server.salt,
-			 server.num_spawned_clients,
-			 "Thirty", HG_CHANGESET_HASH,
-			 config.server.name,
-			 HG_CHANGESET_HASH
-	);
+	char response[HTTP_RESPONSE_LEN];
+	memset(response, 0, HTTP_RESPONSE_LEN);
 
-	struct addrinfo hints, *result;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_INET;
-	hints.ai_socktype = SOCK_STREAM;
+	char tmp[2048];
+	CURLU *curlu = curl_url();
+	curl_url_set(curlu, CURLUPART_URL, "https://www.classicube.net/server/heartbeat/", 0);
+	snprintf(tmp, sizeof tmp, "port=%" PRIu16, config.server.port);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	curl_url_set(curlu, CURLUPART_QUERY, "web=True", CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "max=%d", config.server.max_players);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "public=%s", config.server.public ? "True" : "False");
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	curl_url_set(curlu, CURLUPART_QUERY, "version=7", CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "salt=%s", server.salt);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "users=%zu", server.num_spawned_clients);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "software=Thirty %s", HG_CHANGESET_HASH);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
+	snprintf(tmp, sizeof tmp, "name=%s", config.server.name);
+	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
 
-	int err = getaddrinfo("www.classicube.net", "80", &hints, &result);
-	if (err != 0) {
-		log_printf(log_error, "getaddrinfo error: %d", err);
-		return NULL;
-	}
+	CURL *curl = curl_easy_init();
+	curl_easy_setopt(curl, CURLOPT_CURLU, curlu);
+	snprintf(tmp, sizeof tmp, "Thirty %s", HG_CHANGESET_HASH);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, tmp);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, heartbeat_curl_write_func);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
 
-	socket_t sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) {
-		log_printf(log_error, "socket error: %d", socket_error());
-		goto cleanup;
-	}
+	CURLcode res = curl_easy_perform(curl);
+	if (res == CURLE_OK) {
+		long code;
+		curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
 
-	err = connect(sock, result->ai_addr, result->ai_addrlen);
-	if (err == SOCKET_ERROR) {
-		log_printf(log_error, "connect error: %d", socket_error());
-		goto cleanup;
-	}
-
-	err = send(sock, url, strlen(url), 0);
-	if (err == SOCKET_ERROR) {
-		log_printf(log_error, "send error: %d", socket_error());
-		goto cleanup;
-	}
-
-	err = recv(sock, response, sizeof(response), 0);
-	if (err == SOCKET_ERROR) {
-		log_printf(log_error, "recv error: %d", socket_error());
-		goto cleanup;
-	}
-
-	httpheaders_t headers;
-	if (util_httpheaders_parse(&headers, response)) {
-		if (headers.code == 200) {
+		char *surl = strstr(response, "http");
+		if (code == 200L && surl != NULL) {
 			if (!heartbeat_url_printed) {
-				char *url = strstr(headers.end, "http");
-				if (url == NULL) {
-					url = (char *)headers.end;
-				}
-
-				char *cr = strstr(url, "\r");
-				if (cr != NULL) {
-					*cr = '\0';
-				}
-
-				log_printf(log_info, "Server URL: %s", url);
+				log_printf(log_info, "Server URL: %s\n", surl);
 				heartbeat_url_printed = true;
 			}
 		}
 		else {
-			log_printf(log_error, "Heartbeat failed: %s", headers.end);
+			log_printf(log_error, "Heartbeat failed: %s\n", response);
 		}
 	}
 	else {
-		log_printf(log_error, "Invalid heartbeat response: %s", response);
+		log_printf(log_error, "Failed sending heartbeat: %s\n", curl_easy_strerror(res));
 	}
-	util_httpheaders_destroy(&headers);
 
-cleanup:
-	closesocket(sock);
-	freeaddrinfo(result);
+	curl_url_cleanup(curlu);
+	curl_easy_cleanup(curl);
 
 	return NULL;
 }
