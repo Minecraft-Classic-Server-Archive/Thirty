@@ -6,7 +6,7 @@ RUN \
   apt-get update && \
   apt-get -y upgrade && \
   apt-get -y install --option=Dpkg::Options::=--force-confdef \
-    build-essential mercurial mercurial-evolve zlib1g-dev meson ninja-build
+    build-essential mercurial mercurial-evolve zlib1g-dev meson ninja-build libcurl4-gnutls-dev pkgconf
 
 COPY . /thirty
 
@@ -24,7 +24,7 @@ RUN \
   apt-get update && \
   apt-get -y upgrade && \
   apt-get -y install --option=Dpkg::Options::=--force-confdef \
-    zlib1g-dev
+    zlib1g-dev libcurl3-gnutls
 
 COPY --from=build /thirty-install/bin/thirty /usr/bin/thirty
 
