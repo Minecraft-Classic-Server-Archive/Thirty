@@ -36,6 +36,8 @@ typedef struct {
 
 		char **allowed_web_proxies;
 		size_t num_proxies;
+
+		char *heartbeat_url;
 	} server;
 
 	struct {

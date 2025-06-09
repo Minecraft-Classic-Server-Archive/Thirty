@@ -53,7 +53,7 @@ static void *heartbeat_main(void *data) {
 
 	char tmp[2048];
 	CURLU *curlu = curl_url();
-	curl_url_set(curlu, CURLUPART_URL, "https://www.classicube.net/server/heartbeat/", 0);
+	curl_url_set(curlu, CURLUPART_URL, config.server.heartbeat_url, 0);
 	snprintf(tmp, sizeof tmp, "port=%" PRIu16, config.server.port);
 	curl_url_set(curlu, CURLUPART_QUERY, tmp, CURLU_APPENDQUERY|CURLU_URLENCODE);
 	curl_url_set(curlu, CURLUPART_QUERY, "web=True", CURLU_APPENDQUERY|CURLU_URLENCODE);

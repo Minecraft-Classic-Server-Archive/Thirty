@@ -276,6 +276,9 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "enable_old_clients") == 0) {
 			config.server.enable_old_clients = strcmp(value, "true") == 0;
 		}
+		else if (strcmp(key, "heartbeat_url") == 0) {
+			config.server.heartbeat_url = strdup(value);
+		}
 	}
 
 	else if (strcmp(section, "map") == 0) {
@@ -403,6 +406,10 @@ void config_init(const char *config_path) {
 
 	if (config.server.max_players == 0) {
 		config.server.max_players = 8;
+	}
+
+	if (config.server.heartbeat_url == NULL) {
+		config.server.heartbeat_url = strdup("https://www.classicube.net/server/heartbeat/");
 	}
 
 	if (config.map.name == NULL) {
