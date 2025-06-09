@@ -15,6 +15,7 @@ See [the wiki](https://dev.firestick.games/sean/thirty/-/wikis/home) for documen
 
 Thirty requires [Meson](https://mesonbuild.com/) to generate build files, which in most cases will be for `ninja`.
 [zlib](https://www.zlib.net/) is required for compressing the world for sending to clients and saving to disk.
+[libcurl](https://curl.se/libcurl/) is used for heartbeats (updating the server on the ClassiCube server list).
 [Mercurial](https://mercurial-scm.org) is used to keep the source code and is required to clone the repository.
 
 On Windows, compiling with [MSYS2](https://www.msys2.org/) is recommended.
@@ -31,13 +32,13 @@ pacman -S mercurial $MINGW_PACKAGE_PREFIX-toolchain $MINGW_PACKAGE_PREFIX-meson 
 #### Debian
 
 ```bash
-apt install mercurial build-essential meson ninja-build zlib1g-dev
+apt install mercurial build-essential meson ninja-build zlib1g-dev libcurl4-gnutls-dev pkgconf
 ```
 
 #### Alpine
 
 ```bash
-apk add --update mercurial alpine-sdk zlib-dev samurai meson
+apk add --update mercurial alpine-sdk zlib-dev samurai meson curl-dev
 ```
 
 ### Clone repository
@@ -75,4 +76,21 @@ Use a Docker command like below, replacing `YOUR_DATA_DIRECTORY` with the direct
 
 ```bash
 docker run -it -v YOUR_DATA_DIRECTORY:/data registry.firestick.games/sean/thirty:dev
+```
+
+## openSUSE
+
+A package for Thirty is available on the [openSUSE Build Service](https://build.opensuse.org/package/show/home:DrinkyBird/thirty) in my personal project.
+This package is always built from the latest revision in the default branch from Mercurial.
+
+Use the `opi` tool to install it. Select the `home:DrinkyBird` repository.
+
+```
+d349ee239370:/ # opi thirty
+Searching repos for: thirty
+1. thirty
+Pick a number (0 to quit): 1
+You have selected package name: thirty
+1. home:DrinkyBird !                         | null.186.3862df3bcfa9     | x86_64
+Pick a number (0 to quit): 1
 ```
