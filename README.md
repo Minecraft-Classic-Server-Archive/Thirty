@@ -1,6 +1,7 @@
 # Thirty
 
 **Thirty** is a [ClassiCube](https://classicube.net) (Minecraft Classic) server written in C.
+It is available under the [AGPL v3](LICENCE.md).
 
 ## Features
 
