@@ -1,7 +1,7 @@
 Map format
 ==========
 
-Thirty saves levels in the **[ClassicWorld](https://wiki.vg/ClassicWorld_file_format)** format.
+Thirty saves levels in the **[ClassicWorld](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/ClassicWorld_file_format)** format.
 Thirty-specific data is stored in a `Thirty` compound under the `Metadata` compound, e.g.
 
 ```
