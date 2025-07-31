@@ -9,7 +9,7 @@
 - Some Classic Protocol Extensions support
 - WebSocket support
 
-See [the wiki](https://dev.firestick.games/sean/thirty/-/wikis/home) for documentation.
+See [the `docs` folder](docs) for documentation.
 
 ## Building
 
