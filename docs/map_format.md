@@ -1,7 +1,8 @@
 Map format
 ==========
 
-Thirty saves levels in the **[ClassicWorld](https://wiki.vg/ClassicWorld_file_format)** format. Thirty-specific data is stored in a `Thirty` compound under the `Metadata` compound, e.g.
+Thirty saves levels in the **[ClassicWorld](https://wiki.vg/ClassicWorld_file_format)** format.
+Thirty-specific data is stored in a `Thirty` compound under the `Metadata` compound, e.g.
 
 ```
 TAG_Compound('ClassicWorld'): 8 entries

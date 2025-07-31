@@ -28,7 +28,8 @@ y = aabbccdd
 
 ## Location
 
-By default, settings are loaded from `settings.ini` in the working directory of the server. You can use the `-c` command-line parameter to specify a file to use:
+By default, settings are loaded from `settings.ini` in the working directory of the server.
+You can use the `-c` command-line parameter to specify a file to use:
 
 ```
 thirty -c /path/to/custom/settings.ini

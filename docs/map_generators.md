@@ -29,4 +29,5 @@ Contains every block available, plus pools of water and lava for testing liquid 
 
 ## `random`
 
-Filled with all available blocks randomly. Mostly useful for testing level compression.
+Filled with all available blocks randomly.
+Mostly useful for testing level compression.
