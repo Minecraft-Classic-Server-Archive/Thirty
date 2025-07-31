@@ -67,3 +67,12 @@ Defines custom text colours for use with the [`TextColors`](https://wiki.vg/Clas
 
 The key will be the colour code, the value is an 8-digit hexadecimal number in `RRGGBBAA` format defining the colour.
 
+### `debug`
+
+Settings under this section are mostly only useful for developing or testing the server.
+Avoid using them on actual production servers.
+
+| Key                | Defaul  | Desription                                                                                                                                                                          |
+|--------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **`fixed_salt`**   |         | Specifies a fixed salt that will be used for client authentication. Usually, a salt is randomly generated at server startup. **Do not use this** except for debugging login issues. |
+| **`disable_save`** | `false` | Disables level saving. Mostly useful for writing world generators.                                                                                                                  |
