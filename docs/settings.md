@@ -67,6 +67,7 @@ thirty -c /path/to/custom/settings.ini
 ### `colours`
 
 Defines custom text colours for use with the [`TextColors`](https://wiki.vg/Classic_Protocol_Extension#TextColors) CPE extension.
+The alternative spelling `colors` is also allowed for this section.
 
 The key will be the colour code, the value is an 8-digit hexadecimal number in `RRGGBBAA` format defining the colour.
 

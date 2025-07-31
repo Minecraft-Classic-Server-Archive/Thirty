@@ -334,7 +334,7 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		}
 	}
 
-	else if (strcmp(section, "colours") == 0) {
+	else if (strcmp(section, "colours") == 0 || strcmp(section, "colors") == 0) {
 		if (strlen(key) != 1) {
 			log_printf(log_error, "Colour name must be exactly 1 character.");
 			return;
