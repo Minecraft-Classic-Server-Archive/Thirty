@@ -42,4 +42,7 @@ enum {
 	packet_set_text_colour = 0x27,
 
 	packet_two_way_ping = 0x2b,
+
+	// c0.0.15a mptest1 uses packet ID 9 for despawning players
+	packet_player_despawn_c0015 = 0x09,
 };
