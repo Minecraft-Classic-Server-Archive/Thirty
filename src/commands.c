@@ -54,7 +54,7 @@ static commanddef_t commands[] = {
 	{ "help", command_help, "List available commands", false },
 	{ "info", command_info, "View client info", false },
 	{ "op", command_op, "Manage server admins", true },
-	{ "online", command_online, "List online players", true },
+	{ "online", command_online, "List online players", false },
 	{ "save", command_save, "Save the level", true },
 	{ "teleport", command_teleport, "Teleport a player", false },
 	{ "version", command_version, "Display software version", false },
