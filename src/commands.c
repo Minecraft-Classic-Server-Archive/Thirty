@@ -46,6 +46,7 @@ static void command_ipban(int argc, const char **argv, client_t *client);
 static void command_whitelist(int argc, const char **argv, client_t *client);
 static void command_op(int argc, const char **argv, client_t *client);
 static void command_save(int argc, const char **argv, client_t *client);
+static void command_online(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
 	{ "ban", command_ban, "Manage username bans", true },
@@ -53,6 +54,7 @@ static commanddef_t commands[] = {
 	{ "help", command_help, "List available commands", false },
 	{ "info", command_info, "View client info", false },
 	{ "op", command_op, "Manage server admins", true },
+	{ "online", command_online, "List online players", true },
 	{ "save", command_save, "Save the level", true },
 	{ "teleport", command_teleport, "Teleport a player", false },
 	{ "version", command_version, "Display software version", false },
@@ -261,4 +263,52 @@ void command_save(int argc, const char **argv, client_t *client) {
 	}
 
 	map_save(server.map);
+}
+
+void command_online(int argc, const char **argv, client_t *client) {
+	(void) argc;
+	(void) argv;
+	char msg[256];
+
+	size_t actual_total = 0;
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		if (server.clients[i].spawned) {
+			actual_total++;
+		}
+	}
+
+	client_send_message(client, "&eThere %s &f%zu &eplayer%s online:", actual_total == 1 ? "is" : "are", actual_total, actual_total == 1 ? "" : "s");
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *c = &server.clients[i];
+
+		memset(msg, 0, sizeof(msg));
+		strcat(msg, "&e- ");
+
+		if (!client->is_op && !c->spawned) {
+			continue;
+		}
+
+		if (!c->spawned) {
+			strcat(msg, "&7");
+		}
+		else if (c->is_op) {
+			strcat(msg, "&c");
+		}
+		else {
+			strcat(msg, "&f");
+		}
+
+		strcat(msg, c->name);
+
+		if (c->is_op) {
+			strcat(msg, " &f(op)");
+		}
+		if (!c->spawned) {
+			strcat(msg, " &f(joining)");
+		}
+
+		client_send_message(client, "%s", msg);
+	}
 }
