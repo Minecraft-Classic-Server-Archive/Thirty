@@ -13,7 +13,7 @@ Lists all available commands.
 
 Shows information about your client; currently, only the protocol version and extensions.
 
-### `teleport`
+### `/teleport`
 
 **Arguments:**
 
@@ -24,11 +24,11 @@ Teleports you to a given player or specified coordinates.
 
 Ops can specify `who` will be teleported.
 
-### `online`
+### `/online`
 
 Lists the players currently online.
 
-### `version`
+### `/version`
 
 Shows information about the version of Thirty currently in use.
 
@@ -36,7 +36,7 @@ Shows information about the version of Thirty currently in use.
 
 These commands are only usable by players who are currently operators.
 
-### Name lists (`ban`, `ban-ip`, `op`, `whitelist`)
+### Name lists (`/ban`, `/ban-ip`, `/op`, `/whitelist`)
 
 There are a few commands that are combined here into one documentation section because they work identically: they each manage a list, only differing by which list they manage.
 `ban` manages player name bans, `ban-ip` manages player IP bans, `op` manages opped player names, `whitelist` manages whitelisted player names.
@@ -56,6 +56,6 @@ Removes the given entry from the list.
 
 Shows the entries currently in the list.
 
-### `save`
+### `/save`
 
 Immediately saves the world to disk.
