@@ -43,3 +43,5 @@ void util_httpheaders_destroy(httpheaders_t *list);
 
 void util_print_coloured(FILE *file, const char *msg);
 void util_print_strip_colours(FILE *file, const char *msg);
+
+bool util_secure_random(void *out, size_t num);

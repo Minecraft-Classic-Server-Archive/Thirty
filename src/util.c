@@ -19,9 +19,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include "util.h"
 #include "config.h"
 #include "log.h"
+
+#if defined(__linux__)
+#include <sys/random.h>
+#elif defined(_WIN32)
+#include <ntdef.h>
+#include <ntstatus.h>
+#include <bcrypt.h>
+#endif
 
 extern bool args_disable_colour;
 
@@ -220,4 +229,28 @@ void util_print_strip_colours(FILE *file, const char *msg) {
 	}
 
 	fprintf(file, "\n");
+}
+
+bool util_secure_random(void *out, size_t num) {
+#if defined(__linux__)
+	if (getrandom(out, num, GRND_RANDOM) != (ssize_t)num) {
+		log_printf(log_error, "%s: failed to generate %zu bytes: %d %s", __func__, num, errno, strerror(errno));
+		return false;
+	}
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+	arc4random_buf(out, num);
+#elif defined(_WIN32)
+	BCRYPT_ALG_HANDLE algo;
+	if (BCryptOpenAlgorithmProvider(&algo, BCRYPT_RNG_ALGORITHM, NULL, 0) != STATUS_SUCCESS) {
+		return false;
+	}
+	if (BCryptGenRandom(algo, (PUCHAR)out, (ULONG)num, 0) != STATUS_SUCCESS) {
+		return false;
+	}
+	if (BCryptCloseAlgorithmProvider(algo, 0) != STATUS_SUCCESS) {
+		return false;
+	}
+#endif
+
+	return true;
 }

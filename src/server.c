@@ -40,16 +40,10 @@
 #include <netinet/tcp.h>
 #endif
 
-#if defined(__linux__)
-#include <sys/random.h>
-#elif defined(_WIN32)
-#include <bcrypt.h>
-#endif
-
 #define HEARTBEAT_INTERVAL (45.0)
 
 void server_accept(void);
-void server_generate_salt(char *out, size_t length);
+bool server_generate_salt(char *out, size_t length);
 
 server_t server;
 
@@ -61,7 +55,9 @@ bool server_init(void) {
 	server.num_spawned_clients = 0;
 
 	if (config.debug.fixed_salt[0] == '\0') {
-		server_generate_salt(server.salt, SERVER_SALT_LENGTH);
+		if (!server_generate_salt(server.salt, SERVER_SALT_LENGTH)) {
+			return false;
+		}
 	}
 	else {
 		memcpy(server.salt, config.debug.fixed_salt, util_min(strlen(config.debug.fixed_salt), SERVER_SALT_LENGTH));
@@ -267,27 +263,17 @@ void server_broadcast(const char *msg, ...) {
 	}
 }
 
-void server_generate_salt(char *out, size_t length) {
+bool server_generate_salt(char *out, size_t length) {
 	const char *chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	const size_t num_chars = strlen(chars);
 
-#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(_WIN32)
-#if defined(__linux__)
-	getrandom(out, length, GRND_RANDOM);
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
-	arc4random_buf(out, length);
-#elif defined(_WIN32)
-	BCRYPT_ALG_HANDLE algo;
-	BCryptOpenAlgorithmProvider(&algo, BCRYPT_RNG_ALGORITHM, NULL, 0);
-	BCryptGenRandom(algo, (PUCHAR)out, (ULONG)length, 0);
-	BCryptCloseAlgorithmProvider(algo, 0);
-#endif
+	if (!util_secure_random(out, length)) {
+		return false;
+	}
+
 	for (size_t i = 0; i < length; i++) {
 		out[i] = chars[out[i] % num_chars];
 	}
-#else
-	for (size_t i = 0; i < length; i++) {
-		out[i] = chars[rng_next(server.global_rng, (int)num_chars)];
-	}
-#endif
+
+	return true;
 }
