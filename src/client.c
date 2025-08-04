@@ -55,7 +55,7 @@ static void client_ws_handle_chunk(client_t *client);
 static void client_ws_decode_frame(client_t *client);
 static void client_ws_disconnect(client_t *client, int code);
 static void client_ws_wrap_packet(client_t *client, buffer_t *buffer);
-static void client_send_env_colour(client_t *client, int colour, rgb_t *rgb);
+static void client_send_env_colour(client_t *client, envcolourtype_t colour, rgb_t *rgb);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -816,13 +816,13 @@ void client_teleport(client_t *client, float x, float y, float z, float yaw, flo
 	}
 }
 
-void client_send_env_colour(client_t *client, int colour, rgb_t *rgb) {
+void client_send_env_colour(client_t *client, envcolourtype_t colour, rgb_t *rgb) {
 	if (!client_supports_extension(client, "EnvColors", 1) || rgb->value == ENV_COLOUR_DEFAULT) {
 		return;
 	}
 
 	buffer_write_uint8(client->out_buffer, packet_env_set_colour);
-	buffer_write_uint8(client->out_buffer, colour);
+	buffer_write_uint8(client->out_buffer, (uint8_t)colour);
 	buffer_write_uint16be(client->out_buffer, rgb->r);
 	buffer_write_uint16be(client->out_buffer, rgb->g);
 	buffer_write_uint16be(client->out_buffer, rgb->b);

@@ -51,14 +51,14 @@ enum {
 };
 
 // for packet_env_set_colour
-enum {
+typedef enum {
 	env_colour_sky = 0,
 	env_colour_cloud = 1,
 	env_colour_fog = 2,
 	env_colour_ambient = 3,
 	env_colour_sunlight = 4,
 	env_colour_skybox = 5,
-};
+} envcolourtype_t;
 
 // for packet_message with MessageTypes extension
 typedef enum {
