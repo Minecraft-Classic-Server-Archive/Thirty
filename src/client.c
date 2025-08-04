@@ -141,6 +141,12 @@ void client_tick(client_t *client) {
 					client_send_env_colour(client, env_colour_sunlight, &server.map->envcolours.sunlight);
 					client_send_env_colour(client, env_colour_skybox, &server.map->envcolours.skybox);
 
+					if (client_supports_extension(client, "EnvWeatherType", 1)) {
+						buffer_write_uint8(client->out_buffer, packet_env_set_weather_type);
+						buffer_write_uint8(client->out_buffer, (uint8_t)server.map->weather);
+						client_flush(client);
+					}
+
 					buffer_write_uint8(client->out_buffer, packet_level_finish);
 					buffer_write_uint16be(client->out_buffer, server.map->width);
 					buffer_write_uint16be(client->out_buffer, server.map->depth);

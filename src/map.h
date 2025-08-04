@@ -31,6 +31,12 @@ typedef struct scheduledtick_s {
 	uint64_t time;
 } scheduledtick_t;
 
+enum {
+	weather_clear,
+	weather_rain,
+	weather_snow,
+};
+
 typedef struct map_s {
 	char *name;
 
@@ -45,6 +51,7 @@ typedef struct map_s {
 	scheduledtick_t *ticks;
 
 	envcolours_t envcolours;
+	int weather;
 } map_t;
 
 map_t *map_create(const char *name, size_t width, size_t depth, size_t height);

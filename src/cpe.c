@@ -26,6 +26,7 @@ cpeext_t supported_extensions[] = {
 		{ "TwoWayPing", 1 },
 		{ "TextColors", 1 },
 		{ "EnvColors", 1 },
+		{ "EnvWeatherType", 1 },
 
 		{ "", 0 }
 };

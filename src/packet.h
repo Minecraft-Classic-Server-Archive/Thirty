@@ -40,6 +40,7 @@ enum {
 	packet_custom_block_support_level = 0x13,
 
 	packet_env_set_colour = 0x19,
+	packet_env_set_weather_type = 0x1f,
 
 	packet_set_text_colour = 0x27,
 

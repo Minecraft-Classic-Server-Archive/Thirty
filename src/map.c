@@ -44,6 +44,7 @@ map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map->envcolours.fog.value = ENV_COLOUR_DEFAULT;
 	map->envcolours.ambient.value = ENV_COLOUR_DEFAULT;
 	map->envcolours.sunlight.value = ENV_COLOUR_DEFAULT;
+	map->weather = weather_clear;
 
 	memset(map->blocks, 0, width * depth * height);
 
