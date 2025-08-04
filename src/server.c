@@ -61,10 +61,10 @@ bool server_init(void) {
 	server.num_spawned_clients = 0;
 
 	if (config.debug.fixed_salt[0] == '\0') {
-		server_generate_salt(server.salt, 16);
+		server_generate_salt(server.salt, SERVER_SALT_LENGTH);
 	}
 	else {
-		memcpy(server.salt, config.debug.fixed_salt, 16);
+		memcpy(server.salt, config.debug.fixed_salt, util_min(strlen(config.debug.fixed_salt), SERVER_SALT_LENGTH));
 	}
 
 	int err;

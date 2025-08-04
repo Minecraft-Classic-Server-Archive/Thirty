@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include "sockets.h"
 
+#define SERVER_SALT_LENGTH 64
 typedef struct client_s client_t;
 typedef struct map_s map_t;
 typedef struct rng_s rng_t;
@@ -37,7 +38,7 @@ typedef struct server_s {
 	map_t *map;
 	rng_t *global_rng;
 
-	char salt[17];
+	char salt[SERVER_SALT_LENGTH + 1];
 	double last_heartbeat;
 
 	namelist_t *ops;
