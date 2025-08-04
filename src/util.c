@@ -237,7 +237,7 @@ bool util_secure_random(void *out, size_t num) {
 		log_printf(log_error, "%s: failed to generate %zu bytes: %d %s", __func__, num, errno, strerror(errno));
 		return false;
 	}
-#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 	arc4random_buf(out, num);
 #elif defined(_WIN32)
 	BCRYPT_ALG_HANDLE algo;
