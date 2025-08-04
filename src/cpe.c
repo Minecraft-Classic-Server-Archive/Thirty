@@ -27,6 +27,7 @@ cpeext_t supported_extensions[] = {
 		{ "TextColors", 1 },
 		{ "EnvColors", 1 },
 		{ "EnvWeatherType", 1 },
+		{ "MessageTypes", 1 },
 
 		{ "", 0 }
 };

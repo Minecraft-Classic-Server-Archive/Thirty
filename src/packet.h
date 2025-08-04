@@ -51,8 +51,7 @@ enum {
 };
 
 // for packet_env_set_colour
-enum
-{
+enum {
 	env_colour_sky = 0,
 	env_colour_cloud = 1,
 	env_colour_fog = 2,
@@ -60,3 +59,15 @@ enum
 	env_colour_sunlight = 4,
 	env_colour_skybox = 5,
 };
+
+// for packet_message with MessageTypes extension
+typedef enum {
+	msgtype_chat = 0,
+	msgtype_status1 = 1,
+	msgtype_status2 = 2,
+	msgtype_status3 = 3,
+	msgtype_bottomright1 = 11,
+	msgtype_bottomright2 = 12,
+	msgtype_bottomright3 = 13,
+	msgtype_announcement = 100,
+} msgtype_t;

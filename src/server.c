@@ -259,7 +259,7 @@ void server_broadcast(const char *msg, ...) {
 			continue;
 		}
 
-		client_send_message(client, "%s", buffer);
+		client_send_message(client, msgtype_chat, "%s", buffer);
 	}
 }
 

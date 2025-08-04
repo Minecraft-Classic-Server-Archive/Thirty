@@ -115,10 +115,10 @@ void command_version(int argc, const char **argv, client_t *client) {
 	(void) argc;
 	(void) argv;
 
-	client_send_message(client, "&fThis server is running &eThirty %s", THIRTY_VERSION);
-	client_send_message(client, "&fMercurial changeset: &e%s", HG_CHANGESET_HASH);
-	client_send_message(client, "Thirty is licenced under the GNU AGPL v3 or later, and its");
-	client_send_message(client, "source is available at https://dev.firestick.games/sean/thirty");
+	client_send_message(client, msgtype_chat, "&fThis server is running &eThirty %s", THIRTY_VERSION);
+	client_send_message(client, msgtype_chat, "&fMercurial changeset: &e%s", HG_CHANGESET_HASH);
+	client_send_message(client, msgtype_chat, "Thirty is licenced under the GNU AGPL v3 or later, and its");
+	client_send_message(client, msgtype_chat, "source is available at https://dev.firestick.games/sean/thirty");
 }
 
 void command_help(int argc, const char **argv, client_t *client) {
@@ -132,7 +132,7 @@ void command_help(int argc, const char **argv, client_t *client) {
 			continue;
 		}
 
-		client_send_message(client, "&e%s&f - %s", command->name, command->helpline);
+		client_send_message(client, msgtype_chat, "&e%s&f - %s", command->name, command->helpline);
 	}
 }
 
@@ -140,26 +140,26 @@ void command_info(int argc, const char **argv, client_t *client) {
 	(void) argc;
 	(void) argv;
 
-	client_send_message(client, "&eProtocol version: &f%d", client->protocol_version);
+	client_send_message(client, msgtype_chat, "&eProtocol version: &f%d", client->protocol_version);
 
-	client_send_message(client, "&eCPE extensions:&f (&amutual&f | &bclient&f | &dserver&f)");
+	client_send_message(client, msgtype_chat, "&eCPE extensions:&f (&amutual&f | &bclient&f | &dserver&f)");
 	for (size_t j = 0; j < client->num_extensions; j++) {
 		cpeext_t *ext = &client->extensions[j];
 		const char colour = cpe_extension_supported(ext->name, ext->version) ? 'a' : 'b';
-		client_send_message(client, "&f - &%c%s v%d", colour, ext->name, ext->version);
+		client_send_message(client, msgtype_chat, "&f - &%c%s v%d", colour, ext->name, ext->version);
 	}
 
 	for (size_t j = 0; j < cpe_count_supported(); j++) {
 		const cpeext_t *ext = &supported_extensions[j];
 		if (!client_supports_extension(client, ext->name, ext->version)) {
-			client_send_message(client, "&f - &d%s v%d", ext->name, ext->version);
+			client_send_message(client, msgtype_chat, "&f - &d%s v%d", ext->name, ext->version);
 		}
 	}
 }
 
 void command_teleport(int argc, const char **argv, client_t *client) {
 	if (argc < 3) {
-		client_send_message(client, "&eSyntax: &f/%s [player] <x> <y> <z>", argv[0]);
+		client_send_message(client, msgtype_chat, "&eSyntax: &f/%s [player] <x> <y> <z>", argv[0]);
 		return;
 	}
 
@@ -167,7 +167,7 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 	client_t *target = NULL;
 	if (argc == 4) {
 		if (!client->is_op && strcasecmp(argv[1], client->name) != 0) {
-			client_send_message(client, "&eOnly ops can teleport other players");
+			client_send_message(client, msgtype_chat, "&eOnly ops can teleport other players");
 			return;
 		}
 
@@ -180,7 +180,7 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 		}
 
 		if (target == NULL) {
-			client_send_message(client, "&c'&f%s&c' is not a player", player);
+			client_send_message(client, msgtype_chat, "&c'&f%s&c' is not a player", player);
 			return;
 		}
 		o = 1;
@@ -194,7 +194,7 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 	float z = strtof(argv[3 + o], NULL);
 
 	if (x < 0.0f || x >= server.map->width || y < 0.0f || y >= server.map->depth || z < 0.0f || z >= server.map->height) {
-		client_send_message(client, "&cThat position is outside of the world");
+		client_send_message(client, msgtype_chat, "&cThat position is outside of the world");
 		return;
 	}
 
@@ -203,7 +203,7 @@ void command_teleport(int argc, const char **argv, client_t *client) {
 
 static void namelist_command(int argc, const char **argv, client_t *client, namelist_t *namelist, const char *addWord, const char *removeWord, const char *listTitle) {
 	if (!client->is_op) {
-		client_send_message(client, "&cThis command is op-only");
+		client_send_message(client, msgtype_chat, "&cThis command is op-only");
 		return;
 	}
 
@@ -212,23 +212,23 @@ static void namelist_command(int argc, const char **argv, client_t *client, name
 		const char *player = argv[2];
 		namelist_add(namelist, player);
 
-		client_send_message(client, "&aPlayer '%s' has been %s.", player, addWord);
+		client_send_message(client, msgtype_chat, "&aPlayer '%s' has been %s.", player, addWord);
 	}
 	else if (argc >= 2 && strcasecmp(subcommand, "remove") == 0) {
 		const char *player = argv[2];
 		namelist_remove(namelist, player);
 
-		client_send_message(client, "&aPlayer '%s' has been %s.", player, removeWord);
+		client_send_message(client, msgtype_chat, "&aPlayer '%s' has been %s.", player, removeWord);
 	}
 	else if (argc >= 1 && strcasecmp(subcommand, "list") == 0) {
-		client_send_message(client, "&e%s:", listTitle);
+		client_send_message(client, msgtype_chat, "&e%s:", listTitle);
 		for (size_t i = 0; i < namelist->num_names; i++) {
 			if (namelist->names[i] != NULL) {
-				client_send_message(client, "&f- &e%s", namelist->names[i]);
+				client_send_message(client, msgtype_chat, "&f- &e%s", namelist->names[i]);
 			}
 		}
 	} else {
-		client_send_message(client, "&e Syntax: &f/%s <add | remove | list> [player]", argv[0]);
+		client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <add | remove | list> [player]", argv[0]);
 	}
 }
 
@@ -242,7 +242,7 @@ void command_ipban(int argc, const char **argv, client_t *client) {
 
 void command_whitelist(int argc, const char **argv, client_t *client) {
 	if (!config.server.enable_whitelist) {
-		client_send_message(client, "&cThe server whitelist is not enabled.");
+		client_send_message(client, msgtype_chat, "&cThe server whitelist is not enabled.");
 		return;
 	}
 
@@ -258,7 +258,7 @@ void command_save(int argc, const char **argv, client_t *client) {
 	(void) argv;
 
 	if (!client->is_op) {
-		client_send_message(client, "&cThis command is op-only");
+		client_send_message(client, msgtype_chat, "&cThis command is op-only");
 		return;
 	}
 
@@ -278,7 +278,7 @@ void command_online(int argc, const char **argv, client_t *client) {
 		}
 	}
 
-	client_send_message(client, "&eThere %s &f%zu &eplayer%s online:", actual_total == 1 ? "is" : "are", actual_total, actual_total == 1 ? "" : "s");
+	client_send_message(client, msgtype_chat, "&eThere %s &f%zu &eplayer%s online:", actual_total == 1 ? "is" : "are", actual_total, actual_total == 1 ? "" : "s");
 
 	for (size_t i = 0; i < server.num_clients; i++) {
 		client_t *c = &server.clients[i];
@@ -309,6 +309,6 @@ void command_online(int argc, const char **argv, client_t *client) {
 			strcat(msg, " &f(joining)");
 		}
 
-		client_send_message(client, "%s", msg);
+		client_send_message(client, msgtype_chat, "%s", msg);
 	}
 }

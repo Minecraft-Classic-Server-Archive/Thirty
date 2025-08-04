@@ -771,9 +771,14 @@ uint8_t client_filter_block(client_t *client, uint8_t block) {
 	return block;
 }
 
-void client_send_message(client_t *client, const char *fmt, ...) {
+void client_send_message(client_t *client, msgtype_t type, const char *fmt, ...) {
 	if (client->protocol_version < 3) {
 		return;
+	}
+
+	uint8_t typev = (uint8_t)type;
+	if (!client_supports_extension(client, "MessageTypes" , 1)) {
+		typev = 0;
 	}
 
 	char buffer[65];
@@ -785,7 +790,7 @@ void client_send_message(client_t *client, const char *fmt, ...) {
 	}
 
 	buffer_write_uint8(client->out_buffer, packet_message);
-	buffer_write_uint8(client->out_buffer, 0);
+	buffer_write_uint8(client->out_buffer, typev);
 	buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));
 	client_flush(client);
 }
