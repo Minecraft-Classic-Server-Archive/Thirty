@@ -40,6 +40,12 @@
 #include <netinet/tcp.h>
 #endif
 
+#if defined(__linux__)
+#include <sys/random.h>
+#elif defined(_WIN32)
+#include <bcrypt.h>
+#endif
+
 #define HEARTBEAT_INTERVAL (45.0)
 
 void server_accept(void);
@@ -265,7 +271,23 @@ void server_generate_salt(char *out, size_t length) {
 	const char *chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	const size_t num_chars = strlen(chars);
 
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(_WIN32)
+#if defined(__linux__)
+	getrandom(out, length, GRND_RANDOM);
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
+	arc4random_buf(out, length);
+#elif defined(_WIN32)
+	BCRYPT_ALG_HANDLE algo;
+	BCryptOpenAlgorithmProvider(&algo, BCRYPT_RNG_ALGORITHM, NULL, 0);
+	BCryptGenRandom(algo, (PUCHAR)out, (ULONG)length, 0);
+	BCryptCloseAlgorithmProvider(algo, 0);
+#endif
+	for (size_t i = 0; i < length; i++) {
+		out[i] = chars[out[i] % num_chars];
+	}
+#else
 	for (size_t i = 0; i < length; i++) {
 		out[i] = chars[rng_next(server.global_rng, (int)num_chars)];
 	}
+#endif
 }

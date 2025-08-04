@@ -89,6 +89,7 @@ deps = [
 ]
 
 if build_machine.system() == 'windows'
+    deps += cc.find_library('bcrypt')
     deps += cc.find_library('ws2_32')
 else
     deps += cc.find_library('m')
