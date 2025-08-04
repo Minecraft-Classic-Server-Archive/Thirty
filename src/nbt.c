@@ -472,8 +472,6 @@ tag_t *nbt_get_tag(tag_t *tag, const char *n) {
 		}
 	}
 
-	log_printf(log_error, "tag %s('%s') has no sub-tag %s", tag_get_type_name(tag->type), tag->name, n);
-
 	return NULL;
 }
 
