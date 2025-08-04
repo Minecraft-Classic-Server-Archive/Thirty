@@ -102,6 +102,7 @@ void map_save(map_t *map) {
 	tag_t *cpe_weather_type = nbt_create_compound("EnvWeatherType");
 	tag_t *cpe_weather_value = nbt_create_compound("WeatherType"); nbt_set_int8(cpe_weather_value, (int8_t)map->weather);
 	nbt_add_tag(cpe_weather_type, cpe_weather_value);
+	nbt_add_tag(cpe_data, cpe_env_colours);
 	nbt_add_tag(cpe_data, cpe_weather_type);
 
 	nbt_add_tag(scheduled_ticks, tick_indices);
