@@ -25,6 +25,21 @@
 #include "log.h"
 #include "config.h"
 
+static void save_env_colour(tag_t *cpedata, const char *tagname, rgb_t *rgb) {
+	if (rgb->value == ENV_COLOUR_DEFAULT) {
+		return;
+	}
+
+	tag_t *compound = nbt_create_compound(tagname);
+	tag_t *r = nbt_create("R"); nbt_set_int16(r, rgb->r);
+	tag_t *g = nbt_create("G"); nbt_set_int16(g, rgb->g);
+	tag_t *b = nbt_create("B"); nbt_set_int16(b, rgb->b);
+	nbt_add_tag(compound, r);
+	nbt_add_tag(compound, g);
+	nbt_add_tag(compound, b);
+	nbt_add_tag(cpedata, compound);
+}
+
 void map_save(map_t *map) {
 	if (!map->modified) {
 		return;
@@ -57,6 +72,7 @@ void map_save(map_t *map) {
 	tag_t *block_array = nbt_copy_bytearray("BlockArray", map->blocks, num_blocks);
 	tag_t *metadata = nbt_create_compound("Metadata");
 	tag_t *software_data = nbt_create_compound("Thirty");
+	tag_t *cpe_data = nbt_create_compound("CPE");
 
 	tag_t *scheduled_ticks = nbt_create_compound("ScheduledTicks");
 	int32_t *tick_indices_data = calloc(map->num_ticks, sizeof(int32_t));
@@ -71,12 +87,25 @@ void map_save(map_t *map) {
 		tick_times_data[i] = (int32_t)(tick->time - server.tick);
 	}
 
+	tag_t *cpe_env_colours = nbt_create_compound("EnvColors");
+	save_env_colour(cpe_env_colours, "Sky", &map->envcolours.sky);
+	save_env_colour(cpe_env_colours, "Cloud", &map->envcolours.cloud);
+	save_env_colour(cpe_env_colours, "Fog", &map->envcolours.fog);
+	save_env_colour(cpe_env_colours, "Ambient", &map->envcolours.ambient);
+	save_env_colour(cpe_env_colours, "Sunlight", &map->envcolours.sunlight);
+	save_env_colour(cpe_env_colours, "Skybox", &map->envcolours.skybox);
+	if (cpe_env_colours->array_size == 0) {
+		nbt_destroy(cpe_env_colours, true);
+		cpe_env_colours = NULL;
+	}
+
 	nbt_add_tag(scheduled_ticks, tick_indices);
 	nbt_add_tag(scheduled_ticks, tick_times);
 
 	nbt_add_tag(software_data, scheduled_ticks);
 
 	nbt_add_tag(metadata, software_data);
+	nbt_add_tag(metadata, cpe_data);
 
 	nbt_add_tag(root, format_version);
 	nbt_add_tag(root, name_tag);
@@ -145,6 +174,32 @@ cleanup:
 	buffer_destroy(outbuf);
 
 	nbt_destroy(root, true);
+}
+
+static void read_env_colour(tag_t *envcolors, const char *tagname, rgb_t *rgb) {
+	rgb->value = ENV_COLOUR_DEFAULT;
+
+	tag_t *tag = nbt_get_tag(envcolors, tagname);
+	if (tag == NULL || tag->type != tag_compound) {
+		return;
+	}
+
+	tag_t *rtag = nbt_get_tag(tag, "R");
+	if (rtag == NULL || rtag->type != tag_short) {
+		return;
+	}
+	tag_t *gtag = nbt_get_tag(tag, "G");
+	if (gtag == NULL || gtag->type != tag_short) {
+		return;
+	}
+	tag_t *btag = nbt_get_tag(tag, "B");
+	if (btag == NULL || btag->type != tag_short) {
+		return;
+	}
+
+	rgb->r = rtag->s;
+	rgb->g = gtag->s;
+	rgb->b = btag->s;
 }
 
 map_t *map_load(const char *name) {
@@ -263,6 +318,19 @@ map_t *map_load(const char *name) {
 							map_add_tick(map, x, y, z, time);
 						}
 					}
+				}
+			}
+
+			tag_t *cpe_data = nbt_get_tag(metadata, "CPE");
+			if (cpe_data != NULL && cpe_data->type == tag_compound) {
+				tag_t *env_colours = nbt_get_tag(cpe_data, "EnvColors");
+				if (env_colours != NULL && env_colours->type == tag_compound) {
+					read_env_colour(env_colours, "Sky", &map->envcolours.sky);
+					read_env_colour(env_colours, "Cloud", &map->envcolours.cloud);
+					read_env_colour(env_colours, "Fog", &map->envcolours.fog);
+					read_env_colour(env_colours, "Ambient", &map->envcolours.ambient);
+					read_env_colour(env_colours, "Sunlight", &map->envcolours.sunlight);
+					read_env_colour(env_colours, "Skybox", &map->envcolours.skybox);
 				}
 			}
 		}

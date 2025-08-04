@@ -17,6 +17,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #define util_max(x, y) (((x) > (y)) ? (x) : (y))
 #define util_min(x, y) (((x) < (y)) ? (x) : (y))
@@ -45,3 +46,10 @@ void util_print_coloured(FILE *file, const char *msg);
 void util_print_strip_colours(FILE *file, const char *msg);
 
 bool util_secure_random(void *out, size_t num);
+
+typedef union {
+	uint32_t value;
+	struct {
+		uint8_t r, g, b;
+	};
+} rgb_t;

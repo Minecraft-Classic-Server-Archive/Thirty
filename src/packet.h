@@ -39,10 +39,23 @@ enum {
 
 	packet_custom_block_support_level = 0x13,
 
+	packet_env_set_colour = 0x19,
+
 	packet_set_text_colour = 0x27,
 
 	packet_two_way_ping = 0x2b,
 
 	// c0.0.15a mptest1 uses packet ID 9 for despawning players
 	packet_player_despawn_c0015 = 0x09,
+};
+
+// for packet_env_set_colour
+enum
+{
+	env_colour_sky = 0,
+	env_colour_cloud = 1,
+	env_colour_fog = 2,
+	env_colour_ambient = 3,
+	env_colour_sunlight = 4,
+	env_colour_skybox = 5,
 };

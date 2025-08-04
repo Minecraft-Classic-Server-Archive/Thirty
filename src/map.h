@@ -18,6 +18,13 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "util.h"
+
+// CPE EnvColors definitions
+#define ENV_COLOUR_DEFAULT ((uint32_t)UINT32_MAX)
+typedef struct envcolour_s {
+	rgb_t sky, cloud, fog, ambient, sunlight, skybox;
+} envcolours_t;
 
 typedef struct scheduledtick_s {
 	size_t x, y, z;
@@ -36,6 +43,8 @@ typedef struct map_s {
 	size_t num_ticks;
 	size_t ticks_size;
 	scheduledtick_t *ticks;
+
+	envcolours_t envcolours;
 } map_t;
 
 map_t *map_create(const char *name, size_t width, size_t depth, size_t height);

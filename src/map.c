@@ -39,6 +39,11 @@ map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map->num_ticks = 0;
 	map->ticks = NULL;
 	map->modified = true;
+	map->envcolours.sky.value = ENV_COLOUR_DEFAULT;
+	map->envcolours.cloud.value = ENV_COLOUR_DEFAULT;
+	map->envcolours.fog.value = ENV_COLOUR_DEFAULT;
+	map->envcolours.ambient.value = ENV_COLOUR_DEFAULT;
+	map->envcolours.sunlight.value = ENV_COLOUR_DEFAULT;
 
 	memset(map->blocks, 0, width * depth * height);
 

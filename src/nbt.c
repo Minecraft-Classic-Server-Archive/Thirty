@@ -290,7 +290,7 @@ void nbt_set_int64(tag_t *tag, int64_t b) {
 }
 
 void nbt_add_tag(tag_t *tag, tag_t *new) {
-	if ((tag->type != tag_list && tag->type != tag_compound) || tag->list == NULL) {
+	if ((tag->type != tag_list && tag->type != tag_compound) || tag->list == NULL || new == NULL) {
 		return;
 	}
 
