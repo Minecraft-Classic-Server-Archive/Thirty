@@ -785,7 +785,7 @@ void client_send_message(client_t *client, const char *fmt, ...) {
 	}
 
 	buffer_write_uint8(client->out_buffer, packet_message);
-	buffer_write_uint8(client->out_buffer, 0x7F);
+	buffer_write_uint8(client->out_buffer, 0);
 	buffer_write_mcstr(client->out_buffer, buffer, !client_supports_extension(client, "FullCP437", 1));
 	client_flush(client);
 }
