@@ -331,7 +331,7 @@ void command_env(int argc, const char **argv, client_t *client) {
 	map_t *map = server.map;
 
 	const char *subcommand = argv[1];
-	if (strcmp(subcommand, "colour") == 0) {
+	if (strcmp(subcommand, "colour") == 0 || strcmp(subcommand, "color") == 0) {
 		if (argc != 5 && argc != 3) {
 			client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> <r> <g> <b>", argv[0]);
 			client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> default", argv[0]);
