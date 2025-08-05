@@ -424,6 +424,13 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 				buffer_read_uint8(in_buffer, &mode);
 				buffer_read_uint8(in_buffer, &block);
 
+				if (block >= num_blocks) {
+					char msg[65];
+					snprintf(msg, sizeof(msg), "Invalid block ID %u", block);
+					client_disconnect(client, msg);
+					return;
+				}
+
 				const bool is_break = mode == 0x00;
 				const uint8_t current = map_get(server.map, x, y, z);
 
