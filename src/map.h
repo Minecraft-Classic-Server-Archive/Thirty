@@ -18,24 +18,22 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "packet.h"
 #include "util.h"
 
 // CPE EnvColors definitions
 #define ENV_COLOUR_DEFAULT ((uint32_t)UINT32_MAX)
-typedef struct envcolour_s {
-	rgb_t sky, cloud, fog, ambient, sunlight, skybox;
-} envcolours_t;
 
 typedef struct scheduledtick_s {
 	size_t x, y, z;
 	uint64_t time;
 } scheduledtick_t;
 
-enum {
+typedef enum {
 	weather_clear,
 	weather_rain,
 	weather_snow,
-};
+} weathertype_t;
 
 typedef struct map_s {
 	char *name;
@@ -50,7 +48,7 @@ typedef struct map_s {
 	size_t ticks_size;
 	scheduledtick_t *ticks;
 
-	envcolours_t envcolours;
+	rgb_t colours[env_colour_count];
 	int weather;
 } map_t;
 
@@ -61,6 +59,9 @@ void map_set(map_t *map, size_t x, size_t y, size_t z, uint8_t block);
 uint8_t map_get(map_t *map, size_t x, size_t y, size_t z);
 size_t map_get_top(map_t *map, size_t x, size_t z);
 size_t map_get_top_lit(map_t *map, size_t x, size_t z);
+
+void map_set_colour(map_t *map, envcolourtype_t type, rgb_t *rgb);
+void map_set_weather(map_t *map, weathertype_t type);
 
 void map_tick(map_t *map);
 void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_until);

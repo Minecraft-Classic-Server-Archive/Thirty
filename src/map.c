@@ -39,11 +39,9 @@ map_t *map_create(const char *name, size_t width, size_t depth, size_t height) {
 	map->num_ticks = 0;
 	map->ticks = NULL;
 	map->modified = true;
-	map->envcolours.sky.value = ENV_COLOUR_DEFAULT;
-	map->envcolours.cloud.value = ENV_COLOUR_DEFAULT;
-	map->envcolours.fog.value = ENV_COLOUR_DEFAULT;
-	map->envcolours.ambient.value = ENV_COLOUR_DEFAULT;
-	map->envcolours.sunlight.value = ENV_COLOUR_DEFAULT;
+	for (size_t i =0; i < env_colour_count; i++) {
+		map->colours[i].value = ENV_COLOUR_DEFAULT;
+	}
 	map->weather = weather_clear;
 
 	memset(map->blocks, 0, width * depth * height);
@@ -190,4 +188,37 @@ void map_add_tick(map_t *map, size_t x, size_t y, size_t z, uint64_t num_ticks_u
 	map->ticks[idx].y = y;
 	map->ticks[idx].z = z;
 	map->ticks[idx].time = server.tick + num_ticks_until;
+}
+
+void map_set_colour(map_t *map, envcolourtype_t type, rgb_t *rgb) {
+	map->colours[type].value = rgb->value;
+	map->modified = true;
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *client = &server.clients[i];
+		if (!client_supports_extension(client, "EnvColors", 1)) {
+			continue;
+		}
+
+		buffer_write_uint8(client->out_buffer, packet_env_set_colour);
+		buffer_write_uint8(client->out_buffer, (uint8_t)type);
+		buffer_write_int16be(client->out_buffer, (int16_t)(rgb->value == ENV_COLOUR_DEFAULT ? -1 : rgb->r));
+		buffer_write_int16be(client->out_buffer, (int16_t)(rgb->value == ENV_COLOUR_DEFAULT ? -1 : rgb->g));
+		buffer_write_int16be(client->out_buffer, (int16_t)(rgb->value == ENV_COLOUR_DEFAULT ? -1 : rgb->b));
+	}
+}
+
+void map_set_weather(map_t *map, weathertype_t type) {
+	map->weather = type;
+	map->modified = true;
+
+	for (size_t i = 0; i < server.num_clients; i++) {
+		client_t *client = &server.clients[i];
+		if (!client_supports_extension(client, "EnvWeatherType", 1)) {
+			continue;
+		}
+
+		buffer_write_uint8(client->out_buffer, packet_env_set_weather_type);
+		buffer_write_uint8(client->out_buffer, (uint8_t)type);
+	}
 }

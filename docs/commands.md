@@ -59,3 +59,16 @@ Shows the entries currently in the list.
 ### `/save`
 
 Immediately saves the world to disk.
+
+### `/env`
+
+**Arguments:**
+
+- `colour <sky|cloud|fog|ambient|sunlight|skybox> <r> <g> <b>`
+- `colour <sky|cloud|fog|ambient|sunlight|skybox> default`
+
+Sets the given map environment colour to the given value, or resets it to default.
+
+- `weather <clear|rain|snow>`
+
+Sets the map weather.

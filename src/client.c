@@ -55,7 +55,7 @@ static void client_ws_handle_chunk(client_t *client);
 static void client_ws_decode_frame(client_t *client);
 static void client_ws_disconnect(client_t *client, int code);
 static void client_ws_wrap_packet(client_t *client, buffer_t *buffer);
-static void client_send_env_colour(client_t *client, envcolourtype_t colour, rgb_t *rgb);
+static void client_send_env_colour(client_t *client, envcolourtype_t colour);
 
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
@@ -134,12 +134,12 @@ void client_tick(client_t *client) {
 					client->mapsend_state = mapsend_sent;
 					client->mapgz_buffer = NULL;
 
-					client_send_env_colour(client, env_colour_sky, &server.map->envcolours.sky);
-					client_send_env_colour(client, env_colour_cloud, &server.map->envcolours.cloud);
-					client_send_env_colour(client, env_colour_fog, &server.map->envcolours.fog);
-					client_send_env_colour(client, env_colour_ambient, &server.map->envcolours.ambient);
-					client_send_env_colour(client, env_colour_sunlight, &server.map->envcolours.sunlight);
-					client_send_env_colour(client, env_colour_skybox, &server.map->envcolours.skybox);
+					client_send_env_colour(client, env_colour_sky);
+					client_send_env_colour(client, env_colour_cloud);
+					client_send_env_colour(client, env_colour_fog);
+					client_send_env_colour(client, env_colour_ambient);
+					client_send_env_colour(client, env_colour_sunlight);
+					client_send_env_colour(client, env_colour_skybox);
 
 					if (client_supports_extension(client, "EnvWeatherType", 1)) {
 						buffer_write_uint8(client->out_buffer, packet_env_set_weather_type);
@@ -816,7 +816,9 @@ void client_teleport(client_t *client, float x, float y, float z, float yaw, flo
 	}
 }
 
-void client_send_env_colour(client_t *client, envcolourtype_t colour, rgb_t *rgb) {
+void client_send_env_colour(client_t *client, envcolourtype_t colour) {
+	rgb_t *rgb = &server.map->colours[colour];
+
 	if (!client_supports_extension(client, "EnvColors", 1) || rgb->value == ENV_COLOUR_DEFAULT) {
 		return;
 	}

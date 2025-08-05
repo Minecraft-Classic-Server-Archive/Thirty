@@ -58,6 +58,8 @@ typedef enum {
 	env_colour_ambient = 3,
 	env_colour_sunlight = 4,
 	env_colour_skybox = 5,
+
+	env_colour_count
 } envcolourtype_t;
 
 // for packet_message with MessageTypes extension

@@ -88,12 +88,12 @@ void map_save(map_t *map) {
 	}
 
 	tag_t *cpe_env_colours = nbt_create_compound("EnvColors");
-	save_env_colour(cpe_env_colours, "Sky", &map->envcolours.sky);
-	save_env_colour(cpe_env_colours, "Cloud", &map->envcolours.cloud);
-	save_env_colour(cpe_env_colours, "Fog", &map->envcolours.fog);
-	save_env_colour(cpe_env_colours, "Ambient", &map->envcolours.ambient);
-	save_env_colour(cpe_env_colours, "Sunlight", &map->envcolours.sunlight);
-	save_env_colour(cpe_env_colours, "Skybox", &map->envcolours.skybox);
+	save_env_colour(cpe_env_colours, "Sky", &map->colours[env_colour_sky]);
+	save_env_colour(cpe_env_colours, "Cloud", &map->colours[env_colour_cloud]);
+	save_env_colour(cpe_env_colours, "Fog", &map->colours[env_colour_fog]);
+	save_env_colour(cpe_env_colours, "Ambient", &map->colours[env_colour_ambient]);
+	save_env_colour(cpe_env_colours, "Sunlight", &map->colours[env_colour_sunlight]);
+	save_env_colour(cpe_env_colours, "Skybox", &map->colours[env_colour_skybox]);
 	if (cpe_env_colours->array_size == 0) {
 		nbt_destroy(cpe_env_colours, true);
 		cpe_env_colours = NULL;
@@ -331,12 +331,12 @@ map_t *map_load(const char *name) {
 			if (cpe_data != NULL && cpe_data->type == tag_compound) {
 				tag_t *env_colours = nbt_get_tag(cpe_data, "EnvColors");
 				if (env_colours != NULL && env_colours->type == tag_compound) {
-					read_env_colour(env_colours, "Sky", &map->envcolours.sky);
-					read_env_colour(env_colours, "Cloud", &map->envcolours.cloud);
-					read_env_colour(env_colours, "Fog", &map->envcolours.fog);
-					read_env_colour(env_colours, "Ambient", &map->envcolours.ambient);
-					read_env_colour(env_colours, "Sunlight", &map->envcolours.sunlight);
-					read_env_colour(env_colours, "Skybox", &map->envcolours.skybox);
+					read_env_colour(env_colours, "Sky", &map->colours[env_colour_sky]);
+					read_env_colour(env_colours, "Cloud", &map->colours[env_colour_cloud]);
+					read_env_colour(env_colours, "Fog", &map->colours[env_colour_fog]);
+					read_env_colour(env_colours, "Ambient", &map->colours[env_colour_ambient]);
+					read_env_colour(env_colours, "Sunlight", &map->colours[env_colour_sunlight]);
+					read_env_colour(env_colours, "Skybox", &map->colours[env_colour_skybox]);
 				}
 
 				tag_t *weather_type = nbt_get_tag(cpe_data, "EnvWeatherType");

@@ -47,10 +47,12 @@ static void command_whitelist(int argc, const char **argv, client_t *client);
 static void command_op(int argc, const char **argv, client_t *client);
 static void command_save(int argc, const char **argv, client_t *client);
 static void command_online(int argc, const char **argv, client_t *client);
+static void command_env(int argc, const char **argv, client_t *client);
 
 static commanddef_t commands[] = {
 	{ "ban", command_ban, "Manage username bans", true },
 	{ "ban-ip", command_ipban, "Manage IP bans", true },
+	{ "env", command_env, "Change map environmental settings", true },
 	{ "help", command_help, "List available commands", false },
 	{ "info", command_info, "View client info", false },
 	{ "op", command_op, "Manage server admins", true },
@@ -310,5 +312,79 @@ void command_online(int argc, const char **argv, client_t *client) {
 		}
 
 		client_send_message(client, msgtype_chat, "%s", msg);
+	}
+}
+
+void command_env(int argc, const char **argv, client_t *client) {
+	if (!client->is_op) {
+		client_send_message(client, msgtype_chat, "&cThis command is op-only");
+		return;
+	}
+
+	if (argc == 0) {
+		client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> <r> <g> <b>", argv[0]);
+		client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> default", argv[0]);
+		client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <weather> <clear|rain|snow>", argv[0]);
+		return;
+	}
+
+	map_t *map = server.map;
+
+	const char *subcommand = argv[1];
+	if (strcmp(subcommand, "colour") == 0) {
+		if (argc != 5 && argc != 3) {
+			client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> <r> <g> <b>", argv[0]);
+			client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> default", argv[0]);
+			return;
+		}
+
+		const char *type = argv[2];
+		int what = -1;
+		if (strcmp(type, "sky") == 0) what = env_colour_sky;
+		if (strcmp(type, "cloud") == 0) what = env_colour_cloud;
+		if (strcmp(type, "fog") == 0) what = env_colour_fog;
+		if (strcmp(type, "ambient") == 0) what = env_colour_ambient;
+		if (strcmp(type, "sunlight") == 0) what = env_colour_sunlight;
+		if (strcmp(type, "skybox") == 0) what = env_colour_skybox;
+
+		if (what == -1) {
+			client_send_message(client, msgtype_chat, "&cInvalid colour type");
+			return;
+		}
+
+		const char *rs = argv[3];
+		if (strcmp(rs, "default") == 0) {
+			rgb_t value = { ENV_COLOUR_DEFAULT };
+			map_set_colour(map, what, &value);
+		}
+		else if (argc == 5) {
+			const char *gs = argv[4];
+			const char *bs = argv[5];
+
+			rgb_t value;
+			value.r = atoi(rs);
+			value.g = atoi(gs);
+			value.b = atoi(bs);
+			map_set_colour(map, what, &value);
+		}
+	}
+	else if (strcmp(subcommand, "weather") == 0) {
+		if (argc != 2) {
+			client_send_message(client, msgtype_chat, "&e Syntax: &f/%s <weather> <clear|rain|snow>", argv[0]);
+			return;
+		}
+
+		const char *type = argv[2];
+		int what = -1;
+		if (strcmp(type, "clear") == 0) what = weather_clear;
+		if (strcmp(type, "rain") == 0) what = weather_rain;
+		if (strcmp(type, "snow") == 0) what = weather_snow;
+
+		if (what == -1) {
+			client_send_message(client, msgtype_chat, "&cInvalid weather type");
+			return;
+		}
+
+		map_set_weather(map, what);
 	}
 }
