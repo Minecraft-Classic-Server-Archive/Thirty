@@ -6,8 +6,8 @@ It is available under the [AGPL v3](LICENCE.md).
 ## Features
 
 - Support for Windows, Linux, macOS, BSDs
-- Multiple world generators
-- Some Classic Protocol Extensions support
+- Multiple [world generators](docs/map_generators.md)
+- Some [Classic Protocol Extensions support](docs/cpe.md)
 - WebSocket support
 
 See [the `docs` folder](docs) for documentation.
