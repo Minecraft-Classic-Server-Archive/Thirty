@@ -141,8 +141,10 @@ void server_shutdown(void) {
 	namelist_destroy(server.banned_ips);
 	namelist_destroy(server.banned_users);
 	namelist_destroy(server.ops);
-	map_save(server.map);
-	map_destroy(server.map);
+	if (server.map != NULL) {
+		map_save(server.map);
+		map_destroy(server.map);
+	}
 	closesocket(server.socket_fd);
 	rng_destroy(server.global_rng);
 }

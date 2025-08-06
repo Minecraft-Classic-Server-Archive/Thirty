@@ -114,6 +114,10 @@ void namelist_parse(namelist_t *list) {
 }
 
 void namelist_destroy(namelist_t *list) {
+	if (list == NULL) {
+		return;
+	}
+
 	for (size_t i = 0; i < list->num_names; i++) {
 		free(list->names[i]);
 	}

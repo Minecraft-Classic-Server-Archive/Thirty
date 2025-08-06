@@ -73,7 +73,9 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, signal_handler);
 	signal(SIGTERM, signal_handler);
 
-	server_init();
+	if (!server_init()) {
+		goto cleanup;
+	}
 
 	log_printf(log_info, "Ready!");
 
@@ -88,6 +90,7 @@ int main(int argc, char *argv[]) {
 		usleep(1000000 / 20);
 	}
 
+cleanup:
 	server_shutdown();
 	config_destroy();
 	log_shutdown();
