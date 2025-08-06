@@ -251,6 +251,9 @@ bool util_secure_random(void *out, size_t num) {
 		return false;
 	}
 #else
+#error "An implementation of util_secure_random is required"
+	(void) out;
+	(void) num;
 	return false;
 #endif
 
