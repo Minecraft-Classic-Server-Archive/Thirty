@@ -1,12 +1,7 @@
-FROM debian:stable AS build
+FROM registry.opensuse.org/opensuse/tumbleweed:latest AS build
 
 RUN \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export TZ=Etc/UTC && \
-  apt-get update && \
-  apt-get -y upgrade && \
-  apt-get -y install --option=Dpkg::Options::=--force-confdef \
-    build-essential mercurial mercurial-evolve zlib1g-dev meson ninja-build libcurl4-gnutls-dev pkgconf
+  zypper -n install gcc zlib-ng-devel mercurial mercurial-extension-hg-evolve meson ninja libcurl-devel
 
 COPY . /thirty
 
@@ -16,15 +11,13 @@ RUN \
   meson compile -C docker-build && \
   meson install -C docker-build
 
-FROM debian:stable-slim
+FROM registry.opensuse.org/opensuse/tumbleweed:latest
 
 RUN \
-  export DEBIAN_FRONTEND=noninteractive && \
-  export TZ=Etc/UTC && \
-  apt-get update && \
-  apt-get -y upgrade && \
-  apt-get -y install --option=Dpkg::Options::=--force-confdef \
-    zlib1g-dev libcurl3-gnutls
+  zypper -n ref && \
+  zypper -n install libz-ng2 libcurl4 && \
+  zypper -n clean -a && \
+  rm -rf /var/log/{lastlog,tallylog,zypper.log,zypp/history,YaST2}
 
 COPY --from=build /thirty-install/bin/thirty /usr/bin/thirty
 
