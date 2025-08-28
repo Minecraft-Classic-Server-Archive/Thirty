@@ -15,7 +15,7 @@ FROM registry.opensuse.org/opensuse/tumbleweed:latest
 
 RUN \
   zypper -n ref && \
-  zypper -n install libz-ng2 libcurl4 && \
+  zypper -n install libz-ng2 libcurl4 libgomp1 && \
   zypper -n clean -a && \
   rm -rf /var/log/{lastlog,tallylog,zypper.log,zypp/history,YaST2}
 
