@@ -68,6 +68,7 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 
 	state->heightmap = calloc(map->width * map->depth * map->height, sizeof(int));
 
+#pragma omp parallel for
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
 		double heightLow = combinednoise_compute2d(noise1, (double)x * 1.3, (double)z * 1.3) / 6 - 4;
@@ -100,6 +101,7 @@ void gen_strata(map_t *map, genstate_t *state) {
 	mapgen_percent_init(&pct, "Soiling...", map->width * map->depth * map->height);
 	octavenoise_t *noise = octavenoise_create(state->rng, 8);
 
+#pragma omp parallel for
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
 		size_t dirtThickness = (int) octavenoise_compute2d(noise, (double)x, (double)z) / 24 - 4;
@@ -131,6 +133,7 @@ void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block) {
 	unsigned int numCaves = (map->width * map->depth * map->height) / 8192;
 	mapgen_percent_init(&pct, "Carving...", numCaves);
 
+#pragma omp parallel for
 	for (unsigned int i = 0; i < numCaves; i++) {
 		double caveX = rng_next2(rng, 0, (int)map->width);
 		double caveY = rng_next2(rng, 0, (int)map->depth);
@@ -176,6 +179,7 @@ void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block) {
 void gen_ore(map_t *map, rng_t *rng, int8_t block, float abundance) {
 	int numVeins = (int) (((double) (map->width * map->depth * map->height) * abundance) / 16384.0f);
 
+#pragma omp parallel for
 	for (int i = 0; i < numVeins; i++) {
 		double veinX = rng_next2(rng, 0, (int)map->width);
 		double veinY = rng_next2(rng, 0, (int)map->depth);
@@ -258,6 +262,7 @@ void gen_surface(map_t *map, genstate_t *state) {
 	mapgen_percent_t pct;
 	mapgen_percent_init(&pct, "Growing...", map->width * map->height);
 
+#pragma omp parallel for
 	for (unsigned int x = 0; x < map->width; x++)
 		for (unsigned int z = 0; z < map->height; z++) {
 			bool sandChance = octavenoise_compute2d(noise1, x, z) > 8;
@@ -293,6 +298,7 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 	mapgen_percent_t pct;
 	mapgen_percent_init(&pct, "Planting...", numFlowers + numShrooms + numTrees);
 
+#pragma omp parallel for
 	for (int i = 0; i < numFlowers; i++) {
 		uint8_t flowerType = rng_next_boolean(rng) ? dandelion : rose;
 
@@ -321,6 +327,7 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 		mapgen_percent_increment(&pct);
 	}
 
+#pragma omp parallel for
 	for (int i = 0; i < numShrooms; i++) {
 		uint8_t shroomType = rng_next_boolean(rng) ? brown_mushroom : red_mushroom;
 
@@ -350,6 +357,7 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 		mapgen_percent_increment(&pct);
 	}
 
+#pragma omp parallel for
 	for (int i = 0; i < numTrees; i++) {
 		int patchX = rng_next2(rng, 0, (int)map->width);
 		int patchZ = rng_next2(rng, 0, (int)map->height);
