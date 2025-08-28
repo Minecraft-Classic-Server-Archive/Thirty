@@ -20,7 +20,7 @@ project('thirty', 'c',
 )
 
 cc = meson.get_compiler('c')
-ccflags = []
+ccflags = ['-ftree-vectorize']
 
 version_h = configure_file(input: 'version.h.in', output: 'version.h', configuration: {
     'project_version': meson.project_version(),
@@ -97,5 +97,5 @@ endif
 
 libdir = include_directories('lib')
 
-executable('thirty', source_files, dependencies: deps, include_directories: libdir, install: true)
+executable('thirty', source_files, dependencies: deps, include_directories: libdir, c_args: ccflags, install: true)
 install_data(sources: 'settings.ini', rename: 'thirty.ini', install_dir: '/etc')
