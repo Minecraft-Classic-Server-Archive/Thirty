@@ -86,6 +86,7 @@ deps = [
     dependency('threads', required: true),
     dependency('zlib', required: true),
     dependency('libcurl', required: true),
+    dependency('openmp')
 ]
 
 if build_machine.system() == 'windows'

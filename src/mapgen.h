@@ -17,12 +17,20 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdatomic.h>
 
 /* used for flood fill */
 typedef struct fastintstack_s {
 	unsigned int *values;
 	unsigned int capacity, size;
 } fastintstack_t;
+
+typedef struct{
+	char prefix[128];
+	atomic_size_t n, total;
+	atomic_int last;
+} mapgen_percent_t;
 
 typedef struct map_s map_t;
 typedef struct rng_s rng_t;
@@ -51,3 +59,6 @@ fastintstack_t *fastintstack_create(unsigned int capacity);
 unsigned int fastintstack_pop(fastintstack_t *);
 void fastintstack_push(fastintstack_t *, unsigned int);
 void fastintstack_destroy(fastintstack_t *);
+
+void mapgen_percent_init(mapgen_percent_t *pct, const char *prefix, size_t total);
+void mapgen_percent_increment(mapgen_percent_t *pct);

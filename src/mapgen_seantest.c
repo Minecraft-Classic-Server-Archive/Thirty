@@ -36,7 +36,7 @@ typedef struct {
 	octavenoise_t *basenoise3;
 	combinednoise_t *overhangheight;
 	octavenoise_t *overhangthreshold;
-	combinednoise_t *overhangamplify;
+	octavenoise_t *overhangamplify;
 	octavenoise_t *overhangsample;
 	octavenoise_t *dirtthickness;
 	octavenoise_t *beachnoise;
@@ -55,7 +55,7 @@ void mapgen_seantest(map_t *map) {
 	state.overhangheight = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
 	state.overhangsample = octavenoise_create(state.rng, 8);
 	state.overhangthreshold = octavenoise_create(state.rng, 4);
-	state.overhangamplify = combinednoise_create(octavenoise_create(state.rng, 8), octavenoise_create(state.rng, 8));
+	state.overhangamplify = octavenoise_create(state.rng, 8);
 	state.dirtthickness = octavenoise_create(state.rng, 8);
 	state.beachnoise = octavenoise_create(state.rng, 6);
 
@@ -70,7 +70,7 @@ void mapgen_seantest(map_t *map) {
 
 	octavenoise_destroy(state.beachnoise);
 	octavenoise_destroy(state.dirtthickness);
-	combinednoise_destroy(state.overhangamplify);
+	octavenoise_destroy(state.overhangamplify);
 	octavenoise_destroy(state.overhangthreshold);
 	octavenoise_destroy(state.overhangsample);
 	combinednoise_destroy(state.overhangheight);
@@ -84,10 +84,14 @@ void mapgen_seantest(map_t *map) {
 void gen_noise(map_t *map, genstate_t *state) {
 	int waterLevel = ((int)map->depth / 2) - 1;
 
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Generating noise", map->width * map->depth * map->height);
+
+#pragma omp parallel for
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
-		double h1 = combinednoise_compute2d(state->basenoise1, (double)x / 2.3, (double)z / 2.3) / 3.0 - 2.0;
-		double h2 = combinednoise_compute2d(state->basenoise2, (double)x / 1.3, (double)z / 1.3) / 2.0 - 6.0;
+		double h1 = combinednoise_compute2d(state->basenoise1, (double)x / 5.3, (double)z / 5.3) / 3.0 - 2.0;
+		double h2 = combinednoise_compute2d(state->basenoise2, (double)x / 3.4, (double)z / 3.4) / 2.0 - 6.0;
 		double hr;
 		if (octavenoise_compute2d(state->basenoise3, (double)x, (double)z) / 8.0 > 0) {
 			hr = h1;
@@ -100,8 +104,8 @@ void gen_noise(map_t *map, genstate_t *state) {
 		unsigned int lm = map->depth;
 
 		double bh = waterLevel + hr;
-		double th = waterLevel + (combinednoise_compute2d(state->overhangheight, (double)x / 4.1, (double)z / 4.1) / 2.5) + (combinednoise_compute2d(state->overhangamplify, (double)x / 3.7, (double)z / 3.7) / 2.0);
-		double tt = (octavenoise_compute2d(state->overhangthreshold, (double)x / 4.1, (double)z / 4.1) / 3.0) - (combinednoise_compute2d(state->overhangamplify, (double)x, (double)z) / 3.0);
+		double th = waterLevel + (combinednoise_compute2d(state->overhangheight, (double)x / 3.1, (double)z / 3.1) / 2.5) + (octavenoise_compute2d(state->overhangamplify, (double)x / 3.7, (double)z / 3.7) / 4.4);
+		double tt = (octavenoise_compute2d(state->overhangthreshold, (double)x / 3.1, (double)z / 3.1) / 3.0) - (octavenoise_compute2d(state->overhangamplify, (double)x / 4.9, (double)z / 4.9) / 3.0);
 
 		for (size_t y = 0; y < map->depth; y++) {
 			double ts = octavenoise_compute3d(state->overhangsample, (double)x / 3.3, (double)y, (double)z / 3.3) / 3.0;
@@ -110,6 +114,8 @@ void gen_noise(map_t *map, genstate_t *state) {
 				if (y > hm) hm = y;
 				if (y < lm) lm = y;
 			}
+
+			mapgen_percent_increment(&pct);
 		}
 
 		state->heightmap[x + z * map->width] = hm;
@@ -119,6 +125,10 @@ void gen_noise(map_t *map, genstate_t *state) {
 void gen_surface(map_t *map, genstate_t *state) {
 	int waterLevel = ((int)map->depth / 2) - 1;
 
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Generating surface", map->width * map->height);
+
+#pragma omp parallel for
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
 		int d = 0;
@@ -168,5 +178,7 @@ void gen_surface(map_t *map, genstate_t *state) {
 			map_set(map, x, y, z, newtype);
 			d++;
 		}
+
+		mapgen_percent_increment(&pct);
 	}
 }

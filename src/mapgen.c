@@ -225,3 +225,18 @@ void mapgen_grow_tree(map_t *map, rng_t *rng, int x, int y, int z, int height) {
 		map_set(map, x, yy, z, wood);
 	}
 }
+
+void mapgen_percent_init(mapgen_percent_t *pct, const char *prefix, size_t total) {
+	memset(pct, 0, sizeof(*pct));
+	strncpy(pct->prefix, prefix, sizeof(pct->prefix));
+	pct->total = total;
+}
+
+void mapgen_percent_increment(mapgen_percent_t *pct) {
+	pct->n++;
+	int percent = (int)((double)pct->n / (double)pct->total * 100.0);
+	if (percent != pct->last) {
+		log_printf(log_info, "%s % 3d%%", pct->prefix, percent);
+		pct->last = percent;
+	}
+}
