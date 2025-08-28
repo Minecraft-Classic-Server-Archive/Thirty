@@ -59,6 +59,9 @@ void mapgen_classic(map_t *map) {
 }
 
 void gen_heightmap(map_t *map, genstate_t *state) {
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Raising...", map->width * map->height);
+
 	combinednoise_t *noise1 = combinednoise_create(octavenoise_create(state->rng, 8), octavenoise_create(state->rng, 8));
 	combinednoise_t *noise2 = combinednoise_create(octavenoise_create(state->rng, 8), octavenoise_create(state->rng, 8));
 	octavenoise_t *noise3 = octavenoise_create(state->rng, 6);
@@ -84,6 +87,7 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 		}
 
 		state->heightmap[x + z * map->width] = (unsigned int) (heightResult + ((double)map->depth / 2.0));
+		mapgen_percent_increment(&pct);
 	}
 
 	combinednoise_destroy(noise1);
@@ -92,6 +96,8 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 }
 
 void gen_strata(map_t *map, genstate_t *state) {
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Soiling...", map->width * map->depth * map->height);
 	octavenoise_t *noise = octavenoise_create(state->rng, 8);
 
 	for (size_t x = 0; x < map->width; x++)
@@ -112,6 +118,7 @@ void gen_strata(map_t *map, genstate_t *state) {
 			}
 
 			map_set(map, x, y, z, block);
+			mapgen_percent_increment(&pct);
 		}
 	}
 
@@ -119,7 +126,10 @@ void gen_strata(map_t *map, genstate_t *state) {
 }
 
 void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block) {
+	mapgen_percent_t pct;
+
 	unsigned int numCaves = (map->width * map->depth * map->height) / 8192;
+	mapgen_percent_init(&pct, "Carving...", numCaves);
 
 	for (unsigned int i = 0; i < numCaves; i++) {
 		double caveX = rng_next2(rng, 0, (int)map->width);
@@ -158,6 +168,8 @@ void gen_caves(map_t *map, rng_t *rng, bool filter_stone, uint8_t block) {
 				fill_oblate_spherioid(map, centreX, centreY, centreZ, radius, filter_stone, block);
 			}
 		}
+
+		mapgen_percent_increment(&pct);
 	}
 }
 
@@ -197,14 +209,19 @@ void gen_water(map_t *map, rng_t *rng) {
 	int waterLevel = ((int)map->depth / 2) - 1;
 	int numSources = (int)(map->width * map->height) / 800;
 
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Watering...", map->width + map->height + numSources);
+
 	for (size_t x = 0; x < map->width; x++) {
 		flood_fill(map, map_get_block_index(map, x, waterLevel, 0), water);
 		flood_fill(map, map_get_block_index(map, x, waterLevel, map->height - 1), water);
+		mapgen_percent_increment(&pct);
 	}
 
 	for (size_t z = 0; z < map->height; z++) {
 		flood_fill(map, map_get_block_index(map, 0, waterLevel, z), water);
 		flood_fill(map, map_get_block_index(map, map->width - 1, waterLevel, z), water);
+		mapgen_percent_increment(&pct);
 	}
 
 	for (int i = 0; i < numSources; i++) {
@@ -213,6 +230,7 @@ void gen_water(map_t *map, rng_t *rng) {
 		int y = waterLevel - rng_next2(rng, 0, 2);
 
 		flood_fill(map, map_get_block_index(map, x, y, z), water);
+		mapgen_percent_increment(&pct);
 	}
 }
 
@@ -220,18 +238,25 @@ void gen_lava(map_t *map, genstate_t *state) {
 	int waterLevel = ((int)map->depth / 2) - 1;
 	int numSources = (int)(map->width * map->height) / 20000;
 
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Melting...", numSources);
+
 	for (int i = 0; i < numSources; i++) {
 		int x = rng_next2(state->rng, 0, (int)map->width);
 		int z = rng_next2(state->rng, 0, (int)map->height);
 		int y = (int) ((float)(waterLevel - 3) * rng_next_float(state->rng) * rng_next_float(state->rng));
 
 		flood_fill(map, map_get_block_index(map, x, y, z), lava);
+		mapgen_percent_increment(&pct);
 	}
 }
 
 void gen_surface(map_t *map, genstate_t *state) {
 	octavenoise_t *noise1 = octavenoise_create(state->rng, 8);
 	octavenoise_t *noise2 = octavenoise_create(state->rng, 8);
+
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Growing...", map->width * map->height);
 
 	for (unsigned int x = 0; x < map->width; x++)
 		for (unsigned int z = 0; z < map->height; z++) {
@@ -252,6 +277,8 @@ void gen_surface(map_t *map, genstate_t *state) {
 					map_set(map, x, y, z, grass);
 				}
 			}
+
+			mapgen_percent_increment(&pct);
 		}
 
 	octavenoise_destroy(noise1);
@@ -262,6 +289,9 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 	int numFlowers = (int)(map->width * map->height) / 3000;
 	int numShrooms = (int)(map->width * map->depth * map->height) / 2000;
 	int numTrees = (int)(map->width * map->height) / 4000;
+
+	mapgen_percent_t pct;
+	mapgen_percent_init(&pct, "Planting...", numFlowers + numShrooms + numTrees);
 
 	for (int i = 0; i < numFlowers; i++) {
 		uint8_t flowerType = rng_next_boolean(rng) ? dandelion : rose;
@@ -287,6 +317,8 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 				}
 			}
 		}
+
+		mapgen_percent_increment(&pct);
 	}
 
 	for (int i = 0; i < numShrooms; i++) {
@@ -314,6 +346,8 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 				}
 			}
 		}
+
+		mapgen_percent_increment(&pct);
 	}
 
 	for (int i = 0; i < numTrees; i++) {
@@ -338,5 +372,7 @@ void gen_plants(map_t *map, rng_t *rng, unsigned int *heightmap) {
 				}
 			}
 		}
+
+		mapgen_percent_increment(&pct);
 	}
 }
