@@ -233,10 +233,10 @@ void mapgen_percent_init(mapgen_percent_t *pct, const char *prefix, size_t total
 }
 
 void mapgen_percent_increment(mapgen_percent_t *pct) {
-	pct->n++;
+	size_t last_n = pct->n++;
+	int lastpercent = (int)((double)last_n / (double)pct->total * 100.0);
 	int percent = (int)((double)pct->n / (double)pct->total * 100.0);
-	if (percent != pct->last) {
+	if (percent != lastpercent) {
 		log_printf(log_info, "%s % 3d%%", pct->prefix, percent);
-		pct->last = percent;
 	}
 }

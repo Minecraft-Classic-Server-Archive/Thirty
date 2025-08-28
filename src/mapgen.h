@@ -29,7 +29,6 @@ typedef struct fastintstack_s {
 typedef struct{
 	char prefix[128];
 	atomic_size_t n, total;
-	atomic_int last;
 } mapgen_percent_t;
 
 typedef struct map_s map_t;
