@@ -57,6 +57,8 @@ static void client_ws_disconnect(client_t *client, int code);
 static void client_ws_wrap_packet(client_t *client, buffer_t *buffer);
 static void client_send_env_colour(client_t *client, envcolourtype_t colour);
 
+client_t command_standin;
+
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
 
@@ -779,6 +781,17 @@ uint8_t client_filter_block(client_t *client, uint8_t block) {
 }
 
 void client_send_message(client_t *client, msgtype_t type, const char *fmt, ...) {
+	if (client == &command_standin)
+	{
+		char buffer[65];
+		va_list args;
+		va_start(args, fmt);
+		vsnprintf(buffer, sizeof(buffer), fmt, args);
+		va_end(args);
+		log_printf(log_info, "%s", buffer);
+		return;
+	}
+
 	if (client->protocol_version < 3) {
 		return;
 	}
@@ -1048,4 +1061,11 @@ void client_ws_disconnect(client_t *client, int code) {
 	buffer_write_uint8(client->ws_out_buffer, 0x02);
 	buffer_write_uint16be(client->ws_out_buffer, code);
 	client_send(client, client->ws_out_buffer);
+}
+
+void create_console_standin(void) {
+	memset(&command_standin, 0, sizeof(command_standin));
+	strcpy(command_standin.name, "<server>");
+	command_standin.idx = -1;
+	command_standin.is_op = true;
 }

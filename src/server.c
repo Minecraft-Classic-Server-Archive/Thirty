@@ -34,7 +34,7 @@
 #include "config.h"
 #include "log.h"
 #include "namelist.h"
-#include "mapimage.h"
+#include "commands.h"
 
 #ifndef _WIN32
 #include <netinet/tcp.h>
@@ -133,6 +133,8 @@ bool server_init(void) {
 	server_heartbeat();
 	server.last_heartbeat = get_time_s();
 
+	create_console_standin();
+
 	return true;
 }
 
@@ -150,6 +152,7 @@ void server_shutdown(void) {
 }
 
 void server_tick(void) {
+	command_tick_readline();
 	server_accept();
 	map_tick(server.map);
 

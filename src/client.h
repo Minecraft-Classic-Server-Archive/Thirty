@@ -87,6 +87,8 @@ uint8_t client_filter_block(client_t *client, uint8_t block);
 void client_send_message(client_t *client, msgtype_t type, const char *fmt, ...);
 void client_teleport(client_t *client, float x, float y, float z, float yaw, float pitch);
 
+void create_console_standin(void);
+
 typedef struct {
 	client_t *client;
 	uint8_t *data;

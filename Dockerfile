@@ -1,7 +1,7 @@
 FROM registry.opensuse.org/opensuse/tumbleweed:latest AS build
 
 RUN \
-  zypper -n install gcc zlib-ng-devel mercurial mercurial-extension-hg-evolve meson ninja libcurl-devel
+  zypper -n install gcc zlib-ng-devel mercurial mercurial-extension-hg-evolve meson ninja libcurl-devel readline-devel
 
 COPY . /thirty
 

@@ -22,6 +22,7 @@
 #include "server.h"
 #include "sockets.h"
 #include "blocks.h"
+#include "commands.h"
 #include "util.h"
 #include "config.h"
 #include "log.h"
@@ -77,7 +78,8 @@ int main(int argc, char *argv[]) {
 		goto cleanup;
 	}
 
-	log_printf(log_info, "Ready!");
+	command_readline_init();
+	log_printf(log_info, "Ready! Type 'help' for a list of commands.");
 
 	while (running) {
 		double start = get_time_s();
@@ -91,6 +93,7 @@ int main(int argc, char *argv[]) {
 	}
 
 cleanup:
+	command_readline_shutdown();
 	server_shutdown();
 	config_destroy();
 	log_shutdown();

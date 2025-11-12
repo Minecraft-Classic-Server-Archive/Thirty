@@ -16,10 +16,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+#include <poll.h>
 #include "commands.h"
 #include "client.h"
 #include "config.h"
-#include "log.h"
 #include "version.h"
 #include "cpe.h"
 #include "map.h"
@@ -35,6 +38,9 @@ typedef struct commanddef_s {
 	bool op_only;
 } commanddef_t;
 
+static void command_readline_callback(char *line);
+static char **command_readline_completion(const char *text, int start, int end);
+static char *command_readline_generator(const char *text, int state);
 static commanddef_t *command_find(const char *name);
 
 static void command_version(int argc, const char **argv, client_t *client);
@@ -48,6 +54,9 @@ static void command_op(int argc, const char **argv, client_t *client);
 static void command_save(int argc, const char **argv, client_t *client);
 static void command_online(int argc, const char **argv, client_t *client);
 static void command_env(int argc, const char **argv, client_t *client);
+
+bool readline_enabled = false;
+bool handling_readline = false;
 
 static commanddef_t commands[] = {
 	{ "ban", command_ban, "Manage username bans", true },
@@ -94,12 +103,86 @@ void command_execute(client_t *client, const char *command) {
 		if (command != NULL) {
 			command->func(argc - 1, (const char **)args, client);
 		}
+		else {
+			client_send_message(client, msgtype_chat, "&cNo command exists with that name.");
+		}
 
 		for (int i = 0; i < argc; i++) {
 			free(args[i]);
 		}
 
 		free(args);
+	}
+}
+
+void command_readline_init(void) {
+	rl_readline_name = "thirty";
+	rl_callback_handler_install("> ", command_readline_callback);
+	rl_attempted_completion_function = command_readline_completion;
+	readline_enabled = true;
+}
+
+void command_readline_shutdown(void) {
+	readline_enabled = false;
+	rl_clear_visible_line();
+	rl_callback_handler_remove();
+}
+
+void command_readline_callback(char *line) {
+	if (!line) {
+		return;
+	}
+
+	handling_readline = true;
+	command_execute(&command_standin, line);
+	handling_readline = false;
+
+	add_history(line);
+	free(line);
+}
+
+char **command_readline_completion(const char *text, int start, int end) {
+	(void) text;
+	(void) end;
+
+	if (start == 0) {
+		return rl_completion_matches(text, command_readline_generator);
+	}
+
+	return NULL;
+}
+
+char *command_readline_generator(const char *text, int state) {
+	static size_t index = 0;
+	static size_t len = 0;
+
+	if (state == 0) {
+		index = 0;
+		len = strlen(text);
+	}
+
+	while (index < sizeof(commands) / sizeof(commanddef_t)) {
+		commanddef_t *cmd = &commands[index++];
+
+		if (strncmp(cmd->name, text, len) == 0) {
+			return strdup(cmd->name);
+		}
+	}
+
+	return NULL;
+}
+
+void command_tick_readline(void) {
+	struct pollfd fd = { fileno(stdin), POLLIN, 0 };
+
+	int r = poll(&fd, 1, 0);
+	if (r < 0) {
+		perror("poll on stdin");
+		return;
+	}
+
+	if (fd.revents == POLLIN) {
+		rl_callback_read_char();
 	}
 }
 

@@ -18,12 +18,15 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <time.h>
+#include <readline/readline.h>
 #include "log.h"
-
 #include "util.h"
 
 static FILE *log_fp = NULL;
 static pthread_mutex_t log_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+extern bool readline_enabled;
+extern bool handling_readline;
 
 static const char *level_prefixes[] = {
 	"INFO",
@@ -70,8 +73,17 @@ void log_printf(enum loglevel_e level, const char *fmt, ...) {
 		va_end(args);
 	}
 
+	if (readline_enabled && !handling_readline) {
+		rl_clear_visible_line();
+	}
+
 	fprintf(outbuf, "[%s %s] ", level_prefixes[level], timestamp);
 	util_print_coloured(outbuf, buffer);
+
+	if (readline_enabled && !handling_readline) {
+		rl_on_new_line();
+		rl_redisplay();
+	}
 
 	fprintf(log_fp, "[%s %s] ", level_prefixes[level], timestamp);
 	util_print_strip_colours(log_fp, buffer);
