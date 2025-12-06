@@ -116,6 +116,8 @@ void command_execute(client_t *client, const char *command) {
 }
 
 void command_readline_init(void) {
+	rl_catch_signals = 0;
+	rl_catch_sigwinch = 0;
 	rl_readline_name = "thirty";
 	rl_callback_handler_install("> ", command_readline_callback);
 	rl_attempted_completion_function = command_readline_completion;

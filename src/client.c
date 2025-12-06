@@ -96,7 +96,10 @@ void client_init(client_t *client, int fd, size_t idx) {
 
 void client_destroy(client_t *client) {
 	free(client->extensions);
-	closesocket(client->socket_fd);
+	if (client->socket_fd != INVALID_SOCKET) {
+		closesocket(client->socket_fd);
+		client->socket_fd = INVALID_SOCKET;
+	}
 	buffer_destroy(client->ws_out_buffer);
 	buffer_destroy(client->ws_frame);
 	buffer_destroy(client->in_buffer);
@@ -737,8 +740,10 @@ void client_disconnect(client_t *client, const char *msg) {
 	}
 
 	client->connected = false;
-	closesocket(client->socket_fd);
-	client->socket_fd = 0;
+	if (client->socket_fd != INVALID_SOCKET) {
+		closesocket(client->socket_fd);
+		client->socket_fd = INVALID_SOCKET;
+	}
 
 	if (client->spawned) {
 		client->spawned = false;
