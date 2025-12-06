@@ -175,7 +175,7 @@ char *command_readline_generator(const char *text, int state) {
 }
 
 void command_tick_readline(void) {
-#ifdef USE_POLL
+#if defined(USE_POLL)
 	struct pollfd fd = { fileno(stdin), POLLIN, 0 };
 
 	int r = poll(&fd, 1, 0);
@@ -185,6 +185,12 @@ void command_tick_readline(void) {
 	}
 
 	if (fd.revents == POLLIN) {
+		rl_callback_read_char();
+	}
+#elif defined(_WIN32)
+	DWORD n = 0;
+	GetNumberOfConsoleInputEvents(GetStdHandle(STD_INPUT_HANDLE), &n);
+	if (n > 0) {
 		rl_callback_read_char();
 	}
 #endif
