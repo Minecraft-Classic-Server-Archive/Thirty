@@ -412,6 +412,9 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 				nbt_destroy(subtag, true);
 			}
 
+			// destroy end tag
+			nbt_destroy(subtag, true);
+
 			t->list = calloc(t->array_size, sizeof(*t->list));
 
 			buffer_seek(buffer, off);
@@ -420,6 +423,9 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 				t->list[i] = subtag;
 				i++;
 			}
+
+			// destroy end tag
+			nbt_destroy(subtag, true);
 
 			break;
 		}
