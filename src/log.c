@@ -18,7 +18,9 @@
 #include <stdarg.h>
 #include <pthread.h>
 #include <time.h>
+#ifdef USE_READLINE
 #include <readline/readline.h>
+#endif
 #include "log.h"
 #include "util.h"
 
@@ -73,17 +75,21 @@ void log_printf(enum loglevel_e level, const char *fmt, ...) {
 		va_end(args);
 	}
 
+#ifdef USE_READLINE
 	if (readline_enabled && !handling_readline) {
 		rl_clear_visible_line();
 	}
+#endif
 
 	fprintf(outbuf, "[%s %s] ", level_prefixes[level], timestamp);
 	util_print_coloured(outbuf, buffer);
 
+#ifdef USE_READLINE
 	if (readline_enabled && !handling_readline) {
 		rl_on_new_line();
 		rl_redisplay();
 	}
+#endif
 
 	fprintf(log_fp, "[%s %s] ", level_prefixes[level], timestamp);
 	util_print_strip_colours(log_fp, buffer);

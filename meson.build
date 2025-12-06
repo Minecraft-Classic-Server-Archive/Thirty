@@ -81,13 +81,19 @@ source_files = [
     version_h, hg_identify
 ]
 
+readline = dependency('readline', required: get_option('use_readline'))
+
 deps = [
     dependency('threads', required: true),
     dependency('zlib', required: true),
     dependency('libcurl', required: true),
-    dependency('readline', required: true),
-    dependency('openmp')
+    dependency('openmp'),
+    readline,
 ]
+
+if readline.found()
+    add_project_arguments('-DUSE_READLINE', language: 'c')
+endif
 
 if build_machine.system() == 'windows'
     deps += cc.find_library('bcrypt')

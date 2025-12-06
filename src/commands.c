@@ -17,8 +17,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef USE_READLINE
 #include <readline/readline.h>
 #include <readline/history.h>
+#endif
 #ifdef USE_POLL
 #include <poll.h>
 #elif !defined(_WIN32)
@@ -43,9 +45,6 @@ typedef struct commanddef_s {
 	bool op_only;
 } commanddef_t;
 
-static void command_readline_callback(char *line);
-static char **command_readline_completion(const char *text, int start, int end);
-static char *command_readline_generator(const char *text, int state);
 static commanddef_t *command_find(const char *name);
 
 static void command_version(int argc, const char **argv, client_t *client);
@@ -121,6 +120,11 @@ void command_execute(client_t *client, const char *command) {
 		free(args);
 	}
 }
+
+#ifdef USE_READLINE
+static void command_readline_callback(char *line);
+static char **command_readline_completion(const char *text, int start, int end);
+static char *command_readline_generator(const char *text, int state);
 
 void command_readline_init(void) {
 	rl_readline_name = "thirty";
@@ -213,6 +217,11 @@ void command_tick_readline(void) {
 	}
 #endif
 }
+#else
+void command_readline_init(void) { }
+void command_readline_shutdown(void) { }
+void command_tick_readline(void) { }
+#endif
 
 commanddef_t *command_find(const char *name) {
 	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
