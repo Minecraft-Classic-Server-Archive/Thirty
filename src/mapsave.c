@@ -264,6 +264,8 @@ map_t *map_load(const char *name) {
 		} while (strm.avail_out == 0);
 	} while (ret != Z_STREAM_END);
 
+	inflateEnd(&strm);
+
 	fclose(fp); fp = NULL;
 	free(outbuf); outbuf = NULL;
 	free(inbuf); inbuf = NULL;
