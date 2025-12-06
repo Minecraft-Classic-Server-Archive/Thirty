@@ -26,7 +26,7 @@ version_h = configure_file(input: 'version.h.in', output: 'version.h', configura
     'project_version': meson.project_version()
 })
 
-hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{ifeq(latesttag, "null", "", latesttag)}{ifeq(latesttagdistance, 0, "", "+{latesttagdistance}.{node|short}")}', '-r', '.'], input: 'hginfo.h.in', output: 'hginfo.h', replace_string: '@hg_changeset@')
+hg_identify = vcs_tag(command: ['hg', 'identify', '-T', '{ifeq(latesttag, "null", "", latesttag)}{ifeq(latesttagdistance, 0, "", "+{latesttagdistance}.{node|short}")}{if(topic, "-{topic}")}', '-r', '.'], input: 'hginfo.h.in', output: 'hginfo.h', replace_string: '@hg_changeset@')
 
 source_files = [
     'src/blocks.c',
