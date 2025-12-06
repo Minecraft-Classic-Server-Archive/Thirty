@@ -37,21 +37,27 @@ static const char *level_prefixes[] = {
 
 void log_init(void) {
 	log_fp = fopen("server.log", "a");
+	if (log_fp != NULL) {
+		char timestamp[32];
+		{
+			time_t now;
+			time(&now);
+			struct tm *info = localtime(&now);
+			strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", info);
+		}
 
-	char timestamp[32];
-	{
-		time_t now;
-		time(&now);
-		struct tm *info = localtime(&now);
-		strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", info);
+		fprintf(log_fp, "--- Log opened at %s ---\n", timestamp);
 	}
-
-	fprintf(log_fp, "--- Log opened at %s ---\n", timestamp);
+	else {
+		perror("Failed to open log file");
+	}
 }
 
 void log_shutdown(void) {
-	fprintf(log_fp, "\n");
-	fclose(log_fp);
+	if (log_fp != NULL) {
+		fprintf(log_fp, "\n");
+		fclose(log_fp);
+	}
 }
 
 void log_printf(enum loglevel_e level, const char *fmt, ...) {
@@ -91,9 +97,11 @@ void log_printf(enum loglevel_e level, const char *fmt, ...) {
 	}
 #endif
 
-	fprintf(log_fp, "[%s %s] ", level_prefixes[level], timestamp);
-	util_print_strip_colours(log_fp, buffer);
-	fflush(log_fp);
+	if (log_fp != NULL) {
+		fprintf(log_fp, "[%s %s] ", level_prefixes[level], timestamp);
+		util_print_strip_colours(log_fp, buffer);
+		fflush(log_fp);
+	}
 
 	pthread_mutex_unlock(&log_mutex);
 }
