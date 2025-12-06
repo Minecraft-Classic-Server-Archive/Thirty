@@ -21,6 +21,8 @@
 #include <readline/history.h>
 #ifdef USE_POLL
 #include <poll.h>
+#elif !defined(_WIN32)
+#include <sys/select.h>
 #endif
 #include "commands.h"
 #include "client.h"
@@ -191,6 +193,19 @@ void command_tick_readline(void) {
 	DWORD n = 0;
 	GetNumberOfConsoleInputEvents(GetStdHandle(STD_INPUT_HANDLE), &n);
 	if (n > 0) {
+		rl_callback_read_char();
+	}
+#else
+	fd_set fds;
+	struct timeval tv = { 0, 0 };
+	FD_ZERO(&fds);
+	FD_SET(fileno(stdin), &fds);
+
+	int r = select(1, &fds, NULL, NULL, &tv);
+	if (r == -1) {
+		perror("select on stdin");
+	}
+	else if (r > 0) {
 		rl_callback_read_char();
 	}
 #endif
