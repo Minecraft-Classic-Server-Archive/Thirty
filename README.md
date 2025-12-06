@@ -30,16 +30,22 @@ The MinGW64 and clang64 environments work; clang seems to work better for debugg
 pacman -S mercurial $MINGW_PACKAGE_PREFIX-toolchain $MINGW_PACKAGE_PREFIX-meson $MINGW_PACKAGE_PREFIX-ninja $MINGW_PACKAGE_PREFIX-zlib
 ```
 
+#### openSUSE
+
+```bash
+zypper in mercurial gcc meson ninja zlib-ng-devel libcurl-devel readline-devel
+```
+
 #### Debian
 
 ```bash
-apt install mercurial build-essential meson ninja-build zlib1g-dev libcurl4-gnutls-dev pkgconf
+apt install mercurial build-essential meson ninja-build zlib1g-dev libcurl4-gnutls-dev pkgconf libreadline-dev
 ```
 
 #### Alpine
 
 ```bash
-apk add --update mercurial alpine-sdk zlib-dev samurai meson curl-dev
+apk add --update mercurial alpine-sdk zlib-dev samurai meson curl-dev readline-dev
 ```
 
 ### Clone repository
