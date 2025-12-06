@@ -76,7 +76,7 @@ static void *heartbeat_main(void *data) {
 	snprintf(tmp, sizeof tmp, "Thirty %s", HG_CHANGESET_HASH);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, tmp);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, heartbeat_curl_write_func);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (char *)response);
 
 	CURLcode res = curl_easy_perform(curl);
 	if (res == CURLE_OK) {
