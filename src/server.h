@@ -55,4 +55,6 @@ void server_heartbeat(void);
 
 void server_broadcast(const char *msg, ...) __attribute__((format(printf, 1, 2)));
 
+void server_stop(void); // actually defined in main.c
+
 extern server_t server;

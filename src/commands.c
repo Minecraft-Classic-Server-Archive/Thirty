@@ -32,6 +32,7 @@
 #include "map.h"
 #include "server.h"
 #include "namelist.h"
+#include "log.h"
 
 typedef void (*commandfunc_t)(int argc, const char **argv, client_t *client);
 
@@ -56,6 +57,7 @@ static void command_ipban(int argc, const char **argv, client_t *client);
 static void command_whitelist(int argc, const char **argv, client_t *client);
 static void command_op(int argc, const char **argv, client_t *client);
 static void command_save(int argc, const char **argv, client_t *client);
+static void command_stop(int argc, const char **argv, client_t *client);
 static void command_online(int argc, const char **argv, client_t *client);
 static void command_env(int argc, const char **argv, client_t *client);
 
@@ -71,6 +73,7 @@ static commanddef_t commands[] = {
 	{ "op", command_op, "Manage server admins", true },
 	{ "online", command_online, "List online players", false },
 	{ "save", command_save, "Save the level", true },
+	{ "stop", command_stop, "Stop the server", true },
 	{ "teleport", command_teleport, "Teleport a player", false },
 	{ "version", command_version, "Display software version", false },
 	{ "whitelist", command_whitelist, "Manage server whitelist", true },
@@ -373,6 +376,19 @@ void command_save(int argc, const char **argv, client_t *client) {
 	}
 
 	map_save(server.map);
+}
+
+void command_stop(int argc, const char **argv, client_t *client) {
+	(void) argc;
+	(void) argv;
+
+	if (!client->is_op) {
+		client_send_message(client, msgtype_chat, "&cThis command is op-only");
+		return;
+	}
+
+	log_printf(log_info, "%s is stopping the server", client->name);
+	server_stop();
 }
 
 void command_online(int argc, const char **argv, client_t *client) {

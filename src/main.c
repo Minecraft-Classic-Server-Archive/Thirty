@@ -107,5 +107,9 @@ cleanup:
 
 void signal_handler(int signum) {
 	log_printf(log_info, "Received signal %d, will exit.", signum);
+	server_stop();
+}
+
+void server_stop() {
 	running = false;
 }
