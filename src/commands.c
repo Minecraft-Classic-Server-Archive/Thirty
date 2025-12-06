@@ -19,7 +19,9 @@
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#ifdef USE_POLL
 #include <poll.h>
+#endif
 #include "commands.h"
 #include "client.h"
 #include "config.h"
@@ -173,6 +175,7 @@ char *command_readline_generator(const char *text, int state) {
 }
 
 void command_tick_readline(void) {
+#ifdef USE_POLL
 	struct pollfd fd = { fileno(stdin), POLLIN, 0 };
 
 	int r = poll(&fd, 1, 0);
@@ -184,6 +187,7 @@ void command_tick_readline(void) {
 	if (fd.revents == POLLIN) {
 		rl_callback_read_char();
 	}
+#endif
 }
 
 commanddef_t *command_find(const char *name) {
