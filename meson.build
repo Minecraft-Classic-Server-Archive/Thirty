@@ -92,6 +92,7 @@ deps = [
 if build_machine.system() == 'windows'
     deps += cc.find_library('bcrypt')
     deps += cc.find_library('ws2_32')
+    add_project_arguments('-D_USE_MATH_DEFINES', language: 'c')
 else
     deps += cc.find_library('m')
 endif
