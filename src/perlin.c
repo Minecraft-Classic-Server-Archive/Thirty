@@ -22,7 +22,7 @@
 improvednoise_t *improvednoise_create(rng_t *rng) {
 	improvednoise_t *n = malloc(sizeof(improvednoise_t));
 	n->num_p = 512;
-	n->p = calloc(n->num_p, sizeof(int8_t));
+	n->p = calloc(n->num_p, sizeof(uint8_t));
 
 	for (int i = 0; i < 256; i++) {
 		n->p[i] = (int8_t) i;
