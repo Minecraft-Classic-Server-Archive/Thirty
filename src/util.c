@@ -130,6 +130,9 @@ bool util_httpheaders_parse(httpheaders_t *result, const char *text) {
 
 	result->num_headers = n;
 	result->end = text + i;
+
+	free(key);
+	free(value);
 	
 	return true;
 }
