@@ -448,6 +448,7 @@ void config_destroy(void) {
 	
 	free(config.server.name);
 	free(config.server.motd);
+	free(config.server.heartbeat_url);
 	free(config.map.image_path);
 	free(config.map.name);
 	free(config.map.generator);
