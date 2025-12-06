@@ -110,6 +110,6 @@ void signal_handler(int signum) {
 	server_stop();
 }
 
-void server_stop() {
+void server_stop(void) {
 	running = false;
 }
