@@ -1,5 +1,6 @@
 stages:
   - build
+  - check
   - deploy
 
 .build gcc: &build-gcc
@@ -17,7 +18,7 @@ stages:
     - ninja -C build
 
 .scan-build: &scan-build
-  stage: build
+  stage: check
   variables:
     CC: clang
   script:
