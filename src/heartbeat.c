@@ -111,7 +111,10 @@ void server_heartbeat(void) {
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, 1);
 
 	pthread_t thread;
 	pthread_create(&thread, &attr, heartbeat_main, NULL);
+
+	pthread_attr_destroy(&attr);
 }
