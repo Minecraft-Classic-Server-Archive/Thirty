@@ -66,8 +66,6 @@ void gen_heightmap(map_t *map, genstate_t *state) {
 	combinednoise_t *noise2 = combinednoise_create(octavenoise_create(state->rng, 8), octavenoise_create(state->rng, 8));
 	octavenoise_t *noise3 = octavenoise_create(state->rng, 6);
 
-	state->heightmap = calloc(map->width * map->depth * map->height, sizeof(unsigned	int));
-
 #pragma omp parallel for
 	for (size_t x = 0; x < map->width; x++)
 	for (size_t z = 0; z < map->height; z++) {
