@@ -91,7 +91,11 @@ void config_parse(const char *filename, configcallback_t callback) {
 
 	while (!feof(fp)) {
 		char c;
-		fread(&c, sizeof(char), 1, fp);
+		size_t r = fread(&c, sizeof(char), 1, fp);
+		if (r != 1) {
+			log_printf(log_error, "Error while parsing config file '%s': %s", filename, strerror(errno));
+			break;
+		}
 
 		switch (state) {
 			case parse_section: {

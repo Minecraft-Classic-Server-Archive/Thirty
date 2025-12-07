@@ -52,7 +52,11 @@ void namelist_parse(namelist_t *list) {
 
 	while (!feof(fp)) {
 		char c;
-		fread(&c, sizeof(char), 1, fp);
+		size_t r = fread(&c, sizeof(char), 1, fp);
+		if (r != 1) {
+			log_printf(log_error, "Error while parsing name list '%s': %s", list->filename, strerror(errno));
+			break;
+		}
 
 		switch (c) {
 			case '\n': {
