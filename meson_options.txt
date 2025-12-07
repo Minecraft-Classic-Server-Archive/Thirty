@@ -1,1 +1,1 @@
-option('use_readline', type: 'feature', value: 'enabled')
+option('use_readline', type: 'feature', value: 'auto')
