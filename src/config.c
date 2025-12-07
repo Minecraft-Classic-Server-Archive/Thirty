@@ -371,6 +371,19 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 			config.debug.disable_save = strcmp(value, "true") == 0;
 		}
 	}
+
+	else if (strcmp(section, "network") == 0) {
+		if (strcmp(key, "map_compression") == 0) {
+			long level = parse_int(value, &ok, 10);
+			if (!ok) {
+				log_printf(log_error, "Failed to parse 'map_compression' as integer");
+			} else {
+				if (level < 0) level = 0;
+				if (level > 9) level = 9;
+				config.network.map_compression = (int)level;
+			}
+		}
+	}
 }
 
 void config_init(const char *config_path) {
@@ -381,6 +394,8 @@ void config_init(const char *config_path) {
 	config.server.allowed_web_proxies = malloc(sizeof(char *));
 	config.server.allowed_web_proxies[0] = strdup("34.223.5.250");
 	config.server.num_proxies = 1;
+
+	config.network.map_compression = 9;
 
 	if (config_path != NULL) {
 		config_parse(config_path, cfg_callback);

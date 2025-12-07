@@ -71,6 +71,12 @@ The alternative spelling `colors` is also allowed for this section.
 
 The key will be the colour code, the value is an 8-digit hexadecimal number in `RRGGBBAA` format defining the colour.
 
+### `network`
+
+| Key                   | Default | Description                                                                                                                                                                          |
+|-----------------------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **`map_compression`** | `9`     | DEFLATE compression level used when sending the map to clients. This can be between 1-9, where 1 is the fastest and 9 has the best compression. 0 can be used to use no compression. |
+
 ### `debug`
 
 Settings under this section are mostly only useful for developing or testing the server.

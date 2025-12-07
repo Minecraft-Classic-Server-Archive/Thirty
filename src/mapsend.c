@@ -25,6 +25,7 @@
 #include "blocks.h"
 #include "util.h"
 #include "log.h"
+#include "config.h"
 
 void *mapsend_thread_start(void *data) {
 	mapsend_t *info = (mapsend_t *)data;
@@ -93,7 +94,7 @@ void *mapsend_fast_thread_start(void *data) {
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 
-	int err = deflateInit2(&strm, Z_BEST_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
+	int err = deflateInit2(&strm, config.network.map_compression, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY);
 	if (err != Z_OK) {
 		client->mapsend_state = mapsend_failure;
 		log_printf(log_error, "Failed to init zlib stream.");

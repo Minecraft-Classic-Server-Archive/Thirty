@@ -55,6 +55,10 @@ typedef struct {
 		bool disable_save;
 	} debug;
 
+	struct {
+		int map_compression;
+	} network;
+
 	textcolour_t *colours;
 	size_t num_colours;
 } config_t;
