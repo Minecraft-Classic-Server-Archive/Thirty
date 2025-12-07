@@ -723,9 +723,12 @@ void client_start_fast_mapsave(client_t *client) {
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, 1);
 
 	pthread_t thread;
 	pthread_create(&thread, &attr, mapsend_fast_thread_start, client);
+
+	pthread_attr_destroy(&attr);
 }
 
 void client_disconnect(client_t *client, const char *msg) {
