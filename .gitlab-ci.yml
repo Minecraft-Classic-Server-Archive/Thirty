@@ -10,6 +10,8 @@ stages:
 
 .build clang: &build-clang
   stage: build
+  variables:
+    CC: clang
   script:
     - meson setup build
     - ninja -C build
