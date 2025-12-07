@@ -2,33 +2,61 @@ stages:
   - build
   - deploy
 
-build debian:
+.build gcc: &build-gcc
   stage: build
-  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
   script:
     - meson setup build
-    - cd build && ninja
+    - ninja -C build
 
-build alpine:
+.build clang: &build-clang
   stage: build
-  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
   script:
     - meson setup build
-    - cd build && ninja
+    - ninja -C build
 
-build tumbleweed:
+.scan-build: &scan-build
   stage: build
-  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
-  script:
-    - meson setup build
-    - cd build && ninja
-
-scan-build tumbleweed:
-  stage: build
-  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
+  variables:
+    CC: clang
   script:
     - meson setup build
     - ninja -C build scan-build
+
+build debian gcc:
+  <<: *build-gcc
+  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
+
+build alpine gcc:
+  <<: *build-gcc
+  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
+
+build tumbleweed gcc:
+  <<: *build-gcc
+  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
+
+build debian clang:
+  <<: *build-clang
+  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
+
+build alpine clang:
+  <<: *build-clang
+  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
+
+build tumbleweed clang:
+  <<: *build-clang
+  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
+
+scan-build debian:
+  <<: *scan-build
+  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
+
+scan-build alpine:
+  <<: *scan-build
+  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
+
+scan-build tumbleweed:
+  <<: *scan-build
+  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
 
 ## Docker image
 
