@@ -395,6 +395,10 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 
 			for (int32_t i = 0; i < t->array_size; i++) {
 				t->list[i] = nbt_read(buffer, false);
+
+				if (t->list[i] == NULL) {
+					goto fail;
+				}
 			}
 
 			break;
@@ -407,9 +411,17 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 			size_t off = buffer_tell(buffer);
 
 			// count how many sub-tags we have 
-			while ((subtag = nbt_read(buffer, true))->type != tag_end) {
+			while ((subtag = nbt_read(buffer, true)) != NULL) {
+				if (subtag->type == tag_end) {
+					break;
+				}
+
 				t->array_size++;
 				nbt_destroy(subtag, true);
+			}
+
+			if (subtag == NULL) {
+				goto fail;
 			}
 
 			// destroy end tag
@@ -419,9 +431,17 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 
 			buffer_seek(buffer, off);
 
-			while ((subtag = nbt_read(buffer, true))->type != tag_end) {
+			while ((subtag = nbt_read(buffer, true)) != NULL) {
+				if (subtag->type == tag_end) {
+					break;
+				}
+
 				t->list[i] = subtag;
 				i++;
+			}
+
+			if (subtag == NULL) {
+				goto fail;
 			}
 
 			// destroy end tag
@@ -460,6 +480,10 @@ tag_t *nbt_read(buffer_t *buffer, bool named) {
 	}
 
 	return t;
+
+fail:
+	nbt_destroy(t, true);
+	return NULL;
 }
 
 tag_t *nbt_get_tag(tag_t *tag, const char *n) {
