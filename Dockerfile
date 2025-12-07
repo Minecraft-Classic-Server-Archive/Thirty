@@ -1,7 +1,4 @@
-FROM registry.opensuse.org/opensuse/tumbleweed:latest AS build
-
-RUN \
-  zypper -n install gcc zlib-ng-devel mercurial mercurial-extension-hg-evolve meson ninja libcurl-devel readline-devel
+FROM registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest AS build
 
 COPY . /thirty
 
