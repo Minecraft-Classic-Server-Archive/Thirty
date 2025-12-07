@@ -133,6 +133,10 @@ void map_save(map_t *map) {
 	size_t gzbufsize = 2 * 1024 * 1024;
 	uint8_t *gzbuf = malloc(gzbufsize);
 	FILE *fp = fopen(filename, "wb");
+	if (fp == NULL) {
+		log_printf(log_error, "Failed to open file for save: %s", strerror(errno));
+		goto cleanup;;
+	}
 
 	z_stream strm;
 	strm.zalloc = Z_NULL;
@@ -174,7 +178,9 @@ void map_save(map_t *map) {
 cleanup:
 	deflateEnd(&strm);
 
-	fclose(fp);
+	if (fp != NULL) {
+		fclose(fp);
+	}
 	free(gzbuf);
 	free(readbuf);
 	buffer_destroy(outbuf);
@@ -241,10 +247,14 @@ map_t *map_load(const char *name) {
 	nbtbuf = buffer_allocate_memory(0, true);
 
 	do {
+		if (feof(fp)) {
+			break;
+		}
+		
 		strm.avail_in = fread(inbuf, 1, inbufsize, fp);
 		if (ferror(fp)) {
 			inflateEnd(&strm);
-			return NULL;
+			goto cleanup;
 		}
 
 		if (strm.avail_in == 0) {
