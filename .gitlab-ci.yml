@@ -4,18 +4,14 @@ stages:
 
 build:
   stage: build
-  image: debian:latest
-  before_script:
-    - export DEBIAN_FRONTEND=noninteractive && export TZ=Etc/UTC && apt-get update && apt-get -y dist-upgrade && apt-get -y install mercurial build-essential meson ninja-build zlib1g-dev libcurl4-gnutls-dev pkgconf libreadline-dev
+  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
   script:
     - meson setup build
     - cd build && ninja
 
 build alpine:
   stage: build
-  image: alpine:latest
-  before_script:
-    - apk add --update mercurial alpine-sdk zlib-dev samurai meson curl-dev readline-dev
+  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
   script:
     - meson setup build
     - cd build && ninja
