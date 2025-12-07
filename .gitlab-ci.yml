@@ -16,6 +16,20 @@ build alpine:
     - meson setup build
     - cd build && ninja
 
+build tumbleweed:
+  stage: build
+  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
+  script:
+    - meson setup build
+    - cd build && ninja
+
+scan-build tumbleweed:
+  stage: build
+  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
+  script:
+    - meson setup build
+    - ninja -C build scan-build
+
 ## Docker image
 
 .kaniko: &kaniko
