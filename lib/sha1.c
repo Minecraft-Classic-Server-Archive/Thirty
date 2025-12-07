@@ -167,7 +167,8 @@ void SHA1Transform(
 	state[3] += d;
 	state[4] += e;
 	/* Wipe variables */
-	a = b = c = d = e = 0;
+	// thirty: clang scan-build reports the below line as dead code
+	//a = b = c = d = e = 0;
 #ifdef SHA1HANDSOFF
 	memset(block, '\0', sizeof(block));
 #endif
