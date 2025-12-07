@@ -40,7 +40,9 @@ buffer_t *buffer_allocate_memory(size_t size, bool grows) {
 	buffer->mem.size = size;
 	buffer->mem.offset = 0;
 
-	memset(buffer->mem.data, 0, size);
+	if (buffer->mem.data != NULL) {
+		memset(buffer->mem.data, 0, size);
+	}
 
 	return buffer;
 }
