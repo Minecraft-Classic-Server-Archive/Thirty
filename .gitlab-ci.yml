@@ -2,7 +2,7 @@ stages:
   - build
   - deploy
 
-build:
+build debian:
   stage: build
   image: registry.firestick.games/sean/thirty-ci-images/debian:latest
   script:
