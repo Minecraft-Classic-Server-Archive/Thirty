@@ -21,6 +21,9 @@ stages:
   script:
     - meson setup build
     - ninja -C build scan-build
+  artifacts:
+    paths:
+      - build/meson-logs/scanbuild/*
 
 build debian gcc:
   <<: *build-gcc
