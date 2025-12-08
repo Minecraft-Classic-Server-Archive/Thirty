@@ -107,6 +107,10 @@ if cc.has_function('poll', prefix: '#include <poll.h>')
     add_project_arguments('-DUSE_POLL', language: 'c')
 endif
 
+if cc.has_function('uname', prefix: '#include <sys/utsname.h>')
+    add_project_arguments('-DUSE_UNAME', language: 'c')
+endif
+
 libdir = include_directories('lib')
 
 executable('thirty', source_files, dependencies: deps, include_directories: libdir, c_args: ccflags, install: true)

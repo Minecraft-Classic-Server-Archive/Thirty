@@ -26,6 +26,9 @@
 #elif !defined(_WIN32)
 #include <sys/select.h>
 #endif
+#ifdef USE_UNAME
+#include <sys/utsname.h>
+#endif
 #include "commands.h"
 #include "client.h"
 #include "config.h"
@@ -247,6 +250,14 @@ commanddef_t *command_find(const char *name) {
 void command_version(commandctx_t *ctx) {
 	client_send_message(ctx->client, msgtype_chat, "&fThis server is running &eThirty %s", THIRTY_VERSION);
 	client_send_message(ctx->client, msgtype_chat, "&fMercurial changeset: &e%s", HG_CHANGESET_HASH);
+#ifdef USE_UNAME
+	{
+		struct utsname un;
+		if (uname(&un) == 0) {
+			client_send_message(ctx->client,msgtype_chat, "&fRunning on &e%s %s &f(&e%s&f)", un.sysname, un.release, un.machine);
+		}
+	}
+#endif
 	client_send_message(ctx->client, msgtype_chat, "Thirty is licenced under the GNU AGPL v3 or later, and its");
 	client_send_message(ctx->client, msgtype_chat, "source is available at https://dev.firestick.games/sean/thirty");
 }
