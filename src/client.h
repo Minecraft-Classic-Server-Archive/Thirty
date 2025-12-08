@@ -72,6 +72,8 @@ typedef struct client_s {
 	uint8_t ws_mask[4];
 	struct buffer_s *ws_frame;
 	struct buffer_s *ws_out_buffer;
+
+	uint64_t debug_id; // unique for the lifetime of the server
 } client_t;
 
 void client_init(client_t *client, int fd, size_t idx);

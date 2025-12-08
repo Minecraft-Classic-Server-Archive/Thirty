@@ -29,6 +29,8 @@ typedef struct server_s {
 	socket_t socket_fd;
 	uint16_t port;
 
+	time_t starttime;
+
 	uint64_t tick;
 
 	client_t *clients;

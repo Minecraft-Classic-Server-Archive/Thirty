@@ -48,6 +48,7 @@ bool server_generate_salt(char *out, size_t length);
 server_t server;
 
 bool server_init(void) {
+	server.starttime = time(NULL);
 	server.port = config.server.port;
 	server.global_rng = rng_create((int)time(NULL));
 	server.last_heartbeat = 0.0;

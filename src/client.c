@@ -21,6 +21,9 @@
 #include <math.h>
 #include <stdarg.h>
 #include "client.h"
+
+#include <inttypes.h>
+
 #include "server.h"
 #include "buffer.h"
 #include "map.h"
@@ -59,6 +62,10 @@ static void client_send_env_colour(client_t *client, envcolourtype_t colour);
 
 client_t command_standin;
 
+// for debug packet dumping
+static uint64_t next_debug_id = 0;
+static uint64_t next_recv_id = 0;
+
 void client_init(client_t *client, int fd, size_t idx) {
 	memset(client, 0, sizeof(*client));
 
@@ -90,6 +97,7 @@ void client_init(client_t *client, int fd, size_t idx) {
 	client->ws_frame = NULL;
 	client->ws_out_buffer = NULL;
 	client->last_receive = 0.0;
+	client->debug_id = next_debug_id++;
 
 	pthread_mutex_init(&client->out_mutex, NULL);
 }
@@ -261,6 +269,19 @@ void client_receive(client_t *client) {
 		return;
 	}
 
+	if (config.debug.dump_connection_packets && !client->spawned) {
+		char fn[256];
+		snprintf(fn, sizeof fn, "packets/p_%" PRId64 "_%" PRIu64 "_%" PRIu64 ".bin", (int64_t)server.starttime, client->debug_id, next_recv_id++);
+		FILE *f = fopen(fn, "wb");
+		if (f != NULL) {
+			fwrite(client->in_buffer->mem.data, 1, r, f);
+			fclose(f);
+		}
+		else {
+			log_printf(log_error, "couldn't dump packet! %s", strerror(errno));
+		}
+	}
+
 	if (client->ws_can_switch && memcmp(client->in_buffer->mem.data, "GET ", 4) == 0) {
 		client_ws_upgrade(client, r);
 		return;
@@ -276,6 +297,7 @@ void client_receive(client_t *client) {
 
 void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 	while (buffer_tell(in_buffer) < (size_t)r) {
+		size_t pos = buffer_tell(in_buffer);
 		uint8_t packet_id;
 		buffer_read_uint8(in_buffer, &packet_id);
 
@@ -553,7 +575,10 @@ void client_handle_in_buffer(client_t *client, buffer_t *in_buffer, size_t r) {
 			}
 
 			default: {
-				log_printf(log_error, "client %zu (%s) sent unknown packet 0x%02x", client->idx, client->name, packet_id);
+				log_printf(log_error, "client %zu (%s) sent unknown packet 0x%02x at offset %zu", client->idx, client->name, packet_id, pos);
+				if (config.debug.dump_connection_packets) {
+					log_printf(log_info, "check packets/p_%" PRId64 "_%" PRIu64 "_%" PRIu64 ".bin", (int64_t)server.starttime, client->debug_id, next_recv_id - 1);
+				}
 				client_disconnect(client, "Received malformed data.");
 				return;
 			};

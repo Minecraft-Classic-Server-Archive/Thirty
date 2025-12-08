@@ -372,6 +372,9 @@ void cfg_callback(const char *section, const char *key, const char *value) {
 		else if (strcmp(key, "disable_save") == 0) {
 			config.debug.disable_save = strcmp(value, "true") == 0;
 		}
+		else if (strcmp(key, "dump_connection_packets") == 0) {
+			config.debug.dump_connection_packets = strcmp(value, "true") == 0;
+		}
 	}
 
 	else if (strcmp(section, "network") == 0) {

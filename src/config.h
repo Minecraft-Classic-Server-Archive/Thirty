@@ -53,6 +53,7 @@ typedef struct {
 	struct {
 		char fixed_salt[17];
 		bool disable_save;
+		bool dump_connection_packets;
 	} debug;
 
 	struct {
