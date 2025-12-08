@@ -17,6 +17,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
 #include "sockets.h"
 
 #define SERVER_SALT_LENGTH 64
