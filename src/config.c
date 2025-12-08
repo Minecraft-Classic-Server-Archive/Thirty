@@ -93,7 +93,9 @@ void config_parse(const char *filename, configcallback_t callback) {
 		char c;
 		size_t r = fread(&c, sizeof(char), 1, fp);
 		if (r != 1) {
-			log_printf(log_error, "Error while parsing config file '%s': %s", filename, strerror(errno));
+			if (ferror(fp)) {
+				log_printf(log_error, "Error while parsing config file '%s': %s", filename, strerror(errno));
+			}
 			break;
 		}
 
