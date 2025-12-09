@@ -3,92 +3,73 @@ stages:
   - check
   - deploy
 
-.build gcc: &build-gcc
+build:
   stage: build
-  script:
-    - meson setup build
-    - ninja -C build
-
-.build clang: &build-clang
-  stage: build
+  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO-$ARCH:latest
   variables:
-    CC: clang
+    CC: $CC
+  tags:
+    - $ARCH
   script:
     - meson setup build
     - ninja -C build
+  parallel:
+    matrix:
+      - CC: [ gcc, clang ]
+        DISTRO: [ debian, alpine, tumbleweed ]
+        ARCH: [ x86_64, aarch64 ]
 
-.scan-build: &scan-build
+scan-build:
   stage: check
+  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO-$ARCH:latest
   variables:
     CC: clang
+  tags:
+    - $ARCH
   script:
     - meson setup build
     - ninja -C build scan-build
+  parallel:
+    matrix:
+      - DISTRO: [ debian, alpine, tumbleweed ]
+        ARCH: [ x86_64, aarch64 ]
   artifacts:
     paths:
       - build/meson-logs/scanbuild/*
-
-build debian gcc:
-  <<: *build-gcc
-  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
-
-build alpine gcc:
-  <<: *build-gcc
-  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
-
-build tumbleweed gcc:
-  <<: *build-gcc
-  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
-
-build debian clang:
-  <<: *build-clang
-  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
-
-build alpine clang:
-  <<: *build-clang
-  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
-
-build tumbleweed clang:
-  <<: *build-clang
-  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
-
-scan-build debian:
-  <<: *scan-build
-  image: registry.firestick.games/sean/thirty-ci-images/debian:latest
-
-scan-build alpine:
-  <<: *scan-build
-  image: registry.firestick.games/sean/thirty-ci-images/alpine:latest
-
-scan-build tumbleweed:
-  <<: *scan-build
-  image: registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest
 
 ## Docker image
 
 .kaniko: &kaniko
   stage: deploy
+  parallel:
+    matrix:
+      - ARCH: [ x86_64, aarch64 ]
+  tags:
+    - $ARCH
   image:
-    name: gcr.io/kaniko-project/executor:v1.22.0-debug
+    name: gcr.io/kaniko-project/executor:v1.24.0-debug
     entrypoint: [""]
   before_script:
+    - if [[ "$ARCH" != "x86_64" ]]; then
+        export SUFFIX="-$ARCH";
+      fi
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"$(echo -n $CI_DEPENDENCY_PROXY_SERVER | awk -F[:] '{print $1}')\":{\"auth\":\"$(printf "%s:%s" ${CI_DEPENDENCY_PROXY_USER} "${CI_DEPENDENCY_PROXY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
 
 docker:
   <<: *kaniko
   script:
-    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:dev"
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile" --build-arg ARCH=$ARCH
+      --destination "${CI_REGISTRY_IMAGE}:dev${SUFFIX}"
   rules:
     - if: $CI_COMMIT_TAG
-      when: never 
+      when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 docker tagged:
   <<: *kaniko
   script:
-    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
-      --destination "${CI_REGISTRY_IMAGE}:latest"
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile" --build-arg ARCH=$ARCH
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}${SUFFIX}"
+      --destination "${CI_REGISTRY_IMAGE}:latest${SUFFIX}"
   rules:
      - if: $CI_COMMIT_TAG
