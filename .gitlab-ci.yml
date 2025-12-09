@@ -5,7 +5,7 @@ stages:
 
 build:
   stage: build
-  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO-$ARCH:latest
+  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO:latest
   variables:
     CC: $CC
   tags:
@@ -21,7 +21,7 @@ build:
 
 scan-build:
   stage: check
-  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO-$ARCH:latest
+  image: registry.firestick.games/sean/thirty-ci-images/$DISTRO:latest
   variables:
     CC: clang
   tags:
@@ -58,7 +58,7 @@ scan-build:
 docker:
   <<: *kaniko
   script:
-    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile" --build-arg ARCH=$ARCH
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}:dev${SUFFIX}"
   rules:
     - if: $CI_COMMIT_TAG
@@ -68,7 +68,7 @@ docker:
 docker tagged:
   <<: *kaniko
   script:
-    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile" --build-arg ARCH=$ARCH
+    - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}${SUFFIX}"
       --destination "${CI_REGISTRY_IMAGE}:latest${SUFFIX}"
   rules:

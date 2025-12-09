@@ -1,6 +1,4 @@
-ARG ARCH
-
-FROM registry.firestick.games/sean/thirty-ci-images/tumbleweed-$ARCH:latest AS build
+FROM registry.firestick.games/sean/thirty-ci-images/tumbleweed:latest AS build
 
 COPY . /thirty
 
