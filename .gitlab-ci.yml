@@ -2,6 +2,7 @@ stages:
   - build
   - check
   - deploy
+  - merge
 
 build:
   stage: build
@@ -50,16 +51,37 @@ scan-build:
     name: gcr.io/kaniko-project/executor:v1.24.0-debug
     entrypoint: [""]
   before_script:
-    - if [[ "$ARCH" != "x86_64" ]]; then
-        export SUFFIX="-$ARCH";
-      fi
+    - case "$ARCH" in
+        x86_64)
+          export DOCKER_ARCH=amd64 ;;
+        aarch64)
+          export DOCKER_ARCH=arm64 ;;
+      esac
     - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"$(echo -n $CI_DEPENDENCY_PROXY_SERVER | awk -F[:] '{print $1}')\":{\"auth\":\"$(printf "%s:%s" ${CI_DEPENDENCY_PROXY_USER} "${CI_DEPENDENCY_PROXY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
 
 docker:
   <<: *kaniko
   script:
     - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:dev${SUFFIX}"
+      --destination "${CI_REGISTRY_IMAGE}:dev-${DOCKER_ARCH}"
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+merge:
+  stage: merge
+  image:
+    name: mplatform/manifest-tool:alpine
+    entrypoint: [""]
+  script:
+    - >-
+      manifest-tool
+      --username=${CI_REGISTRY_USER} --password=${CI_REGISTRY_PASSWORD}
+      push from-args
+      --platforms linux/amd64,linux/arm64
+      --template ${CI_REGISTRY_IMAGE}:dev-ARCH
+      --target ${CI_REGISTRY_IMAGE}:dev
   rules:
     - if: $CI_COMMIT_TAG
       when: never
@@ -69,7 +91,23 @@ docker tagged:
   <<: *kaniko
   script:
     - /kaniko/executor --context "${CI_PROJECT_DIR}" --dockerfile "Dockerfile"
-      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}${SUFFIX}"
-      --destination "${CI_REGISTRY_IMAGE}:latest${SUFFIX}"
+      --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-${DOCKER_ARCH}"
   rules:
      - if: $CI_COMMIT_TAG
+
+merge tagged:
+  stage: merge
+  image:
+    name: mplatform/manifest-tool:alpine
+    entrypoint: [""]
+  script:
+    - >-
+      manifest-tool
+      --username=${CI_REGISTRY_USER} --password=${CI_REGISTRY_PASSWORD}
+      push from-args
+      --platforms linux/amd64,linux/arm64
+      --template ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}-ARCH
+      --target ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+      --tags latest
+  rules:
+    - if: $CI_COMMIT_TAG
