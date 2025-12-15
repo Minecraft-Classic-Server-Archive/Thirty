@@ -460,9 +460,9 @@ void command_env(commandctx_t *ctx) {
 	}
 
 	if (ctx->argc == 0) {
-		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> <r> <g> <b>", ctx->argv[0]);
-		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> default", ctx->argv[0]);
-		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <weather> <clear|rain|snow>", ctx->argv[0]);
+		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s colour <type> <r> <g> <b>", ctx->argv[0]);
+		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s colour <type> default", ctx->argv[0]);
+		client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s weather <clear|rain|snow>", ctx->argv[0]);
 		return;
 	}
 
@@ -471,8 +471,8 @@ void command_env(commandctx_t *ctx) {
 	const char *subcommand = ctx->argv[1];
 	if (strcmp(subcommand, "colour") == 0 || strcmp(subcommand, "color") == 0) {
 		if (ctx->argc != 5 && ctx->argc != 3) {
-			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> <r> <g> <b>", ctx->argv[0]);
-			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <colour> <type> default", ctx->argv[0]);
+			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s colour <type> <r> <g> <b>", ctx->argv[0]);
+			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s colour <type> default", ctx->argv[0]);
 			return;
 		}
 
@@ -508,7 +508,7 @@ void command_env(commandctx_t *ctx) {
 	}
 	else if (strcmp(subcommand, "weather") == 0) {
 		if (ctx->argc != 2) {
-			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s <weather> <clear|rain|snow>", ctx->argv[0]);
+			client_send_message(ctx->client, msgtype_chat, "&e Syntax: &f/%s weather <clear|rain|snow>", ctx->argv[0]);
 			return;
 		}
 
