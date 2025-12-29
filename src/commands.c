@@ -54,6 +54,10 @@ typedef struct commanddef_s {
 	bool op_only;
 } commanddef_t;
 
+static void command_register(commanddef_t *cmd);
+static void command_quick_register(const char *name, commandfunc_t func, const char *help, bool oponly);
+static void command_readline_init(void);
+
 static commanddef_t *command_find(const char *name);
 
 static void command_version(commandctx_t *ctx);
@@ -72,20 +76,40 @@ static void command_env(commandctx_t *ctx);
 bool readline_enabled = false;
 bool handling_readline = false;
 
-static commanddef_t commands[] = {
-	{ "ban", command_ban, "Manage username bans", true },
-	{ "ban-ip", command_ipban, "Manage IP bans", true },
-	{ "env", command_env, "Change map environmental settings", true },
-	{ "help", command_help, "List available commands", false },
-	{ "info", command_info, "View client info", false },
-	{ "op", command_op, "Manage server admins", true },
-	{ "online", command_online, "List online players", false },
-	{ "save", command_save, "Save the level", true },
-	{ "stop", command_stop, "Stop the server", true },
-	{ "teleport", command_teleport, "Teleport a player", false },
-	{ "version", command_version, "Display software version", false },
-	{ "whitelist", command_whitelist, "Manage server whitelist", true },
-};
+static commanddef_t *commands = NULL;
+static size_t num_commands = 0;
+
+void commands_init(void) {
+	command_quick_register("ban", command_ban, "Manage username bans", true);
+	command_quick_register("ban-ip", command_ipban, "Manage IP bans", true);
+	command_quick_register("env", command_env, "Change map environmental settings", true);
+	command_quick_register("help", command_help, "List available commands", false);
+	command_quick_register("info", command_info, "View client info", false);
+	command_quick_register("op", command_op, "Manage server admins", true);
+	command_quick_register("online", command_online, "List online players", false);
+	command_quick_register("save", command_save, "Save the level", true);
+	command_quick_register("stop", command_stop, "Stop the server", true);
+	command_quick_register("teleport", command_teleport, "Teleport a player", false);
+	command_quick_register("version", command_version, "Display software version", false);
+	command_quick_register("whitelist", command_whitelist, "Manage server whitelist", true);
+
+	command_readline_init();
+}
+
+void command_register(commanddef_t *cmd) {
+	size_t idx = num_commands++;
+	commands = realloc(commands, sizeof(commanddef_t) * num_commands);
+	memcpy(&commands[idx], cmd, sizeof(commanddef_t));
+}
+
+void command_quick_register(const char *name, commandfunc_t func, const char *help, bool oponly) {
+	commanddef_t cmd;
+	cmd.name = name;
+	cmd.func = func;
+	cmd.helpline = help;
+	cmd.op_only = oponly;
+	command_register(&cmd);
+}
 
 void command_execute(client_t *client, const char *command) {
 	char **args = NULL;
@@ -186,7 +210,7 @@ char *command_readline_generator(const char *text, int state) {
 		len = strlen(text);
 	}
 
-	while (index < sizeof(commands) / sizeof(commanddef_t)) {
+	while (index < num_commands) {
 		commanddef_t *cmd = &commands[index++];
 
 		if (strncmp(cmd->name, text, len) == 0) {
@@ -238,7 +262,7 @@ void command_tick_readline(void) { }
 #endif
 
 commanddef_t *command_find(const char *name) {
-	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
+	for (size_t i = 0; i < num_commands; i++) {
 		if (strcmp(name, commands[i].name) == 0) {
 			return &commands[i];
 		}
@@ -263,7 +287,7 @@ void command_version(commandctx_t *ctx) {
 }
 
 void command_help(commandctx_t *ctx) {
-	for (size_t i = 0; i < sizeof(commands) / sizeof(commanddef_t); i++) {
+	for (size_t i = 0; i < num_commands; i++) {
 		commanddef_t *command = &commands[i];
 
 		if (command->op_only && !ctx->client->is_op) {

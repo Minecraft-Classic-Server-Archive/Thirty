@@ -18,9 +18,9 @@
 
 typedef struct client_s client_t;
 
+void commands_init(void);
 void command_execute(client_t *client, const char *command);
 
-void command_readline_init(void);
 void command_tick_readline(void);
 void command_readline_shutdown(void);
 

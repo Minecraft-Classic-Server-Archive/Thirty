@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 		goto cleanup;
 	}
 
-	command_readline_init();
+	commands_init();
 	log_printf(log_info, "Ready! Type 'help' for a list of commands.");
 
 	while (running) {
