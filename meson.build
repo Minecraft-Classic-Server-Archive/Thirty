@@ -66,6 +66,8 @@ source_files = [
     'src/rng.h',
     'src/server.c',
     'src/server.h',
+    'src/str.c',
+    'src/str.h',
     'src/util.c',
     'src/util.h',
 
