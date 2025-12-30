@@ -83,9 +83,10 @@ void string_appendl(str_t *str, const char *text) {
         return;
     }
 
-    size_t copylen = strlen(text);
-    string_expand(str, str->len + copylen + 1);
-    memcpy(str->data + str->len, text, util_min(copylen, str->capacity - copylen - 1));
+    size_t textlen = strlen(text);
+    size_t copylen = util_min(textlen, str->capacity - textlen - 1);
+    string_expand(str, copylen);
+    memcpy(str->data + str->len, text, copylen);
     str->len += copylen;
 }
 
