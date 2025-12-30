@@ -17,6 +17,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdbool.h>
+#include <alloca.h>
 
 typedef struct str_s {
     size_t len;
@@ -35,7 +36,6 @@ void string_appendl(str_t *str, const char *text);
 void string_appendf(str_t *str, const char *fmt, ...) __attribute__((format(printf, 2, 3)));
 
 #define string_allocate_stack(str, _capacity) do { \
-        string_destroy((str)); \
         (str)->len = 0; \
         (str)->capacity = (_capacity); \
         (str)->data = alloca((_capacity)); \
