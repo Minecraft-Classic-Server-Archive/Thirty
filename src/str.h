@@ -17,7 +17,9 @@
 #pragma once
 #include <stddef.h>
 #include <stdbool.h>
+#ifdef USE_ALLOCA_H
 #include <alloca.h>
+#endif
 
 typedef struct str_s {
     size_t len;
