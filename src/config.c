@@ -470,6 +470,9 @@ void config_destroy(void) {
 	config.server.allowed_web_proxies = NULL;
 	config.server.num_proxies = 0;
 	
+	free(config.colours);
+	config.num_colours = 0;
+	
 	free(config.server.name);
 	free(config.server.motd);
 	free(config.server.heartbeat_url);
