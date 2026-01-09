@@ -65,7 +65,10 @@ void map_save_image_threaded(map_t *map, const char *path) {
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, 1);
 
 	pthread_t thread;
 	pthread_create(&thread, &attr, map_save_image, data);
+
+	pthread_attr_destroy(&attr);
 }
