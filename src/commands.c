@@ -165,6 +165,10 @@ static char **command_readline_completion(const char *text, int start, int end);
 static char *command_readline_generator(const char *text, int state);
 
 void command_readline_init(void) {
+	if (!isatty(fileno(stdin))) {
+		return;
+	}
+
 	rl_readline_name = "thirty";
 	rl_callback_handler_install("> ", command_readline_callback);
 	rl_attempted_completion_function = command_readline_completion;
@@ -222,6 +226,10 @@ char *command_readline_generator(const char *text, int state) {
 }
 
 void command_tick_readline(void) {
+	if (!readline_enabled) {
+		return;
+	}
+
 #if defined(USE_POLL)
 	struct pollfd fd = { fileno(stdin), POLLIN, 0 };
 
