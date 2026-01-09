@@ -24,6 +24,7 @@
 #include "server.h"
 #include "log.h"
 #include "config.h"
+#include "blocks.h"
 
 static void save_env_colour(tag_t *cpedata, const char *tagname, rgb_t *rgb) {
 	if (rgb->value == ENV_COLOUR_DEFAULT) {
@@ -316,6 +317,13 @@ map_t *map_load(const char *name) {
 	h = (size_t)zsize->s;
 	map = map_create(name, w, d, h);
 	memcpy(map->blocks, blocks->pb, w * d * h);
+
+	// filter out invalid blocks
+	for (size_t i = 0; i < w * d * h; i++) {
+		if (map->blocks[i] >= num_blocks) {
+			map->blocks[i] = air;
+		}
+	}
 
 	{
 		tag_t *metadata = nbt_get_tag(root, "Metadata");
